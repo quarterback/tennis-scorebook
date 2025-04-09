@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { TennisBall, Users, Award, Calendar, School, LogOut } from 'lucide-react';
+import { Activity, Users, Award, Calendar, School, LogOut } from 'lucide-react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -18,7 +18,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <header className="bg-tennis-blue text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <TennisBall className="h-6 w-6" />
+            <Activity className="h-6 w-6" />
             <h1 className="text-xl font-bold">Tennis Team Manager</h1>
           </div>
           
