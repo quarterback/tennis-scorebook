@@ -3,7 +3,7 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
 import { Match, Flight, Set } from '@/types';
@@ -49,7 +49,9 @@ const Matches = () => {
     addSet,
     removeSet,
     calculateTeamWinner,
-    resetMatchForm
+    resetMatchForm,
+    addNewFlight,
+    toggleJvMatches
   } = useMatchFunctions(initialFlights);
 
   // Filter matches if coach
@@ -100,6 +102,7 @@ const Matches = () => {
       awayTeamId: matchFormData.awayTeamId,
       isLeagueMatch: matchFormData.isLeagueMatch,
       isComplete: matchFormData.isComplete,
+      hasJvMatches: matchFormData.hasJvMatches,
       homeTeamWon: matchFormData.homeTeamWon,
       flights: newFlights
     });
@@ -113,7 +116,7 @@ const Matches = () => {
     
     if (selectedMatch) {
       // Update with form data, but keep existing IDs
-      const updatedFlights = matchFormData.flights.map((formFlight, index) => {
+      const updatedFlights = matchFormData.flights.map((formFlight) => {
         const existingFlight = selectedMatch.flights.find(
           f => f.type === formFlight.type && 
               f.position === formFlight.position && 
@@ -134,6 +137,7 @@ const Matches = () => {
         awayTeamId: matchFormData.awayTeamId,
         isLeagueMatch: matchFormData.isLeagueMatch,
         isComplete: matchFormData.isComplete,
+        hasJvMatches: matchFormData.hasJvMatches,
         homeTeamWon: matchFormData.homeTeamWon,
         flights: updatedFlights
       });
@@ -153,6 +157,7 @@ const Matches = () => {
       awayTeamId: match.awayTeamId,
       isLeagueMatch: match.isLeagueMatch,
       isComplete: match.isComplete,
+      hasJvMatches: match.hasJvMatches || false,
       homeTeamWon: match.homeTeamWon,
       flights: match.flights.map(flight => ({
         type: flight.type,
@@ -222,6 +227,9 @@ const Matches = () => {
         <DialogContent className="w-full max-w-5xl">
           <DialogHeader>
             <DialogTitle>Add New Match</DialogTitle>
+            <DialogDescription>
+              Configure match details and add player lineups
+            </DialogDescription>
           </DialogHeader>
           
           <MatchForm
@@ -238,6 +246,8 @@ const Matches = () => {
             addSet={addSet}
             removeSet={removeSet}
             calculateTeamWinner={calculateTeamWinner}
+            addNewFlight={addNewFlight}
+            toggleJvMatches={toggleJvMatches}
             onSubmit={handleAddMatchSubmit}
             onCancel={() => setIsAddDialogOpen(false)}
             submitButtonText="Save Match"
@@ -250,6 +260,9 @@ const Matches = () => {
         <DialogContent className="w-full max-w-5xl">
           <DialogHeader>
             <DialogTitle>Edit Match</DialogTitle>
+            <DialogDescription>
+              Modify match details and player lineups
+            </DialogDescription>
           </DialogHeader>
           
           <MatchForm
@@ -266,6 +279,8 @@ const Matches = () => {
             addSet={addSet}
             removeSet={removeSet}
             calculateTeamWinner={calculateTeamWinner}
+            addNewFlight={addNewFlight}
+            toggleJvMatches={toggleJvMatches}
             onSubmit={handleEditMatchSubmit}
             onCancel={() => {
               setIsEditDialogOpen(false);

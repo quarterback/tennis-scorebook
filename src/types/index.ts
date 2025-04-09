@@ -40,6 +40,7 @@ export interface Match {
   awayTeamId: string;
   isLeagueMatch: boolean;
   isComplete: boolean;
+  hasJvMatches?: boolean; // New field to toggle JV section
   homeTeamWon?: boolean;
   flights: Flight[];
 }

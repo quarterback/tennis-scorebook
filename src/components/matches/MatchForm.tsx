@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Plus } from 'lucide-react';
 import FlightForm from './FlightForm';
 
 interface MatchFormProps {
@@ -16,6 +17,7 @@ interface MatchFormProps {
     awayTeamId: string;
     isLeagueMatch: boolean;
     isComplete: boolean;
+    hasJvMatches?: boolean;
     homeTeamWon?: boolean;
     flights: Array<{
       type: 'singles' | 'doubles';
@@ -39,6 +41,8 @@ interface MatchFormProps {
   addSet: (flightIndex: number) => void;
   removeSet: (flightIndex: number, setIndex: number) => void;
   calculateTeamWinner: () => void;
+  addNewFlight: (type: 'singles' | 'doubles', level: 'varsity' | 'jv') => void;
+  toggleJvMatches: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   submitButtonText: string;
@@ -58,6 +62,8 @@ const MatchForm: React.FC<MatchFormProps> = ({
   addSet,
   removeSet,
   calculateTeamWinner,
+  addNewFlight,
+  toggleJvMatches,
   onSubmit,
   onCancel,
   submitButtonText
@@ -149,6 +155,18 @@ const MatchForm: React.FC<MatchFormProps> = ({
             </Label>
           </div>
           
+          <div className="space-y-2">
+            <Label>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={matchFormData.hasJvMatches}
+                  onCheckedChange={toggleJvMatches}
+                />
+                <span>Include JV Matches</span>
+              </div>
+            </Label>
+          </div>
+          
           {matchFormData.isComplete && (
             <div className="space-y-2">
               <Label>
@@ -193,11 +211,27 @@ const MatchForm: React.FC<MatchFormProps> = ({
           <h3 className="font-semibold text-lg">Match Lineup</h3>
           
           <div>
-            <h4 className="text-sm font-medium mb-4 bg-tennis-blue text-white px-3 py-1">Varsity</h4>
+            <div className="flex justify-between items-center">
+              <h4 className="text-sm font-medium mb-4 bg-tennis-blue text-white px-3 py-1 w-full">Varsity</h4>
+            </div>
+            
             <div className="space-y-6">
               {/* Singles Flights */}
-              <div>
-                <h5 className="text-sm font-medium mb-2">Singles</h5>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h5 className="text-sm font-medium">Singles</h5>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => addNewFlight('singles', 'varsity')}
+                    className="h-8"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Singles
+                  </Button>
+                </div>
+                
                 <div className="space-y-4">
                   {matchFormData.flights
                     .filter(f => f.level === 'varsity' && f.type === 'singles')
@@ -227,8 +261,21 @@ const MatchForm: React.FC<MatchFormProps> = ({
               </div>
               
               {/* Doubles Flights */}
-              <div>
-                <h5 className="text-sm font-medium mb-2">Doubles</h5>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h5 className="text-sm font-medium">Doubles</h5>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => addNewFlight('doubles', 'varsity')}
+                    className="h-8"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Doubles
+                  </Button>
+                </div>
+                
                 <div className="space-y-4">
                   {matchFormData.flights
                     .filter(f => f.level === 'varsity' && f.type === 'doubles')
@@ -259,72 +306,101 @@ const MatchForm: React.FC<MatchFormProps> = ({
             </div>
           </div>
           
-          <div>
-            <h4 className="text-sm font-medium mb-4 bg-tennis-green text-white px-3 py-1">JV</h4>
-            <div className="space-y-6">
-              {/* JV Singles Flights */}
-              <div>
-                <h5 className="text-sm font-medium mb-2">Singles</h5>
+          {/* JV Section - Only show if hasJvMatches is true */}
+          {matchFormData.hasJvMatches && (
+            <div>
+              <h4 className="text-sm font-medium mb-4 bg-tennis-green text-white px-3 py-1">JV</h4>
+              <div className="space-y-6">
+                {/* JV Singles Flights */}
                 <div className="space-y-4">
-                  {matchFormData.flights
-                    .filter(f => f.level === 'jv' && f.type === 'singles')
-                    .sort((a, b) => a.position - b.position)
-                    .map((flight, flightIndex) => {
-                      const actualIndex = matchFormData.flights.findIndex(
-                        f => f.type === flight.type && f.position === flight.position && f.level === flight.level
-                      );
-                      
-                      return (
-                        <FlightForm
-                          key={`${flight.type}-${flight.position}-${flight.level}`}
-                          flight={flight}
-                          flightIndex={actualIndex}
-                          homeTeamPlayers={getTeamPlayersForSelect(matchFormData.homeTeamId)}
-                          awayTeamPlayers={getTeamPlayersForSelect(matchFormData.awayTeamId)}
-                          onPlayerChange={handleFlightPlayerChange}
-                          onSetScoreChange={handleSetScoreChange}
-                          onTiebreakScoreChange={handleTiebreakScoreChange}
-                          toggleTiebreak={toggleTiebreak}
-                          addSet={addSet}
-                          removeSet={removeSet}
-                        />
-                      );
-                    })}
+                  <div className="flex justify-between items-center">
+                    <h5 className="text-sm font-medium">Singles</h5>
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => addNewFlight('singles', 'jv')}
+                      className="h-8"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Singles
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {matchFormData.flights
+                      .filter(f => f.level === 'jv' && f.type === 'singles')
+                      .sort((a, b) => a.position - b.position)
+                      .map((flight, flightIndex) => {
+                        const actualIndex = matchFormData.flights.findIndex(
+                          f => f.type === flight.type && f.position === flight.position && f.level === flight.level
+                        );
+                        
+                        return (
+                          <FlightForm
+                            key={`${flight.type}-${flight.position}-${flight.level}`}
+                            flight={flight}
+                            flightIndex={actualIndex}
+                            homeTeamPlayers={getTeamPlayersForSelect(matchFormData.homeTeamId)}
+                            awayTeamPlayers={getTeamPlayersForSelect(matchFormData.awayTeamId)}
+                            onPlayerChange={handleFlightPlayerChange}
+                            onSetScoreChange={handleSetScoreChange}
+                            onTiebreakScoreChange={handleTiebreakScoreChange}
+                            toggleTiebreak={toggleTiebreak}
+                            addSet={addSet}
+                            removeSet={removeSet}
+                          />
+                        );
+                      })}
+                  </div>
                 </div>
-              </div>
-              
-              {/* JV Doubles Flights */}
-              <div>
-                <h5 className="text-sm font-medium mb-2">Doubles</h5>
+                
+                {/* JV Doubles Flights */}
                 <div className="space-y-4">
-                  {matchFormData.flights
-                    .filter(f => f.level === 'jv' && f.type === 'doubles')
-                    .sort((a, b) => a.position - b.position)
-                    .map((flight, flightIndex) => {
-                      const actualIndex = matchFormData.flights.findIndex(
-                        f => f.type === flight.type && f.position === flight.position && f.level === flight.level
-                      );
-                      
-                      return (
-                        <FlightForm
-                          key={`${flight.type}-${flight.position}-${flight.level}`}
-                          flight={flight}
-                          flightIndex={actualIndex}
-                          homeTeamPlayers={getTeamPlayersForSelect(matchFormData.homeTeamId)}
-                          awayTeamPlayers={getTeamPlayersForSelect(matchFormData.awayTeamId)}
-                          onPlayerChange={handleFlightPlayerChange}
-                          onSetScoreChange={handleSetScoreChange}
-                          onTiebreakScoreChange={handleTiebreakScoreChange}
-                          toggleTiebreak={toggleTiebreak}
-                          addSet={addSet}
-                          removeSet={removeSet}
-                        />
-                      );
-                    })}
+                  <div className="flex justify-between items-center">
+                    <h5 className="text-sm font-medium">Doubles</h5>
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => addNewFlight('doubles', 'jv')}
+                      className="h-8"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Doubles
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {matchFormData.flights
+                      .filter(f => f.level === 'jv' && f.type === 'doubles')
+                      .sort((a, b) => a.position - b.position)
+                      .map((flight, flightIndex) => {
+                        const actualIndex = matchFormData.flights.findIndex(
+                          f => f.type === flight.type && f.position === flight.position && f.level === flight.level
+                        );
+                        
+                        return (
+                          <FlightForm
+                            key={`${flight.type}-${flight.position}-${flight.level}`}
+                            flight={flight}
+                            flightIndex={actualIndex}
+                            homeTeamPlayers={getTeamPlayersForSelect(matchFormData.homeTeamId)}
+                            awayTeamPlayers={getTeamPlayersForSelect(matchFormData.awayTeamId)}
+                            onPlayerChange={handleFlightPlayerChange}
+                            onSetScoreChange={handleSetScoreChange}
+                            onTiebreakScoreChange={handleTiebreakScoreChange}
+                            toggleTiebreak={toggleTiebreak}
+                            addSet={addSet}
+                            removeSet={removeSet}
+                          />
+                        );
+                      })}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </ScrollArea>
       

@@ -8,6 +8,7 @@ export interface MatchFormData {
   awayTeamId: string;
   isLeagueMatch: boolean;
   isComplete: boolean;
+  hasJvMatches?: boolean; // New field
   homeTeamWon?: boolean;
   flights: Array<{
     type: 'singles' | 'doubles';
@@ -36,12 +37,18 @@ const useMatchFunctions = (initialFlights: Array<{
     awayTeamId: '',
     isLeagueMatch: true,
     isComplete: false,
+    hasJvMatches: false,
     flights: initialFlights
   });
 
-  const emptyFlight = (matchId: string, type: 'singles' | 'doubles', position: number, level: 'varsity' | 'jv'): Flight => ({
-    id: crypto.randomUUID(),
-    matchId,
+  const emptyFlight = (type: 'singles' | 'doubles', position: number, level: 'varsity' | 'jv'): {
+    type: 'singles' | 'doubles';
+    position: number;
+    level: 'varsity' | 'jv';
+    homePlayers: string[];
+    awayPlayers: string[];
+    sets: Set[];
+  } => ({
     type,
     position,
     level,
@@ -49,6 +56,31 @@ const useMatchFunctions = (initialFlights: Array<{
     awayPlayers: [],
     sets: [{ homeScore: 0, awayScore: 0 }]
   });
+  
+  // New function to add a new flight
+  const addNewFlight = (type: 'singles' | 'doubles', level: 'varsity' | 'jv') => {
+    setMatchFormData(prev => {
+      // Find the highest position for this type and level
+      const existingFlights = prev.flights.filter(f => f.type === type && f.level === level);
+      const highestPosition = Math.max(...existingFlights.map(f => f.position), 0);
+      const newPosition = highestPosition + 1;
+      
+      const newFlight = emptyFlight(type, newPosition, level);
+      
+      return {
+        ...prev,
+        flights: [...prev.flights, newFlight]
+      };
+    });
+  };
+
+  // New function to toggle JV section
+  const toggleJvMatches = () => {
+    setMatchFormData(prev => ({
+      ...prev,
+      hasJvMatches: !prev.hasJvMatches
+    }));
+  };
 
   const handleFlightPlayerChange = (
     flightIndex: number, 
@@ -181,6 +213,7 @@ const useMatchFunctions = (initialFlights: Array<{
       awayTeamId: '',
       isLeagueMatch: true,
       isComplete: false,
+      hasJvMatches: false,
       flights: initialFlights.map(f => ({
         ...f,
         homePlayers: [],
@@ -201,7 +234,9 @@ const useMatchFunctions = (initialFlights: Array<{
     addSet,
     removeSet,
     calculateTeamWinner,
-    resetMatchForm
+    resetMatchForm,
+    addNewFlight,
+    toggleJvMatches
   };
 };
 
