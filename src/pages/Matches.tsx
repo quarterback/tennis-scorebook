@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -689,7 +690,952 @@ const Matches = () => {
                       <SelectValue placeholder="Select away team" />
                     </SelectTrigger>
                     <SelectContent>
-                      {teams
-                        .filter(team => {
-                          // Filter out teams of different gender
-                          if (!matchFormData.
+                      {teams.map((team) => {
+                        const school = schools.find(s => s.id === team.schoolId);
+                        return (
+                          <SelectItem key={team.id} value={team.id}>
+                            {school?.name} {team.gender}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={matchFormData.isComplete}
+                        onCheckedChange={(checked) => 
+                          setMatchFormData({ ...matchFormData, isComplete: checked as boolean })
+                        }
+                      />
+                      <span>Match Complete</span>
+                    </div>
+                  </Label>
+                </div>
+                
+                {matchFormData.isComplete && (
+                  <div className="space-y-2">
+                    <Label>
+                      <div className="flex items-center space-x-2">
+                        <span>Winner:</span>
+                      </div>
+                    </Label>
+                    <div className="flex space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={matchFormData.homeTeamWon === true}
+                          onCheckedChange={(checked) => 
+                            setMatchFormData({ ...matchFormData, homeTeamWon: checked ? true : undefined })
+                          }
+                        />
+                        <span>Home Team</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={matchFormData.homeTeamWon === false}
+                          onCheckedChange={(checked) => 
+                            setMatchFormData({ ...matchFormData, homeTeamWon: checked ? false : undefined })
+                          }
+                        />
+                        <span>Away Team</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={calculateTeamWinner}
+                      >
+                        Calculate from Flights
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Flights Section */}
+              <div className="space-y-6 mb-6">
+                <h3 className="font-semibold text-lg">Match Lineup</h3>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-4 bg-tennis-blue text-white px-3 py-1">Varsity</h4>
+                  <div className="space-y-6">
+                    {/* Singles Flights */}
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Singles</h5>
+                      <div className="space-y-4">
+                        {matchFormData.flights
+                          .filter(f => f.level === 'varsity' && f.type === 'singles')
+                          .sort((a, b) => a.position - b.position)
+                          .map((flight, flightIndex) => {
+                            const actualIndex = matchFormData.flights.findIndex(
+                              f => f.type === flight.type && f.position === flight.position && f.level === flight.level
+                            );
+                            
+                            return (
+                              <div key={`${flight.type}-${flight.position}-${flight.level}`} className="border rounded-md p-4">
+                                <div className="flex justify-between items-center mb-3">
+                                  <h6 className="font-medium">#{flight.position} Singles</h6>
+                                  
+                                  {flight.homePlayerWon !== undefined && (
+                                    <div className="text-sm">
+                                      Winner: {flight.homePlayerWon ? 'Home' : 'Away'}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <Label className="mb-1 block">Home Player</Label>
+                                    <Select
+                                      value={flight.homePlayers[0] || ''}
+                                      onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'home', 0, value)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select player" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getTeamPlayersForSelect(matchFormData.homeTeamId).map((player) => (
+                                          <SelectItem key={player.id} value={player.id}>
+                                            {player.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label className="mb-1 block">Away Player</Label>
+                                    <Select
+                                      value={flight.awayPlayers[0] || ''}
+                                      onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'away', 0, value)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select player" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getTeamPlayersForSelect(matchFormData.awayTeamId).map((player) => (
+                                          <SelectItem key={player.id} value={player.id}>
+                                            {player.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                  <h6 className="text-sm font-medium">Sets</h6>
+                                  {flight.sets.map((set, setIndex) => (
+                                    <div key={setIndex} className="flex items-center gap-4">
+                                      <div className="text-sm">Set {setIndex + 1}</div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.homeScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                        />
+                                        <span>-</span>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.awayScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                        />
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => toggleTiebreak(actualIndex, setIndex)}
+                                        >
+                                          {set.tiebreak ? <X className="h-3 w-3" /> : 'TB'}
+                                        </Button>
+                                        
+                                        {set.tiebreak && (
+                                          <div className="flex items-center gap-1">
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.homeScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                            />
+                                            <span>-</span>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.awayScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex-1 flex justify-end">
+                                        {flight.sets.length > 1 && (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => removeSet(actualIndex, setIndex)}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => addSet(actualIndex)}
+                                  >
+                                    Add Set
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                    
+                    {/* Doubles Flights */}
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Doubles</h5>
+                      <div className="space-y-4">
+                        {matchFormData.flights
+                          .filter(f => f.level === 'varsity' && f.type === 'doubles')
+                          .sort((a, b) => a.position - b.position)
+                          .map((flight, flightIndex) => {
+                            const actualIndex = matchFormData.flights.findIndex(
+                              f => f.type === flight.type && f.position === flight.position && f.level === flight.level
+                            );
+                            
+                            return (
+                              <div key={`${flight.type}-${flight.position}-${flight.level}`} className="border rounded-md p-4">
+                                <div className="flex justify-between items-center mb-3">
+                                  <h6 className="font-medium">#{flight.position} Doubles</h6>
+                                  
+                                  {flight.homePlayerWon !== undefined && (
+                                    <div className="text-sm">
+                                      Winner: {flight.homePlayerWon ? 'Home' : 'Away'}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label className="mb-1 block">Home Player 1</Label>
+                                      <Select
+                                        value={flight.homePlayers[0] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'home', 0, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.homeTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="mb-1 block">Home Player 2</Label>
+                                      <Select
+                                        value={flight.homePlayers[1] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'home', 1, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.homeTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label className="mb-1 block">Away Player 1</Label>
+                                      <Select
+                                        value={flight.awayPlayers[0] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'away', 0, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.awayTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="mb-1 block">Away Player 2</Label>
+                                      <Select
+                                        value={flight.awayPlayers[1] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'away', 1, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.awayTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                  <h6 className="text-sm font-medium">Sets</h6>
+                                  {flight.sets.map((set, setIndex) => (
+                                    <div key={setIndex} className="flex items-center gap-4">
+                                      <div className="text-sm">Set {setIndex + 1}</div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.homeScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                        />
+                                        <span>-</span>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.awayScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                        />
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => toggleTiebreak(actualIndex, setIndex)}
+                                        >
+                                          {set.tiebreak ? <X className="h-3 w-3" /> : 'TB'}
+                                        </Button>
+                                        
+                                        {set.tiebreak && (
+                                          <div className="flex items-center gap-1">
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.homeScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                            />
+                                            <span>-</span>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.awayScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex-1 flex justify-end">
+                                        {flight.sets.length > 1 && (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => removeSet(actualIndex, setIndex)}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => addSet(actualIndex)}
+                                  >
+                                    Add Set
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-4 bg-tennis-green text-white px-3 py-1">JV</h4>
+                  <div className="space-y-6">
+                    {/* JV Singles Flights */}
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Singles</h5>
+                      <div className="space-y-4">
+                        {matchFormData.flights
+                          .filter(f => f.level === 'jv' && f.type === 'singles')
+                          .sort((a, b) => a.position - b.position)
+                          .map((flight, flightIndex) => {
+                            const actualIndex = matchFormData.flights.findIndex(
+                              f => f.type === flight.type && f.position === flight.position && f.level === flight.level
+                            );
+                            
+                            return (
+                              <div key={`${flight.type}-${flight.position}-${flight.level}`} className="border rounded-md p-4">
+                                <div className="flex justify-between items-center mb-3">
+                                  <h6 className="font-medium">#{flight.position} Singles</h6>
+                                  
+                                  {flight.homePlayerWon !== undefined && (
+                                    <div className="text-sm">
+                                      Winner: {flight.homePlayerWon ? 'Home' : 'Away'}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <Label className="mb-1 block">Home Player</Label>
+                                    <Select
+                                      value={flight.homePlayers[0] || ''}
+                                      onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'home', 0, value)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select player" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getTeamPlayersForSelect(matchFormData.homeTeamId).map((player) => (
+                                          <SelectItem key={player.id} value={player.id}>
+                                            {player.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label className="mb-1 block">Away Player</Label>
+                                    <Select
+                                      value={flight.awayPlayers[0] || ''}
+                                      onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'away', 0, value)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select player" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getTeamPlayersForSelect(matchFormData.awayTeamId).map((player) => (
+                                          <SelectItem key={player.id} value={player.id}>
+                                            {player.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                  <h6 className="text-sm font-medium">Sets</h6>
+                                  {flight.sets.map((set, setIndex) => (
+                                    <div key={setIndex} className="flex items-center gap-4">
+                                      <div className="text-sm">Set {setIndex + 1}</div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.homeScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                        />
+                                        <span>-</span>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.awayScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                        />
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => toggleTiebreak(actualIndex, setIndex)}
+                                        >
+                                          {set.tiebreak ? <X className="h-3 w-3" /> : 'TB'}
+                                        </Button>
+                                        
+                                        {set.tiebreak && (
+                                          <div className="flex items-center gap-1">
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.homeScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                            />
+                                            <span>-</span>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.awayScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex-1 flex justify-end">
+                                        {flight.sets.length > 1 && (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => removeSet(actualIndex, setIndex)}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => addSet(actualIndex)}
+                                  >
+                                    Add Set
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                    
+                    {/* JV Doubles Flights */}
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Doubles</h5>
+                      <div className="space-y-4">
+                        {matchFormData.flights
+                          .filter(f => f.level === 'jv' && f.type === 'doubles')
+                          .sort((a, b) => a.position - b.position)
+                          .map((flight, flightIndex) => {
+                            const actualIndex = matchFormData.flights.findIndex(
+                              f => f.type === flight.type && f.position === flight.position && f.level === flight.level
+                            );
+                            
+                            return (
+                              <div key={`${flight.type}-${flight.position}-${flight.level}`} className="border rounded-md p-4">
+                                <div className="flex justify-between items-center mb-3">
+                                  <h6 className="font-medium">#{flight.position} Doubles</h6>
+                                  
+                                  {flight.homePlayerWon !== undefined && (
+                                    <div className="text-sm">
+                                      Winner: {flight.homePlayerWon ? 'Home' : 'Away'}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label className="mb-1 block">Home Player 1</Label>
+                                      <Select
+                                        value={flight.homePlayers[0] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'home', 0, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.homeTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="mb-1 block">Home Player 2</Label>
+                                      <Select
+                                        value={flight.homePlayers[1] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'home', 1, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.homeTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label className="mb-1 block">Away Player 1</Label>
+                                      <Select
+                                        value={flight.awayPlayers[0] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'away', 0, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.awayTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="mb-1 block">Away Player 2</Label>
+                                      <Select
+                                        value={flight.awayPlayers[1] || ''}
+                                        onValueChange={(value) => handleFlightPlayerChange(actualIndex, 'away', 1, value)}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select player" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getTeamPlayersForSelect(matchFormData.awayTeamId).map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                  <h6 className="text-sm font-medium">Sets</h6>
+                                  {flight.sets.map((set, setIndex) => (
+                                    <div key={setIndex} className="flex items-center gap-4">
+                                      <div className="text-sm">Set {setIndex + 1}</div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.homeScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                        />
+                                        <span>-</span>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          className="w-16"
+                                          value={set.awayScore}
+                                          onChange={(e) => handleSetScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                        />
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => toggleTiebreak(actualIndex, setIndex)}
+                                        >
+                                          {set.tiebreak ? <X className="h-3 w-3" /> : 'TB'}
+                                        </Button>
+                                        
+                                        {set.tiebreak && (
+                                          <div className="flex items-center gap-1">
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.homeScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'home', parseInt(e.target.value) || 0)}
+                                            />
+                                            <span>-</span>
+                                            <Input
+                                              type="number"
+                                              min="0"
+                                              className="w-12 h-7"
+                                              value={set.tiebreak.awayScore}
+                                              onChange={(e) => handleTiebreakScoreChange(actualIndex, setIndex, 'away', parseInt(e.target.value) || 0)}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex-1 flex justify-end">
+                                        {flight.sets.length > 1 && (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => removeSet(actualIndex, setIndex)}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => addSet(actualIndex)}
+                                  >
+                                    Add Set
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+            
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-tennis-blue hover:bg-tennis-darkBlue">
+                Save Match
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Match Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="w-full max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Edit Match</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleEditMatchSubmit} className="space-y-4 pt-4">
+            <ScrollArea className="h-[70vh] pr-4">
+              {/* Same content as Add Match form */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Date and League Match checkbox */}
+                <div className="space-y-2">
+                  <Label htmlFor="match-date-edit">Match Date</Label>
+                  <Input
+                    id="match-date-edit"
+                    type="date"
+                    value={matchFormData.date}
+                    onChange={(e) => setMatchFormData({ ...matchFormData, date: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={matchFormData.isLeagueMatch}
+                        onCheckedChange={(checked) => 
+                          setMatchFormData({ ...matchFormData, isLeagueMatch: checked as boolean })
+                        }
+                      />
+                      <span>League Match</span>
+                    </div>
+                  </Label>
+                </div>
+                
+                {/* Home and Away team selects */}
+                <div className="space-y-2">
+                  <Label htmlFor="home-team-edit">Home Team</Label>
+                  <Select
+                    value={matchFormData.homeTeamId}
+                    onValueChange={(value) => setMatchFormData({ ...matchFormData, homeTeamId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select home team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredTeams.map((team) => {
+                        const school = schools.find(s => s.id === team.schoolId);
+                        return (
+                          <SelectItem key={team.id} value={team.id}>
+                            {school?.name} {team.gender}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="away-team-edit">Away Team</Label>
+                  <Select
+                    value={matchFormData.awayTeamId}
+                    onValueChange={(value) => setMatchFormData({ ...matchFormData, awayTeamId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select away team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teams.map((team) => {
+                        const school = schools.find(s => s.id === team.schoolId);
+                        return (
+                          <SelectItem key={team.id} value={team.id}>
+                            {school?.name} {team.gender}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Match complete and winner */}
+                <div className="space-y-2">
+                  <Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={matchFormData.isComplete}
+                        onCheckedChange={(checked) => 
+                          setMatchFormData({ ...matchFormData, isComplete: checked as boolean })
+                        }
+                      />
+                      <span>Match Complete</span>
+                    </div>
+                  </Label>
+                </div>
+                
+                {matchFormData.isComplete && (
+                  <div className="space-y-2">
+                    <Label>
+                      <div className="flex items-center space-x-2">
+                        <span>Winner:</span>
+                      </div>
+                    </Label>
+                    <div className="flex space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={matchFormData.homeTeamWon === true}
+                          onCheckedChange={(checked) => 
+                            setMatchFormData({ ...matchFormData, homeTeamWon: checked ? true : undefined })
+                          }
+                        />
+                        <span>Home Team</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={matchFormData.homeTeamWon === false}
+                          onCheckedChange={(checked) => 
+                            setMatchFormData({ ...matchFormData, homeTeamWon: checked ? false : undefined })
+                          }
+                        />
+                        <span>Away Team</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={calculateTeamWinner}
+                      >
+                        Calculate from Flights
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Flights section (same as in Add Match form) */}
+              {/* ... */}
+            </ScrollArea>
+            
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedMatch(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-tennis-blue hover:bg-tennis-darkBlue">
+                Update Match
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Matches;
+
