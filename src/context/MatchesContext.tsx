@@ -17,6 +17,9 @@ interface MatchesContextType {
   setMatchFormData: React.Dispatch<React.SetStateAction<MatchFormData>>;
   filteredMatches: Match[];
   filteredTeams: Team[];
+  schools: School[];
+  teams: Team[];
+  players: Player[];
   getTeamName: (teamId: string) => string;
   getTeamPlayersForSelect: (teamId: string) => { id: string; name: string }[];
   handleAddMatchSubmit: (e: React.FormEvent) => void;
@@ -27,7 +30,7 @@ interface MatchesContextType {
   handleFlightPlayerChange: (flightIndex: number, team: 'home' | 'away', playerIndex: number, playerId: string) => void;
   handleSetScoreChange: (flightIndex: number, setIndex: number, team: 'home' | 'away', score: number) => void;
   handleTiebreakScoreChange: (flightIndex: number, setIndex: number, team: 'home' | 'away', score: number) => void;
-  toggleTiebreak: (flightIndex: number) => void;
+  toggleTiebreak: (flightIndex: number, setIndex: number) => void;
   addSet: (flightIndex: number) => void;
   removeSet: (flightIndex: number, setIndex: number) => void;
   calculateTeamWinner: () => void;
@@ -81,10 +84,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     toggleJvMatches
   } = useMatchFunctions(initialFlights);
 
-  // Reset form with current date
   const resetMatchForm = () => resetForm(today);
 
-  // Filter matches if coach
   const filteredMatches = user?.role === 'coach' && user.schoolId
     ? matches.filter(match => {
         const homeTeam = teams.find(t => t.id === match.homeTeamId);
@@ -93,7 +94,6 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       })
     : matches;
   
-  // Filter teams based on user role
   const filteredTeams = user?.role === 'coach' && user.schoolId
     ? teams.filter(team => team.schoolId === user.schoolId)
     : teams;
@@ -117,7 +117,6 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const handleAddMatchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Create flights based on form data
     const newMatchId = crypto.randomUUID();
     
     const newFlights = matchFormData.flights.map(flight => ({
@@ -145,7 +144,6 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     e.preventDefault();
     
     if (selectedMatch) {
-      // Update with form data, but keep existing IDs
       const updatedFlights = matchFormData.flights.map((formFlight) => {
         const existingFlight = selectedMatch.flights.find(
           f => f.type === formFlight.type && 
@@ -180,7 +178,6 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const openEditDialog = (match: Match) => {
     setSelectedMatch(match);
     
-    // Initialize form with match data
     setMatchFormData({
       date: match.date,
       homeTeamId: match.homeTeamId,
@@ -213,7 +210,7 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return false;
   };
 
-  const value = {
+  const value: MatchesContextType = {
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
@@ -226,6 +223,9 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setMatchFormData,
     filteredMatches,
     filteredTeams,
+    schools,
+    teams,
+    players,
     getTeamName,
     getTeamPlayersForSelect,
     handleAddMatchSubmit,

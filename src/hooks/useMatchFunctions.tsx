@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Match, Flight, Set } from '@/types';
 
@@ -8,7 +7,7 @@ export interface MatchFormData {
   awayTeamId: string;
   isLeagueMatch: boolean;
   isComplete: boolean;
-  hasJvMatches?: boolean; // New field
+  hasJvMatches?: boolean;
   homeTeamWon?: boolean;
   flights: Array<{
     type: 'singles' | 'doubles';
@@ -57,10 +56,8 @@ const useMatchFunctions = (initialFlights: Array<{
     sets: [{ homeScore: 0, awayScore: 0 }]
   });
   
-  // New function to add a new flight
   const addNewFlight = (type: 'singles' | 'doubles', level: 'varsity' | 'jv') => {
     setMatchFormData(prev => {
-      // Find the highest position for this type and level
       const existingFlights = prev.flights.filter(f => f.type === type && f.level === level);
       const highestPosition = Math.max(...existingFlights.map(f => f.position), 0);
       const newPosition = highestPosition + 1;
@@ -74,7 +71,6 @@ const useMatchFunctions = (initialFlights: Array<{
     });
   };
 
-  // New function to toggle JV section
   const toggleJvMatches = () => {
     setMatchFormData(prev => ({
       ...prev,
@@ -122,7 +118,6 @@ const useMatchFunctions = (initialFlights: Array<{
         [team === 'home' ? 'homeScore' : 'awayScore']: score
       };
       
-      // Calculate if home player won based on sets
       const sets = newFlights[flightIndex].sets;
       let homeWins = 0;
       let awayWins = 0;
