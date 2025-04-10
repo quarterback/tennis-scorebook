@@ -22,6 +22,8 @@ interface MatchFormProps {
     homeTeamWon?: boolean;
     homeCoachApproved?: boolean;
     awayCoachApproved?: boolean;
+    homeTeamScore?: number;
+    awayTeamScore?: number;
     flights: Array<{
       type: 'singles' | 'doubles';
       position: number;
@@ -30,6 +32,8 @@ interface MatchFormProps {
       awayPlayers: string[];
       sets: Set[];
       homePlayerWon?: boolean;
+      retired?: boolean;
+      defaulted?: boolean;
     }>;
   };
   setMatchFormData: React.Dispatch<React.SetStateAction<any>>;
@@ -48,6 +52,7 @@ interface MatchFormProps {
   toggleJvMatches: () => void;
   toggleApproval: (team: 'home' | 'away') => void;
   isCoachOfTeam: (teamId: string) => boolean;
+  updateTeamScores: (homeScore: number, awayScore: number) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   submitButtonText: string;
@@ -71,6 +76,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
   toggleJvMatches,
   toggleApproval,
   isCoachOfTeam,
+  updateTeamScores,
   onSubmit,
   onCancel,
   submitButtonText
@@ -78,6 +84,15 @@ const MatchForm: React.FC<MatchFormProps> = ({
   const { user } = useAuth();
   const canApproveHome = user?.role === 'admin' || isCoachOfTeam(matchFormData.homeTeamId);
   const canApproveAway = user?.role === 'admin' || isCoachOfTeam(matchFormData.awayTeamId);
+  
+  const getTeamName = (teamId: string) => {
+    if (!teamId) return '';
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return '';
+    
+    const school = schools.find(s => s.id === team.schoolId);
+    return `${school?.name || ''} ${team.gender}`;
+  };
   
   return (
     <form onSubmit={onSubmit} className="space-y-4 pt-4">
@@ -180,13 +195,35 @@ const MatchForm: React.FC<MatchFormProps> = ({
           
           {matchFormData.isComplete && (
             <>
-              <div className="space-y-2">
-                <Label>
-                  <div className="flex items-center space-x-2">
-                    <span>Winner:</span>
+              <div className="col-span-2 space-y-2 border p-4 rounded-md">
+                <Label>Match Score</Label>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <Label className="mb-1 block">{getTeamName(matchFormData.homeTeamId)} Score</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={matchFormData.homeTeamScore || 0}
+                      onChange={(e) => {
+                        const homeScore = parseInt(e.target.value) || 0;
+                        updateTeamScores(homeScore, matchFormData.awayTeamScore || 0);
+                      }}
+                    />
                   </div>
-                </Label>
-                <div className="flex space-x-4">
+                  <div>
+                    <Label className="mb-1 block">{getTeamName(matchFormData.awayTeamId)} Score</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={matchFormData.awayTeamScore || 0}
+                      onChange={(e) => {
+                        const awayScore = parseInt(e.target.value) || 0;
+                        updateTeamScores(matchFormData.homeTeamScore || 0, awayScore);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-4 mt-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       checked={matchFormData.homeTeamWon === true}
@@ -194,7 +231,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
                         setMatchFormData({ ...matchFormData, homeTeamWon: checked ? true : undefined })
                       }
                     />
-                    <span>Home Team</span>
+                    <span>Home Team Won</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -203,7 +240,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
                         setMatchFormData({ ...matchFormData, homeTeamWon: checked ? false : undefined })
                       }
                     />
-                    <span>Away Team</span>
+                    <span>Away Team Won</span>
                   </div>
                   <Button
                     type="button"
@@ -211,7 +248,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
                     size="sm"
                     onClick={calculateTeamWinner}
                   >
-                    Calculate from Flights
+                    Set Winner from Scores
                   </Button>
                 </div>
               </div>

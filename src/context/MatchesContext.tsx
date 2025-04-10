@@ -40,6 +40,9 @@ interface MatchesContextType {
   addNewFlight: (type: 'singles' | 'doubles', level: 'varsity' | 'jv') => void;
   toggleJvMatches: () => void;
   toggleApproval: (team: 'home' | 'away') => void;
+  toggleFlightRetired: (flightIndex: number) => void;
+  toggleFlightDefaulted: (flightIndex: number) => void;
+  updateTeamScores: (homeScore: number, awayScore: number) => void;
 }
 
 const MatchesContext = createContext<MatchesContextType | null>(null);
@@ -86,7 +89,10 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     resetMatchForm: resetForm,
     addNewFlight,
     toggleJvMatches,
-    toggleApproval
+    toggleApproval,
+    toggleFlightRetired,
+    toggleFlightDefaulted,
+    updateTeamScores
   } = useMatchFunctions(initialFlights);
 
   const resetMatchForm = () => resetForm(today);
@@ -166,6 +172,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       homeTeamWon: matchFormData.homeTeamWon,
       homeCoachApproved: false,
       awayCoachApproved: false,
+      homeTeamScore: matchFormData.homeTeamScore,
+      awayTeamScore: matchFormData.awayTeamScore,
       flights: newFlights
     });
     
@@ -202,6 +210,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         homeTeamWon: matchFormData.homeTeamWon,
         homeCoachApproved: matchFormData.homeCoachApproved,
         awayCoachApproved: matchFormData.awayCoachApproved,
+        homeTeamScore: matchFormData.homeTeamScore,
+        awayTeamScore: matchFormData.awayTeamScore,
         flights: updatedFlights
       });
       
@@ -223,6 +233,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       homeTeamWon: match.homeTeamWon,
       homeCoachApproved: match.homeCoachApproved,
       awayCoachApproved: match.awayCoachApproved,
+      homeTeamScore: match.homeTeamScore,
+      awayTeamScore: match.awayTeamScore,
       flights: match.flights.map(flight => ({
         type: flight.type,
         position: flight.position,
@@ -230,7 +242,9 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         homePlayers: flight.homePlayers,
         awayPlayers: flight.awayPlayers,
         sets: flight.sets,
-        homePlayerWon: flight.homePlayerWon
+        homePlayerWon: flight.homePlayerWon,
+        retired: flight.retired,
+        defaulted: flight.defaulted
       }))
     });
     
@@ -282,7 +296,10 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     calculateTeamWinner,
     addNewFlight,
     toggleJvMatches,
-    toggleApproval
+    toggleApproval,
+    toggleFlightRetired,
+    toggleFlightDefaulted,
+    updateTeamScores
   };
 
   return <MatchesContext.Provider value={value}>{children}</MatchesContext.Provider>;

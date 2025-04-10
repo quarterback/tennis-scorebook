@@ -45,6 +45,8 @@ export interface Match {
   homeCoachApproved?: boolean;
   awayCoachApproved?: boolean;
   flights: Flight[];
+  homeTeamScore?: number; // Added for match score display
+  awayTeamScore?: number; // Added for match score display
 }
 
 export interface Flight {
@@ -57,6 +59,8 @@ export interface Flight {
   awayPlayers: string[];
   sets: Set[];
   homePlayerWon?: boolean;
+  retired?: boolean; // New field for player retired/quit early
+  defaulted?: boolean; // New field for forfeit/default
 }
 
 export interface Set {

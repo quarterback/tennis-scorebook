@@ -4,10 +4,12 @@ import { Match, Player } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
-  Calendar, Edit, ChevronDown, ChevronUp, ShieldCheck, ShieldX 
+  Calendar, Edit, ChevronDown, ChevronUp, ShieldCheck, ShieldX,
+  Flag, AlertTriangle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMatches } from '@/context/MatchesContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface MatchCardProps {
   match: Match;
@@ -28,7 +30,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   openEditDialog,
   players 
 }) => {
-  const { approveMatch, canApproveMatch } = useMatches();
+  const { approveMatch, canApproveMatch, isCoachOfTeam } = useMatches();
+  const { user } = useAuth();
   
   const isExpanded = expandedMatchId === match.id;
   
@@ -38,6 +41,22 @@ const MatchCard: React.FC<MatchCardProps> = ({
   
   const homeTeamName = getTeamName(match.homeTeamId);
   const awayTeamName = getTeamName(match.awayTeamId);
+
+  // Check if current user is coach of home or away team
+  const isHomeCoach = user?.role === 'coach' && isCoachOfTeam(match.homeTeamId);
+  const isAwayCoach = user?.role === 'coach' && isCoachOfTeam(match.awayTeamId);
+  
+  // Format match score for display
+  const getMatchScoreDisplay = () => {
+    if (match.homeTeamScore !== undefined && match.awayTeamScore !== undefined) {
+      if (match.homeTeamWon) {
+        return `${homeTeamName} ${match.homeTeamScore}-${match.awayTeamScore}`;
+      } else {
+        return `${awayTeamName} ${match.awayTeamScore}-${match.homeTeamScore}`;
+      }
+    }
+    return match.homeTeamWon ? `${homeTeamName} won` : `${awayTeamName} won`;
+  };
   
   return (
     <Card className="w-full mb-4">
@@ -74,7 +93,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                       </div>
                     </div>
                     <span className="text-sm font-semibold">
-                      {match.homeTeamWon ? homeTeamName : awayTeamName} won
+                      {getMatchScoreDisplay()}
                     </span>
                   </div>
                 )}
@@ -103,7 +122,19 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   .map((flight, index) => (
                     <div key={index} className="flex justify-between border-b pb-2">
                       <div className="flex-1">
-                        <div className="text-sm">Singles {flight.position}</div>
+                        <div className="text-sm">
+                          Singles {flight.position} 
+                          {flight.retired && (
+                            <span className="ml-2 text-orange-500 text-xs flex items-center">
+                              <Flag className="h-3 w-3 mr-1" /> Retired
+                            </span>
+                          )}
+                          {flight.defaulted && (
+                            <span className="ml-2 text-red-500 text-xs flex items-center">
+                              <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex-1">
                         {flight.sets.map((set, setIndex) => (
@@ -126,7 +157,19 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   .map((flight, index) => (
                     <div key={index} className="flex justify-between border-b pb-2">
                       <div className="flex-1">
-                        <div className="text-sm">Doubles {flight.position}</div>
+                        <div className="text-sm">
+                          Doubles {flight.position}
+                          {flight.retired && (
+                            <span className="ml-2 text-orange-500 text-xs flex items-center">
+                              <Flag className="h-3 w-3 mr-1" /> Retired
+                            </span>
+                          )}
+                          {flight.defaulted && (
+                            <span className="ml-2 text-red-500 text-xs flex items-center">
+                              <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex-1">
                         {flight.sets.map((set, setIndex) => (
@@ -151,7 +194,19 @@ const MatchCard: React.FC<MatchCardProps> = ({
                       .map((flight, index) => (
                         <div key={`jvs-${index}`} className="flex justify-between border-b pb-2">
                           <div className="flex-1">
-                            <div className="text-sm">Singles {flight.position}</div>
+                            <div className="text-sm">
+                              Singles {flight.position}
+                              {flight.retired && (
+                                <span className="ml-2 text-orange-500 text-xs flex items-center">
+                                  <Flag className="h-3 w-3 mr-1" /> Retired
+                                </span>
+                              )}
+                              {flight.defaulted && (
+                                <span className="ml-2 text-red-500 text-xs flex items-center">
+                                  <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex-1">
                             {flight.sets.map((set, setIndex) => (
@@ -174,7 +229,19 @@ const MatchCard: React.FC<MatchCardProps> = ({
                       .map((flight, index) => (
                         <div key={`jvd-${index}`} className="flex justify-between border-b pb-2">
                           <div className="flex-1">
-                            <div className="text-sm">Doubles {flight.position}</div>
+                            <div className="text-sm">
+                              Doubles {flight.position}
+                              {flight.retired && (
+                                <span className="ml-2 text-orange-500 text-xs flex items-center">
+                                  <Flag className="h-3 w-3 mr-1" /> Retired
+                                </span>
+                              )}
+                              {flight.defaulted && (
+                                <span className="ml-2 text-red-500 text-xs flex items-center">
+                                  <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex-1">
                             {flight.sets.map((set, setIndex) => (
@@ -210,7 +277,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         
         {match.isComplete && (
           <>
-            {canApproveMatch(match, 'home') && !match.homeCoachApproved && (
+            {(user?.role === 'admin' || isHomeCoach) && !match.homeCoachApproved && (
               <Button
                 variant="default"
                 size="sm"
@@ -221,7 +288,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               </Button>
             )}
             
-            {canApproveMatch(match, 'away') && !match.awayCoachApproved && (
+            {(user?.role === 'admin' || isAwayCoach) && !match.awayCoachApproved && (
               <Button
                 variant="default"
                 size="sm"

@@ -11,6 +11,8 @@ export interface MatchFormData {
   homeTeamWon?: boolean;
   homeCoachApproved?: boolean;
   awayCoachApproved?: boolean;
+  homeTeamScore?: number;
+  awayTeamScore?: number;
   flights: Array<{
     type: 'singles' | 'doubles';
     position: number;
@@ -19,6 +21,8 @@ export interface MatchFormData {
     awayPlayers: string[];
     sets: Set[];
     homePlayerWon?: boolean;
+    retired?: boolean;
+    defaulted?: boolean;
   }>;
 }
 
@@ -77,6 +81,40 @@ const useMatchFunctions = (initialFlights: Array<{
     setMatchFormData(prev => ({
       ...prev,
       hasJvMatches: !prev.hasJvMatches
+    }));
+  };
+
+  const toggleFlightRetired = (flightIndex: number) => {
+    setMatchFormData(prev => {
+      const newFlights = [...prev.flights];
+      newFlights[flightIndex].retired = !newFlights[flightIndex].retired;
+      
+      if (newFlights[flightIndex].retired) {
+        newFlights[flightIndex].defaulted = false;
+      }
+      
+      return { ...prev, flights: newFlights };
+    });
+  };
+
+  const toggleFlightDefaulted = (flightIndex: number) => {
+    setMatchFormData(prev => {
+      const newFlights = [...prev.flights];
+      newFlights[flightIndex].defaulted = !newFlights[flightIndex].defaulted;
+      
+      if (newFlights[flightIndex].defaulted) {
+        newFlights[flightIndex].retired = false;
+      }
+      
+      return { ...prev, flights: newFlights };
+    });
+  };
+
+  const updateTeamScores = (homeScore: number, awayScore: number) => {
+    setMatchFormData(prev => ({
+      ...prev,
+      homeTeamScore: homeScore,
+      awayTeamScore: awayScore
     }));
   };
 
@@ -192,14 +230,12 @@ const useMatchFunctions = (initialFlights: Array<{
   };
   
   const calculateTeamWinner = () => {
-    const varsityFlights = matchFormData.flights.filter(f => f.level === 'varsity');
-    const homeWins = varsityFlights.filter(f => f.homePlayerWon).length;
-    const awayWins = varsityFlights.filter(f => f.homePlayerWon === false).length;
-    
-    if (homeWins > awayWins) {
-      setMatchFormData(prev => ({ ...prev, homeTeamWon: true }));
-    } else if (awayWins > homeWins) {
-      setMatchFormData(prev => ({ ...prev, homeTeamWon: false }));
+    if (matchFormData.homeTeamScore !== undefined && 
+        matchFormData.awayTeamScore !== undefined) {
+      setMatchFormData(prev => ({ 
+        ...prev, 
+        homeTeamWon: prev.homeTeamScore! > prev.awayTeamScore!
+      }));
     }
   };
 
@@ -215,7 +251,9 @@ const useMatchFunctions = (initialFlights: Array<{
         ...f,
         homePlayers: [],
         awayPlayers: [],
-        sets: [{ homeScore: 0, awayScore: 0 }]
+        sets: [{ homeScore: 0, awayScore: 0 }],
+        retired: false,
+        defaulted: false
       }))
     });
   };
@@ -242,7 +280,10 @@ const useMatchFunctions = (initialFlights: Array<{
     resetMatchForm,
     addNewFlight,
     toggleJvMatches,
-    toggleApproval
+    toggleApproval,
+    toggleFlightRetired,
+    toggleFlightDefaulted,
+    updateTeamScores
   };
 };
 

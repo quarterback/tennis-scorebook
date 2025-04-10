@@ -3,9 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X } from 'lucide-react';
+import { X, Flag, AlertTriangle } from 'lucide-react';
 import { Flight, Set, Player } from '@/types';
+import { useMatches } from '@/context/MatchesContext';
 
 interface FlightFormProps {
   flight: {
@@ -16,6 +18,8 @@ interface FlightFormProps {
     awayPlayers: string[];
     sets: Set[];
     homePlayerWon?: boolean;
+    retired?: boolean;
+    defaulted?: boolean;
   };
   flightIndex: number;
   homeTeamPlayers: { id: string; name: string }[];
@@ -41,6 +45,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
   removeSet
 }) => {
   const isSingles = flight.type === 'singles';
+  const { toggleFlightRetired, toggleFlightDefaulted } = useMatches();
   
   return (
     <div className="border rounded-md p-4">
@@ -180,6 +185,31 @@ const FlightForm: React.FC<FlightFormProps> = ({
             </div>
           </>
         )}
+      </div>
+      
+      {/* Match Status */}
+      <div className="mb-4 flex space-x-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id={`retired-${flightIndex}`}
+            checked={flight.retired}
+            onCheckedChange={() => toggleFlightRetired(flightIndex)}
+          />
+          <Label htmlFor={`retired-${flightIndex}`} className="flex items-center">
+            <Flag className="h-4 w-4 mr-1 text-orange-500" /> Retired
+          </Label>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id={`defaulted-${flightIndex}`}
+            checked={flight.defaulted}
+            onCheckedChange={() => toggleFlightDefaulted(flightIndex)}
+          />
+          <Label htmlFor={`defaulted-${flightIndex}`} className="flex items-center">
+            <AlertTriangle className="h-4 w-4 mr-1 text-red-500" /> Defaulted
+          </Label>
+        </div>
       </div>
       
       <div className="space-y-3">
