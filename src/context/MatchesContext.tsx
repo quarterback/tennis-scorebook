@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
-import { Match, Team, School, Player } from '@/types';
+import { Match, Team, School, Player, MatchFormData } from '@/types';
 import { useData } from './DataContext';
 import { useAuth } from './AuthContext';
-import useMatchFunctions, { MatchFormData } from '@/hooks/useMatchFunctions';
+import useMatchFunctions from '@/hooks/useMatchFunctions';
 
 interface MatchesContextType {
   isAddDialogOpen: boolean;

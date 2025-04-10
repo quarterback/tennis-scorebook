@@ -1,4 +1,3 @@
-
 export type Gender = 'Boys' | 'Girls';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
 
@@ -83,4 +82,29 @@ export interface TeamStanding {
   overallLosses: number;
   leagueWins: number;
   leagueLosses: number;
+}
+
+export interface MatchFormData {
+  date: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  isLeagueMatch: boolean;
+  isComplete: boolean;
+  hasJvMatches?: boolean;
+  homeTeamWon?: boolean;
+  homeCoachApproved?: boolean;
+  awayCoachApproved?: boolean;
+  homeTeamScore?: number;
+  awayTeamScore?: number;
+  flights: Array<{
+    type: 'singles' | 'doubles';
+    position: number;
+    level: 'varsity' | 'jv';
+    homePlayers: string[];
+    awayPlayers: string[];
+    sets: Set[];
+    homePlayerWon?: boolean;
+    retired?: boolean;
+    defaulted?: boolean;
+  }>;
 }
