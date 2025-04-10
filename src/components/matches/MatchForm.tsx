@@ -53,6 +53,8 @@ interface MatchFormProps {
   toggleApproval: (team: 'home' | 'away') => void;
   isCoachOfTeam: (teamId: string) => boolean;
   updateTeamScores: (homeScore: number, awayScore: number) => void;
+  toggleFlightRetired: (flightIndex: number) => void;
+  toggleFlightDefaulted: (flightIndex: number) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   submitButtonText: string;
