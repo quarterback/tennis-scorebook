@@ -9,6 +9,8 @@ export interface MatchFormData {
   isComplete: boolean;
   hasJvMatches?: boolean;
   homeTeamWon?: boolean;
+  homeCoachApproved?: boolean;
+  awayCoachApproved?: boolean;
   flights: Array<{
     type: 'singles' | 'doubles';
     position: number;
@@ -218,6 +220,14 @@ const useMatchFunctions = (initialFlights: Array<{
     });
   };
 
+  const toggleApproval = (team: 'home' | 'away') => {
+    setMatchFormData(prev => ({
+      ...prev,
+      [team === 'home' ? 'homeCoachApproved' : 'awayCoachApproved']: 
+        !prev[team === 'home' ? 'homeCoachApproved' : 'awayCoachApproved']
+    }));
+  };
+
   return {
     matchFormData,
     setMatchFormData,
@@ -231,7 +241,8 @@ const useMatchFunctions = (initialFlights: Array<{
     calculateTeamWinner,
     resetMatchForm,
     addNewFlight,
-    toggleJvMatches
+    toggleJvMatches,
+    toggleApproval
   };
 };
 

@@ -1,47 +1,38 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import MatchForm from './MatchForm';
 import { useMatches } from '@/context/MatchesContext';
 
-const MatchDialogs: React.FC = () => {
-  const { 
-    isAddDialogOpen, 
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    setSelectedMatch,
-    matchFormData,
-    setMatchFormData,
-    filteredTeams,
-    schools,
-    teams,
-    getTeamPlayersForSelect,
-    handleFlightPlayerChange,
-    handleSetScoreChange,
-    handleTiebreakScoreChange,
-    toggleTiebreak,
-    addSet,
-    removeSet,
-    calculateTeamWinner,
-    addNewFlight,
-    toggleJvMatches,
-    handleAddMatchSubmit,
-    handleEditMatchSubmit
+const MatchDialogs = () => {
+  const {
+    isAddDialogOpen, setIsAddDialogOpen,
+    isEditDialogOpen, setIsEditDialogOpen,
+    matchFormData, setMatchFormData,
+    handleAddMatchSubmit, handleEditMatchSubmit,
+    resetMatchForm, schools, teams, filteredTeams,
+    getTeamPlayersForSelect, handleFlightPlayerChange,
+    handleSetScoreChange, handleTiebreakScoreChange,
+    toggleTiebreak, addSet, removeSet, calculateTeamWinner,
+    addNewFlight, toggleJvMatches, toggleApproval, isCoachOfTeam
   } = useMatches();
 
   return (
     <>
-      {/* Add Match Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="w-full max-w-5xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Add New Match</DialogTitle>
             <DialogDescription>
-              Configure match details and add player lineups
+              Enter the details for the new match.
             </DialogDescription>
           </DialogHeader>
-          
           <MatchForm
             matchFormData={matchFormData}
             setMatchFormData={setMatchFormData}
@@ -58,23 +49,26 @@ const MatchDialogs: React.FC = () => {
             calculateTeamWinner={calculateTeamWinner}
             addNewFlight={addNewFlight}
             toggleJvMatches={toggleJvMatches}
+            toggleApproval={toggleApproval}
+            isCoachOfTeam={isCoachOfTeam}
             onSubmit={handleAddMatchSubmit}
-            onCancel={() => setIsAddDialogOpen(false)}
-            submitButtonText="Save Match"
+            onCancel={() => {
+              setIsAddDialogOpen(false);
+              resetMatchForm();
+            }}
+            submitButtonText="Add Match"
           />
         </DialogContent>
       </Dialog>
-      
-      {/* Edit Match Dialog */}
+
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="w-full max-w-5xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Edit Match</DialogTitle>
             <DialogDescription>
-              Modify match details and player lineups
+              Update the details for this match.
             </DialogDescription>
           </DialogHeader>
-          
           <MatchForm
             matchFormData={matchFormData}
             setMatchFormData={setMatchFormData}
@@ -91,10 +85,11 @@ const MatchDialogs: React.FC = () => {
             calculateTeamWinner={calculateTeamWinner}
             addNewFlight={addNewFlight}
             toggleJvMatches={toggleJvMatches}
+            toggleApproval={toggleApproval}
+            isCoachOfTeam={isCoachOfTeam}
             onSubmit={handleEditMatchSubmit}
             onCancel={() => {
               setIsEditDialogOpen(false);
-              setSelectedMatch(null);
             }}
             submitButtonText="Update Match"
           />

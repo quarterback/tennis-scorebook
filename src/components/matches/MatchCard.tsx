@@ -1,259 +1,228 @@
 
 import React from 'react';
-import { Match, School, Team, Player, Flight } from '@/types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Match } from '@/types';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Check, Edit, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Calendar, Edit, ChevronDown, ChevronUp, ShieldCheck, ShieldX 
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { useMatches } from '@/context/MatchesContext';
 
 interface MatchCardProps {
   match: Match;
-  expandedMatchId: string | null;
-  setExpandedMatchId: (id: string | null) => void;
-  getTeamName: (teamId: string) => string;
-  canEditMatch: (match: Match) => boolean;
-  openEditDialog: (match: Match) => void;
-  players: Player[];
 }
 
-const MatchCard: React.FC<MatchCardProps> = ({
-  match,
-  expandedMatchId,
-  setExpandedMatchId,
-  getTeamName,
-  canEditMatch,
-  openEditDialog,
-  players
-}) => {
+const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
+  const { 
+    getTeamName, expandedMatchId, setExpandedMatchId, 
+    canEditMatch, openEditDialog, approveMatch, canApproveMatch 
+  } = useMatches();
+  
+  const isExpanded = expandedMatchId === match.id;
+  
+  const toggleExpand = () => {
+    setExpandedMatchId(isExpanded ? null : match.id);
+  };
+  
+  const homeTeamName = getTeamName(match.homeTeamId);
+  const awayTeamName = getTeamName(match.awayTeamId);
+  
   return (
-    <Card key={match.id} className="overflow-hidden">
-      <CardHeader className="pb-4 cursor-pointer" onClick={() => setExpandedMatchId(expandedMatchId === match.id ? null : match.id)}>
-        <div className="flex justify-between">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-tennis-blue" />
-            <span className="font-medium">
-              {new Date(match.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-            </span>
-            <span className={`px-2 py-0.5 rounded-full text-xs ${match.isLeagueMatch ? 'bg-tennis-blue text-white' : 'bg-gray-200'}`}>
-              {match.isLeagueMatch ? 'League' : 'Non-League'}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            {match.isComplete && (
-              <span className="flex items-center text-green-600">
-                <Check className="h-4 w-4 mr-1" />
-                Complete
-              </span>
-            )}
-            
-            {expandedMatchId === match.id ? (
-              <ChevronUp className="h-5 w-5 text-gray-400" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            )}
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center mt-2">
-          <div className="flex-1">
-            <div className="font-semibold">{getTeamName(match.homeTeamId)}</div>
-            <div className="text-gray-500">Home</div>
-          </div>
-          
-          <div className="px-4 font-bold text-lg">vs.</div>
-          
-          <div className="flex-1 text-right">
-            <div className="font-semibold">{getTeamName(match.awayTeamId)}</div>
-            <div className="text-gray-500">Away</div>
-          </div>
-        </div>
-        
-        {match.isComplete && match.homeTeamWon !== undefined && (
-          <div className="text-center mt-2 font-medium">
-            Winner: {match.homeTeamWon ? getTeamName(match.homeTeamId) : getTeamName(match.awayTeamId)}
-          </div>
-        )}
-      </CardHeader>
-      
-      {expandedMatchId === match.id && (
-        <CardContent>
-          <div className="border-t border-gray-100 pt-4">
-            <h3 className="font-semibold mb-3">Match Results</h3>
-            
-            <div className="space-y-6">
-              {match.flights.length > 0 ? (
-                <>
-                  <div>
-                    <h4 className="text-sm font-medium mb-2 bg-tennis-blue text-white px-3 py-1">Varsity</h4>
-                    <div className="space-y-3">
-                      {match.flights
-                        .filter(f => f.level === 'varsity')
-                        .sort((a, b) => {
-                          if (a.type !== b.type) {
-                            return a.type === 'singles' ? -1 : 1;
-                          }
-                          return a.position - b.position;
-                        })
-                        .map((flight, i) => (
-                          <div key={flight.id} className="tennis-card">
-                            <div className="font-medium mb-1">
-                              {flight.type === 'singles' ? `#${flight.position} Singles` : `#${flight.position} Doubles`}
-                              {flight.homePlayerWon !== undefined && (
-                                <span className="ml-2">
-                                  {flight.homePlayerWon ? (
-                                    <span className="text-green-600">(Home Won)</span>
-                                  ) : (
-                                    <span className="text-red-600">(Away Won)</span>
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div className="flex justify-between items-center text-sm">
-                              <div className="flex-1">
-                                <div className="font-medium">Home:</div>
-                                {flight.homePlayers.map(playerId => {
-                                  const player = players.find(p => p.id === playerId);
-                                  return player ? (
-                                    <div key={player.id}>{player.name}</div>
-                                  ) : (
-                                    <div key={playerId}>Unknown Player</div>
-                                  );
-                                })}
-                              </div>
-                              
-                              <div className="flex-1 text-right">
-                                <div className="font-medium">Away:</div>
-                                {flight.awayPlayers.map(playerId => {
-                                  const player = players.find(p => p.id === playerId);
-                                  return player ? (
-                                    <div key={player.id}>{player.name}</div>
-                                  ) : (
-                                    <div key={playerId}>Unknown Player</div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                            
-                            <div className="mt-2 pt-2 border-t border-gray-100">
-                              <div className="flex space-x-4">
-                                {flight.sets.map((set, setIdx) => (
-                                  <div key={setIdx} className="flex space-x-1">
-                                    <div className="text-center">
-                                      <div className="text-xs text-gray-500">Set {setIdx + 1}</div>
-                                      <div className="font-medium">{set.homeScore}-{set.awayScore}</div>
-                                      {set.tiebreak && (
-                                        <div className="text-xs text-gray-500">
-                                          TB: {set.tiebreak.homeScore}-{set.tiebreak.awayScore}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                  
-                  {match.flights.some(f => f.level === 'jv') && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-2 bg-tennis-green text-white px-3 py-1">JV</h4>
-                      <div className="space-y-3">
-                        {match.flights
-                          .filter(f => f.level === 'jv')
-                          .sort((a, b) => {
-                            if (a.type !== b.type) {
-                              return a.type === 'singles' ? -1 : 1;
-                            }
-                            return a.position - b.position;
-                          })
-                          .map((flight) => (
-                            <div key={flight.id} className="tennis-card">
-                              <div className="font-medium mb-1">
-                                {flight.type === 'singles' ? `#${flight.position} Singles` : `#${flight.position} Doubles`}
-                                {flight.homePlayerWon !== undefined && (
-                                  <span className="ml-2">
-                                    {flight.homePlayerWon ? (
-                                      <span className="text-green-600">(Home Won)</span>
-                                    ) : (
-                                      <span className="text-red-600">(Away Won)</span>
-                                    )}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="flex justify-between items-center text-sm">
-                                <div className="flex-1">
-                                  <div className="font-medium">Home:</div>
-                                  {flight.homePlayers.map(playerId => {
-                                    const player = players.find(p => p.id === playerId);
-                                    return player ? (
-                                      <div key={player.id}>{player.name}</div>
-                                    ) : (
-                                      <div key={playerId}>Unknown Player</div>
-                                    );
-                                  })}
-                                </div>
-                                
-                                <div className="flex-1 text-right">
-                                  <div className="font-medium">Away:</div>
-                                  {flight.awayPlayers.map(playerId => {
-                                    const player = players.find(p => p.id === playerId);
-                                    return player ? (
-                                      <div key={player.id}>{player.name}</div>
-                                    ) : (
-                                      <div key={playerId}>Unknown Player</div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                              
-                              <div className="mt-2 pt-2 border-t border-gray-100">
-                                <div className="flex space-x-4">
-                                  {flight.sets.map((set, setIdx) => (
-                                    <div key={setIdx} className="flex space-x-1">
-                                      <div className="text-center">
-                                        <div className="text-xs text-gray-500">Set {setIdx + 1}</div>
-                                        <div className="font-medium">{set.homeScore}-{set.awayScore}</div>
-                                        {set.tiebreak && (
-                                          <div className="text-xs text-gray-500">
-                                            TB: {set.tiebreak.homeScore}-{set.tiebreak.awayScore}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center text-gray-500 py-4">
-                  No flight information available
-                </div>
+    <Card className="w-full mb-4">
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start">
+          <div className="space-y-2 flex-1">
+            <div className="flex items-center text-muted-foreground text-sm">
+              <Calendar className="h-4 w-4 mr-1" />
+              {format(new Date(match.date), 'MMMM d, yyyy')}
+              {match.isLeagueMatch && (
+                <span className="ml-2 bg-tennis-blue text-white text-xs px-2 py-0.5 rounded-full">
+                  League
+                </span>
               )}
             </div>
             
-            {canEditMatch(match) && (
-              <div className="mt-6 flex justify-end">
-                <Button 
-                  onClick={() => openEditDialog(match)}
-                  className="bg-tennis-blue hover:bg-tennis-darkBlue"
+            <div className="flex justify-between items-center">
+              <div className="text-lg font-medium">{homeTeamName} vs {awayTeamName}</div>
+              <div className="flex items-center space-x-2">
+                {match.isComplete && (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex">
+                      <div title={match.homeCoachApproved ? "Home coach approved" : "Awaiting home coach approval"}>
+                        {match.homeCoachApproved ? 
+                          <ShieldCheck className="h-5 w-5 text-green-500" /> : 
+                          <ShieldX className="h-5 w-5 text-gray-300" />
+                        }
+                      </div>
+                      <div title={match.awayCoachApproved ? "Away coach approved" : "Awaiting away coach approval"}>
+                        {match.awayCoachApproved ? 
+                          <ShieldCheck className="h-5 w-5 text-green-500" /> : 
+                          <ShieldX className="h-5 w-5 text-gray-300" />
+                        }
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {match.homeTeamWon ? homeTeamName : awayTeamName} won
+                    </span>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleExpand}
+                  className="-mr-2"
                 >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Match
+                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                 </Button>
               </div>
-            )}
+            </div>
           </div>
-        </CardContent>
-      )}
+        </div>
+        
+        {isExpanded && (
+          <div className="mt-4 space-y-6">
+            {/* Match details section */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm">Varsity Singles</h4>
+              <div className="space-y-2">
+                {match.flights
+                  .filter(f => f.level === 'varsity' && f.type === 'singles')
+                  .sort((a, b) => a.position - b.position)
+                  .map((flight, index) => (
+                    <div key={index} className="flex justify-between border-b pb-2">
+                      <div className="flex-1">
+                        <div className="text-sm">Singles {flight.position}</div>
+                      </div>
+                      <div className="flex-1">
+                        {flight.sets.map((set, setIndex) => (
+                          <div key={setIndex} className="text-sm">
+                            {set.homeScore}-{set.awayScore}
+                            {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
+                            {setIndex < flight.sets.length - 1 ? ', ' : ''}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              
+              <h4 className="font-medium text-sm">Varsity Doubles</h4>
+              <div className="space-y-2">
+                {match.flights
+                  .filter(f => f.level === 'varsity' && f.type === 'doubles')
+                  .sort((a, b) => a.position - b.position)
+                  .map((flight, index) => (
+                    <div key={index} className="flex justify-between border-b pb-2">
+                      <div className="flex-1">
+                        <div className="text-sm">Doubles {flight.position}</div>
+                      </div>
+                      <div className="flex-1">
+                        {flight.sets.map((set, setIndex) => (
+                          <div key={setIndex} className="text-sm">
+                            {set.homeScore}-{set.awayScore}
+                            {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
+                            {setIndex < flight.sets.length - 1 ? ', ' : ''}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              
+              {match.hasJvMatches && (
+                <>
+                  <h4 className="font-medium text-sm">JV Singles</h4>
+                  <div className="space-y-2">
+                    {match.flights
+                      .filter(f => f.level === 'jv' && f.type === 'singles')
+                      .sort((a, b) => a.position - b.position)
+                      .map((flight, index) => (
+                        <div key={`jvs-${index}`} className="flex justify-between border-b pb-2">
+                          <div className="flex-1">
+                            <div className="text-sm">Singles {flight.position}</div>
+                          </div>
+                          <div className="flex-1">
+                            {flight.sets.map((set, setIndex) => (
+                              <div key={setIndex} className="text-sm">
+                                {set.homeScore}-{set.awayScore}
+                                {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
+                                {setIndex < flight.sets.length - 1 ? ', ' : ''}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                  
+                  <h4 className="font-medium text-sm">JV Doubles</h4>
+                  <div className="space-y-2">
+                    {match.flights
+                      .filter(f => f.level === 'jv' && f.type === 'doubles')
+                      .sort((a, b) => a.position - b.position)
+                      .map((flight, index) => (
+                        <div key={`jvd-${index}`} className="flex justify-between border-b pb-2">
+                          <div className="flex-1">
+                            <div className="text-sm">Doubles {flight.position}</div>
+                          </div>
+                          <div className="flex-1">
+                            {flight.sets.map((set, setIndex) => (
+                              <div key={setIndex} className="text-sm">
+                                {set.homeScore}-{set.awayScore}
+                                {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
+                                {setIndex < flight.sets.length - 1 ? ', ' : ''}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+      
+      <CardFooter className="flex justify-end space-x-2 pt-0">
+        {canEditMatch(match) && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => openEditDialog(match)}
+            className="flex items-center"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        )}
+        
+        {match.isComplete && (
+          <>
+            {canApproveMatch(match, 'home') && !match.homeCoachApproved && (
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => approveMatch(match.id, 'home')}
+              >
+                Approve as Home Coach
+              </Button>
+            )}
+            
+            {canApproveMatch(match, 'away') && !match.awayCoachApproved && (
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => approveMatch(match.id, 'away')}
+              >
+                Approve as Away Coach
+              </Button>
+            )}
+          </>
+        )}
+      </CardFooter>
     </Card>
   );
 };

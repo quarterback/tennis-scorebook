@@ -26,6 +26,9 @@ interface MatchesContextType {
   handleEditMatchSubmit: (e: React.FormEvent) => void;
   openEditDialog: (match: Match) => void;
   canEditMatch: (match: Match) => boolean;
+  canApproveMatch: (match: Match, team: 'home' | 'away') => boolean;
+  approveMatch: (matchId: string, team: 'home' | 'away') => void;
+  isCoachOfTeam: (teamId: string) => boolean;
   resetMatchForm: () => void;
   handleFlightPlayerChange: (flightIndex: number, team: 'home' | 'away', playerIndex: number, playerId: string) => void;
   handleSetScoreChange: (flightIndex: number, setIndex: number, team: 'home' | 'away', score: number) => void;
@@ -36,6 +39,7 @@ interface MatchesContextType {
   calculateTeamWinner: () => void;
   addNewFlight: (type: 'singles' | 'doubles', level: 'varsity' | 'jv') => void;
   toggleJvMatches: () => void;
+  toggleApproval: (team: 'home' | 'away') => void;
 }
 
 const MatchesContext = createContext<MatchesContextType | null>(null);
@@ -81,7 +85,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     calculateTeamWinner,
     resetMatchForm: resetForm,
     addNewFlight,
-    toggleJvMatches
+    toggleJvMatches,
+    toggleApproval
   } = useMatchFunctions(initialFlights);
 
   const resetMatchForm = () => resetForm(today);
@@ -114,6 +119,32 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .map(p => ({ id: p.id, name: p.name }));
   };
   
+  const isCoachOfTeam = (teamId: string) => {
+    if (user?.role !== 'coach' || !user.schoolId) return false;
+    return teams.some(t => t.id === teamId && t.schoolId === user.schoolId);
+  };
+  
+  const canApproveMatch = (match: Match, team: 'home' | 'away') => {
+    if (!match.isComplete) return false;
+    if (user?.role === 'admin') return true;
+    
+    const teamId = team === 'home' ? match.homeTeamId : match.awayTeamId;
+    return isCoachOfTeam(teamId);
+  };
+  
+  const approveMatch = (matchId: string, team: 'home' | 'away') => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+    
+    const updatedMatch = {
+      ...match,
+      [team === 'home' ? 'homeCoachApproved' : 'awayCoachApproved']: 
+        !match[team === 'home' ? 'homeCoachApproved' : 'awayCoachApproved']
+    };
+    
+    updateMatch(updatedMatch);
+  };
+  
   const handleAddMatchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -133,6 +164,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isComplete: matchFormData.isComplete,
       hasJvMatches: matchFormData.hasJvMatches,
       homeTeamWon: matchFormData.homeTeamWon,
+      homeCoachApproved: false,
+      awayCoachApproved: false,
       flights: newFlights
     });
     
@@ -167,6 +200,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isComplete: matchFormData.isComplete,
         hasJvMatches: matchFormData.hasJvMatches,
         homeTeamWon: matchFormData.homeTeamWon,
+        homeCoachApproved: matchFormData.homeCoachApproved,
+        awayCoachApproved: matchFormData.awayCoachApproved,
         flights: updatedFlights
       });
       
@@ -186,6 +221,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isComplete: match.isComplete,
       hasJvMatches: match.hasJvMatches || false,
       homeTeamWon: match.homeTeamWon,
+      homeCoachApproved: match.homeCoachApproved,
+      awayCoachApproved: match.awayCoachApproved,
       flights: match.flights.map(flight => ({
         type: flight.type,
         position: flight.position,
@@ -232,6 +269,9 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     handleEditMatchSubmit,
     openEditDialog,
     canEditMatch,
+    canApproveMatch,
+    approveMatch,
+    isCoachOfTeam,
     resetMatchForm,
     handleFlightPlayerChange,
     handleSetScoreChange,
@@ -241,7 +281,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     removeSet,
     calculateTeamWinner,
     addNewFlight,
-    toggleJvMatches
+    toggleJvMatches,
+    toggleApproval
   };
 
   return <MatchesContext.Provider value={value}>{children}</MatchesContext.Provider>;

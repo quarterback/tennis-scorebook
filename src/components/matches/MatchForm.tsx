@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus } from 'lucide-react';
+import { Plus, ShieldCheck, ShieldX } from 'lucide-react';
 import FlightForm from './FlightForm';
+import { useAuth } from '@/context/AuthContext';
 
 interface MatchFormProps {
   matchFormData: {
@@ -19,6 +20,8 @@ interface MatchFormProps {
     isComplete: boolean;
     hasJvMatches?: boolean;
     homeTeamWon?: boolean;
+    homeCoachApproved?: boolean;
+    awayCoachApproved?: boolean;
     flights: Array<{
       type: 'singles' | 'doubles';
       position: number;
@@ -43,6 +46,8 @@ interface MatchFormProps {
   calculateTeamWinner: () => void;
   addNewFlight: (type: 'singles' | 'doubles', level: 'varsity' | 'jv') => void;
   toggleJvMatches: () => void;
+  toggleApproval: (team: 'home' | 'away') => void;
+  isCoachOfTeam: (teamId: string) => boolean;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   submitButtonText: string;
@@ -64,10 +69,16 @@ const MatchForm: React.FC<MatchFormProps> = ({
   calculateTeamWinner,
   addNewFlight,
   toggleJvMatches,
+  toggleApproval,
+  isCoachOfTeam,
   onSubmit,
   onCancel,
   submitButtonText
 }) => {
+  const { user } = useAuth();
+  const canApproveHome = user?.role === 'admin' || isCoachOfTeam(matchFormData.homeTeamId);
+  const canApproveAway = user?.role === 'admin' || isCoachOfTeam(matchFormData.awayTeamId);
+  
   return (
     <form onSubmit={onSubmit} className="space-y-4 pt-4">
       <ScrollArea className="h-[70vh] pr-4">
@@ -168,41 +179,94 @@ const MatchForm: React.FC<MatchFormProps> = ({
           </div>
           
           {matchFormData.isComplete && (
-            <div className="space-y-2">
-              <Label>
-                <div className="flex items-center space-x-2">
-                  <span>Winner:</span>
+            <>
+              <div className="space-y-2">
+                <Label>
+                  <div className="flex items-center space-x-2">
+                    <span>Winner:</span>
+                  </div>
+                </Label>
+                <div className="flex space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={matchFormData.homeTeamWon === true}
+                      onCheckedChange={(checked) => 
+                        setMatchFormData({ ...matchFormData, homeTeamWon: checked ? true : undefined })
+                      }
+                    />
+                    <span>Home Team</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={matchFormData.homeTeamWon === false}
+                      onCheckedChange={(checked) => 
+                        setMatchFormData({ ...matchFormData, homeTeamWon: checked ? false : undefined })
+                      }
+                    />
+                    <span>Away Team</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={calculateTeamWinner}
+                  >
+                    Calculate from Flights
+                  </Button>
                 </div>
-              </Label>
-              <div className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={matchFormData.homeTeamWon === true}
-                    onCheckedChange={(checked) => 
-                      setMatchFormData({ ...matchFormData, homeTeamWon: checked ? true : undefined })
-                    }
-                  />
-                  <span>Home Team</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={matchFormData.homeTeamWon === false}
-                    onCheckedChange={(checked) => 
-                      setMatchFormData({ ...matchFormData, homeTeamWon: checked ? false : undefined })
-                    }
-                  />
-                  <span>Away Team</span>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={calculateTeamWinner}
-                >
-                  Calculate from Flights
-                </Button>
               </div>
-            </div>
+
+              <div className="space-y-2 col-span-2">
+                <Label>Match Approval Status</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border p-4 rounded-md">
+                    <div className="flex justify-between items-center mb-2">
+                      <Label>Home Coach Approval</Label>
+                      {matchFormData.homeCoachApproved ? (
+                        <ShieldCheck className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <ShieldX className="h-5 w-5 text-gray-300" />
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant={matchFormData.homeCoachApproved ? "outline" : "default"}
+                      size="sm"
+                      className={matchFormData.homeCoachApproved ? "" : "bg-green-600 hover:bg-green-700"}
+                      disabled={!canApproveHome}
+                      onClick={() => toggleApproval('home')}
+                    >
+                      {matchFormData.homeCoachApproved 
+                        ? "Revoke Approval" 
+                        : "Approve Match Result"}
+                    </Button>
+                  </div>
+
+                  <div className="border p-4 rounded-md">
+                    <div className="flex justify-between items-center mb-2">
+                      <Label>Away Coach Approval</Label>
+                      {matchFormData.awayCoachApproved ? (
+                        <ShieldCheck className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <ShieldX className="h-5 w-5 text-gray-300" />
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant={matchFormData.awayCoachApproved ? "outline" : "default"}
+                      size="sm"
+                      className={matchFormData.awayCoachApproved ? "" : "bg-green-600 hover:bg-green-700"}
+                      disabled={!canApproveAway}
+                      onClick={() => toggleApproval('away')}
+                    >
+                      {matchFormData.awayCoachApproved 
+                        ? "Revoke Approval" 
+                        : "Approve Match Result"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
         
