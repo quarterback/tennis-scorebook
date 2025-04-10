@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Match } from '@/types';
+import { Match, Player } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,13 +11,24 @@ import { useMatches } from '@/context/MatchesContext';
 
 interface MatchCardProps {
   match: Match;
+  expandedMatchId: string | null;
+  setExpandedMatchId: (id: string | null) => void;
+  getTeamName: (teamId: string) => string;
+  canEditMatch: (match: Match) => boolean;
+  openEditDialog: (match: Match) => void;
+  players: Player[];
 }
 
-const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
-  const { 
-    getTeamName, expandedMatchId, setExpandedMatchId, 
-    canEditMatch, openEditDialog, approveMatch, canApproveMatch 
-  } = useMatches();
+const MatchCard: React.FC<MatchCardProps> = ({ 
+  match, 
+  expandedMatchId, 
+  setExpandedMatchId, 
+  getTeamName, 
+  canEditMatch, 
+  openEditDialog,
+  players 
+}) => {
+  const { approveMatch, canApproveMatch } = useMatches();
   
   const isExpanded = expandedMatchId === match.id;
   
