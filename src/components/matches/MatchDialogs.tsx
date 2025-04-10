@@ -20,7 +20,8 @@ const MatchDialogs = () => {
     getTeamPlayersForSelect, handleFlightPlayerChange,
     handleSetScoreChange, handleTiebreakScoreChange,
     toggleTiebreak, addSet, removeSet, calculateTeamWinner,
-    addNewFlight, toggleJvMatches, toggleApproval, isCoachOfTeam
+    addNewFlight, toggleJvMatches, toggleApproval, isCoachOfTeam,
+    toggleFlightRetired, toggleFlightDefaulted, updateTeamScores
   } = useMatches();
 
   return (
@@ -51,6 +52,9 @@ const MatchDialogs = () => {
             toggleJvMatches={toggleJvMatches}
             toggleApproval={toggleApproval}
             isCoachOfTeam={isCoachOfTeam}
+            updateTeamScores={updateTeamScores}
+            toggleFlightRetired={toggleFlightRetired}
+            toggleFlightDefaulted={toggleFlightDefaulted}
             onSubmit={handleAddMatchSubmit}
             onCancel={() => {
               setIsAddDialogOpen(false);
@@ -87,6 +91,9 @@ const MatchDialogs = () => {
             toggleJvMatches={toggleJvMatches}
             toggleApproval={toggleApproval}
             isCoachOfTeam={isCoachOfTeam}
+            updateTeamScores={updateTeamScores}
+            toggleFlightRetired={toggleFlightRetired}
+            toggleFlightDefaulted={toggleFlightDefaulted}
             onSubmit={handleEditMatchSubmit}
             onCancel={() => {
               setIsEditDialogOpen(false);
