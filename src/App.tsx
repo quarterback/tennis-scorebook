@@ -13,8 +13,8 @@ import Schools from "@/pages/Schools";
 import Teams from "@/pages/Teams";
 import Matches from "@/pages/Matches";
 import Standings from "@/pages/Standings";
+import Districts from "@/pages/Districts";
 import NotFound from "@/pages/NotFound";
-import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +80,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <Standings />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/districts" element={
+        <ProtectedRoute>
+          <Layout>
+            <Districts />
           </Layout>
         </ProtectedRoute>
       } />
