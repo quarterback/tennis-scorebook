@@ -13,7 +13,7 @@ import { Users, UserPlus, Plus, Trash } from 'lucide-react';
 import { Team, Gender, Player } from '@/types';
 
 const Teams = () => {
-  const { schools, teams, addTeam, updateTeam, deleteTeam, players, addPlayer, deletePlayer } = useData();
+  const { schools, teams, addTeam, updateTeam, deleteTeam, players, addPlayer, deletePlayer, districts } = useData();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const schoolIdParam = searchParams.get('school');
@@ -57,6 +57,11 @@ const Teams = () => {
   
   // Get the selected school
   const selectedSchool = schools.find(s => s.id === selectedSchoolId);
+
+  // Get the district for the selected school
+  const selectedDistrict = selectedSchool 
+    ? districts.find(d => d.id === selectedSchool.districtId)
+    : undefined;
   
   // Get players for the selected team
   const teamPlayers = selectedTeamId
@@ -161,7 +166,7 @@ const Teams = () => {
                       <span className="font-medium">Classification:</span> {selectedSchool.classification}
                     </div>
                     <div>
-                      <span className="font-medium">District:</span> {selectedSchool.district}
+                      <span className="font-medium">District:</span> {selectedDistrict?.name || 'Unknown'}
                     </div>
                   </div>
                   
