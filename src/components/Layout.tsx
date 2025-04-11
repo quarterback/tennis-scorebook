@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, Award, Calendar, School, LogOut, FolderTree } from 'lucide-react';
+import { Activity, Users, Award, Calendar, School, LogOut, FolderTree, BarChart3 } from 'lucide-react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -77,6 +77,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <Link to="/standings" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/standings') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
                   <Award className="h-4 w-4 mr-2" />
                   Standings
+                </Link>
+              </li>
+              <li>
+                <Link to="/rankings" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/rankings') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Rankings
                 </Link>
               </li>
             </ul>
