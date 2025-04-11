@@ -77,6 +77,9 @@ const Districts = () => {
     groupedDistricts[district.classification].push(district);
   });
   
+  // View-only mode for non-admin users
+  const isAdminView = user?.role === 'admin';
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -98,7 +101,7 @@ const Districts = () => {
             </SelectContent>
           </Select>
           
-          {user?.role === 'admin' && (
+          {isAdminView && (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-tennis-blue hover:bg-tennis-darkBlue">
@@ -172,7 +175,7 @@ const Districts = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead className="w-24 text-right">Actions</TableHead>
+                      {isAdminView && <TableHead className="w-24 text-right">Actions</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -182,8 +185,8 @@ const Districts = () => {
                           <Folder className="h-4 w-4 mr-2 text-tennis-blue" />
                           {district.name}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {user?.role === 'admin' && (
+                        {isAdminView && (
+                          <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button 
                                 variant="ghost" 
@@ -203,8 +206,8 @@ const Districts = () => {
                                 <span className="sr-only">Delete</span>
                               </Button>
                             </div>
-                          )}
-                        </TableCell>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -223,7 +226,7 @@ const Districts = () => {
                 ? `There are no districts for the ${currentFilter} classification.` 
                 : 'There are no districts available.'}
             </p>
-            {user?.role === 'admin' && (
+            {isAdminView && (
               <Button 
                 className="mt-4 bg-tennis-blue hover:bg-tennis-darkBlue"
                 onClick={() => setIsAddDialogOpen(true)}
@@ -236,54 +239,56 @@ const Districts = () => {
         )}
       </div>
       
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit District</DialogTitle>
-            <DialogDescription>
-              Update the district details.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">District Name</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-classification">Classification</Label>
-              <Select
-                value={formData.classification}
-                onValueChange={(value) => setFormData({ ...formData, classification: value as Classification })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select classification" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6A">6A</SelectItem>
-                  <SelectItem value="5A">5A</SelectItem>
-                  <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex justify-end pt-4">
-              <Button 
-                type="submit" 
-                className="bg-tennis-blue hover:bg-tennis-darkBlue"
-                disabled={!formData.name}
-              >
-                Save Changes
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {isAdminView && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit District</DialogTitle>
+              <DialogDescription>
+                Update the district details.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">District Name</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-classification">Classification</Label>
+                <Select
+                  value={formData.classification}
+                  onValueChange={(value) => setFormData({ ...formData, classification: value as Classification })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select classification" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6A">6A</SelectItem>
+                    <SelectItem value="5A">5A</SelectItem>
+                    <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  className="bg-tennis-blue hover:bg-tennis-darkBlue"
+                  disabled={!formData.name}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

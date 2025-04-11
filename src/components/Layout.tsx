@@ -55,14 +55,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   Schools
                 </Link>
               </li>
-              {user.role === 'admin' && (
-                <li>
-                  <Link to="/districts" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/districts') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                    <FolderTree className="h-4 w-4 mr-2" />
-                    Districts
-                  </Link>
-                </li>
-              )}
+              <li>
+                <Link to="/districts" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/districts') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
+                  <FolderTree className="h-4 w-4 mr-2" />
+                  Districts
+                </Link>
+              </li>
               <li>
                 <Link to="/teams" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/teams') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
                   <Users className="h-4 w-4 mr-2" />
