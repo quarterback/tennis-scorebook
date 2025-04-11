@@ -13,6 +13,7 @@ import Schools from "@/pages/Schools";
 import Teams from "@/pages/Teams";
 import Matches from "@/pages/Matches";
 import Standings from "@/pages/Standings";
+import Rankings from "@/pages/Rankings";
 import Districts from "@/pages/Districts";
 import NotFound from "@/pages/NotFound";
 
@@ -80,6 +81,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <Standings />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/rankings" element={
+        <ProtectedRoute>
+          <Layout>
+            <Rankings />
           </Layout>
         </ProtectedRoute>
       } />
