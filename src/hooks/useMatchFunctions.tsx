@@ -3,9 +3,9 @@ import { useMatchForm } from './useMatchForm';
 import { useFlightManagement } from './useFlightManagement';
 import { usePlayerManagement } from './usePlayerManagement';
 import { useScoreManagement } from './useScoreManagement';
-import { MatchFormData } from '@/types';
+import type { MatchFormData } from '@/types';
 
-export { MatchFormData };
+export type { MatchFormData };
 
 const useMatchFunctions = (initialFlights: Array<{
   type: 'singles' | 'doubles';
