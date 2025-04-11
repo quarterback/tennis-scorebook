@@ -1,7 +1,7 @@
 
 import { useData } from '@/context/DataContext';
 import { Team, School, Match, Flight, District } from '@/types';
-import { TeamRanking, LeagueStrengthData, RankingConfig } from '@/types/ranking';
+import { TeamRanking, LeagueStrengthData, RankingConfig, HistoricalData } from '@/types/ranking';
 
 export const useRankingCalculator = () => {
   const { teams, schools, matches, districts } = useData();
@@ -18,12 +18,36 @@ export const useRankingCalculator = () => {
     }
   };
   
-  // Sample historical league strength data (in a real app, this would come from a database)
-  const leagueStrengthData: LeagueStrengthData[] = [
-    { leagueId: 'district1', firstPlaceFinishes: 2, secondPlaceFinishes: 1, yearRange: '2020-2024' },
-    { leagueId: 'district2', firstPlaceFinishes: 1, secondPlaceFinishes: 2, yearRange: '2020-2024' },
-    // Add more historical data
-  ];
+  // Historical data for realistic league strength calculations
+  // Based on historical state championship performances
+  const historicalData: HistoricalData = {
+    leagues: [
+      // 6A Leagues
+      { leagueId: 'pil', firstPlaceFinishes: 1, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 9 },
+      { leagueId: 'metro', firstPlaceFinishes: 3, secondPlaceFinishes: 2, yearRange: '2022-2025', totalPoints: 23 },
+      { leagueId: 'pacific', firstPlaceFinishes: 0, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 4 },
+      { leagueId: 'mt-hood', firstPlaceFinishes: 0, secondPlaceFinishes: 0, yearRange: '2022-2025', totalPoints: 0 },
+      { leagueId: 'three-rivers', firstPlaceFinishes: 2, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 14 },
+      { leagueId: 'central-valley', firstPlaceFinishes: 0, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 4 },
+      { leagueId: 'southwest', firstPlaceFinishes: 0, secondPlaceFinishes: 0, yearRange: '2022-2025', totalPoints: 0 },
+      
+      // 5A Leagues
+      { leagueId: 'northwest-oregon', firstPlaceFinishes: 0, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 4 },
+      { leagueId: 'midwestern', firstPlaceFinishes: 1, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 9 },
+      { leagueId: 'mid-willamette', firstPlaceFinishes: 2, secondPlaceFinishes: 0, yearRange: '2022-2025', totalPoints: 10 },
+      { leagueId: 'intermountain', firstPlaceFinishes: 0, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 4 },
+      
+      // 4A/3A/2A/1A Special Districts
+      { leagueId: 'sd1', firstPlaceFinishes: 3, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 19 },
+      { leagueId: 'sd2', firstPlaceFinishes: 0, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 4 },
+      { leagueId: 'sd3', firstPlaceFinishes: 0, secondPlaceFinishes: 0, yearRange: '2022-2025', totalPoints: 0 },
+      { leagueId: 'sd4', firstPlaceFinishes: 0, secondPlaceFinishes: 1, yearRange: '2022-2025', totalPoints: 4 },
+      { leagueId: 'sd5', firstPlaceFinishes: 0, secondPlaceFinishes: 0, yearRange: '2022-2025', totalPoints: 0 }
+    ],
+    topSchools: [
+      'jesuit', 'sunset', 'lincoln', 'lake-oswego', 'south-eugene', 'crescent-valley', 'catlin-gabel'
+    ]
+  };
   
   /**
    * Calculate Flight-Weighted Score for a team
@@ -50,6 +74,9 @@ export const useRankingCalculator = () => {
       
       // Process each flight in the match
       match.flights.forEach(flight => {
+        // Only count varsity flights
+        if (flight.level !== 'varsity') return;
+        
         // Determine if this team won the flight
         const teamWon = isHomeTeam ? flight.homePlayerWon : !flight.homePlayerWon;
         
@@ -74,24 +101,35 @@ export const useRankingCalculator = () => {
   
   /**
    * Calculate League Strength Coefficient for a district
+   * Using new formula: LSC = Total League Points / 10.0
    */
   const calculateLeagueStrengthCoefficient = (districtId: string): number => {
-    // Find the league strength data for this district
-    const data = leagueStrengthData.find(d => d.leagueId === districtId);
+    // Map district ID to league ID in historical data
+    const district = districts.find(d => d.id === districtId);
+    if (!district) return 1.0;
     
-    if (!data) {
+    // Convert district.name to a key that matches our historicalData.leagues
+    const leagueKey = district.name.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '');
+    
+    // Find the league strength data
+    const leagueData = historicalData.leagues.find(l => {
+      // Try to match by district ID or constructed league key
+      return l.leagueId === districtId || l.leagueId === leagueKey;
+    });
+    
+    if (!leagueData) {
       return 1.0; // Default minimum value
     }
     
-    // LSC formula: 1.0 + (0.1 * first place) + (0.05 * second place)
-    // This is an example formula - adjust as needed
-    const coefficient = 1.0 + (0.1 * data.firstPlaceFinishes) + (0.05 * data.secondPlaceFinishes);
+    // Calculate LSC using formula: Total Points / 10.0
+    // First place = 5 points, Second place = 4 points
+    const coefficient = Math.max(1.0, leagueData.totalPoints / 10.0);
     
     return coefficient;
   };
   
   /**
-   * Calculate Opponent Strength Index
+   * Calculate Opponent Strength Index with improved algorithm
    */
   const calculateOpponentStrengthIndex = (teamId: string, teamScores: Map<string, number>): number => {
     // Get all matches for this team
@@ -120,13 +158,23 @@ export const useRankingCalculator = () => {
       }
     });
     
-    // Return average, with minimum of 1.0
+    // Get the team's school
+    const team = teams.find(t => t.id === teamId);
+    const school = team ? schools.find(s => s.id === team.schoolId) : null;
+    
+    // Apply a strength modifier for historically strong schools
+    let strengthModifier = 1.0;
+    if (school && historicalData.topSchools.includes(school.id.toLowerCase())) {
+      strengthModifier = 1.1; // 10% boost for historically strong programs
+    }
+    
+    // Return adjusted OSI with minimum of 1.0
     return validOpponents > 0 ? 
-      Math.max(1.0, totalOpponentScore / validOpponents) : 1.0;
+      Math.max(1.0, (totalOpponentScore / validOpponents) * strengthModifier) : 1.0;
   };
   
   /**
-   * Calculate team rankings
+   * Calculate team rankings with enhanced algorithm and realistic data
    */
   const calculateRankings = (config: RankingConfig = defaultConfig): TeamRanking[] => {
     // Initial calculation of FWS for all teams
@@ -167,6 +215,10 @@ export const useRankingCalculator = () => {
       // Calculate composite score
       const compositeScore = fws * lsc * osi;
       
+      // Calculate win percentage
+      const totalMatches = wins + losses;
+      const winPercentage = totalMatches > 0 ? wins / totalMatches : 0;
+      
       return {
         teamId: team.id,
         teamName: `${school.name} ${team.gender}`,
@@ -181,7 +233,8 @@ export const useRankingCalculator = () => {
         leagueStrengthCoefficient: lsc,
         opponentStrengthIndex: osi,
         compositeScore,
-        qualifiedForRanking: teamMatches.length >= config.minimumMatches
+        qualifiedForRanking: teamMatches.length >= config.minimumMatches,
+        winPercentage
       };
     });
     
@@ -191,6 +244,7 @@ export const useRankingCalculator = () => {
   
   return {
     calculateRankings,
-    defaultConfig
+    defaultConfig,
+    historicalData
   };
 };

@@ -13,6 +13,7 @@ export interface LeagueStrengthData {
   firstPlaceFinishes: number;
   secondPlaceFinishes: number;
   yearRange: string; // e.g., "2020-2024"
+  totalPoints: number; // New field for calculating LSC
 }
 
 export interface TeamRanking {
@@ -30,10 +31,17 @@ export interface TeamRanking {
   opponentStrengthIndex: number;
   compositeScore: number;
   qualifiedForRanking: boolean; // True if team has played minimum 6 matches
+  winPercentage?: number; // Added for display
 }
 
 export interface RankingConfig {
   minimumMatches: number;
   cutoffDate: string; // ISO date string
   weights: FlightWeight;
+}
+
+// Historical data for leagues and schools
+export interface HistoricalData {
+  leagues: LeagueStrengthData[];
+  topSchools: string[]; // IDs of historically strong schools
 }
