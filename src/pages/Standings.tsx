@@ -81,14 +81,14 @@ const Standings = () => {
             <div className="space-y-2">
               <Label htmlFor="district">District/Conference</Label>
               <Select
-                value={selectedDistrictId || ''}
-                onValueChange={(value) => setSelectedDistrictId(value || undefined)}
+                value={selectedDistrictId || 'all'}
+                onValueChange={(value) => setSelectedDistrictId(value === 'all' ? undefined : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Districts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Districts</SelectItem>
+                  <SelectItem value="all">All Districts</SelectItem>
                   {availableDistricts.map(district => (
                     <SelectItem key={district.id} value={district.id}>
                       {district.name}
