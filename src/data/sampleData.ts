@@ -1,40 +1,68 @@
 
-import { School, Team, Player, Match, Flight, Set } from '@/types';
+import { School, Team, Player, Match, Flight, Set, District } from '@/types';
+
+export const sampleDistricts: District[] = [
+  {
+    id: '1',
+    name: 'Metro League',
+    classification: '6A'
+  },
+  {
+    id: '2',
+    name: 'Pacific Conference',
+    classification: '6A'
+  },
+  {
+    id: '3',
+    name: 'Valley League',
+    classification: '5A'
+  },
+  {
+    id: '4',
+    name: 'Northwest League',
+    classification: '5A'
+  },
+  {
+    id: '5',
+    name: 'Rural Conference',
+    classification: '4A/3A/2A/1A'
+  }
+];
 
 export const sampleSchools: School[] = [
   {
     id: '1',
     name: 'Westside High',
     classification: '6A',
-    district: 'Metro League',
+    districtId: '1', // Metro League
     teams: []
   },
   {
     id: '2',
     name: 'Eastside High',
     classification: '6A',
-    district: 'Metro League',
+    districtId: '1', // Metro League
     teams: []
   },
   {
     id: '3',
     name: 'North County High',
     classification: '5A',
-    district: 'Valley League',
+    districtId: '3', // Valley League
     teams: []
   },
   {
     id: '4',
     name: 'South County High',
     classification: '5A',
-    district: 'Valley League',
+    districtId: '3', // Valley League
     teams: []
   },
   {
     id: '5',
     name: 'Central Academy',
     classification: '4A/3A/2A/1A',
-    district: 'Rural Conference',
+    districtId: '5', // Rural Conference
     teams: []
   }
 ];

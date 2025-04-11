@@ -8,22 +8,21 @@ import { Award, Medal } from 'lucide-react';
 import { Gender, Classification } from '@/types';
 
 const Standings = () => {
-  const { schools, getStandings } = useData();
+  const { schools, getStandings, districts, getDistrictsByClassification } = useData();
   const [selectedGender, setSelectedGender] = useState<Gender>('Boys');
   const [selectedClassification, setSelectedClassification] = useState<Classification>('6A');
-  const [selectedDistrict, setSelectedDistrict] = useState<string | undefined>(undefined);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string | undefined>(undefined);
   
-  // Get all unique districts for the selected classification
-  const districts = Array.from(
-    new Set(
-      schools
-        .filter(school => school.classification === selectedClassification)
-        .map(school => school.district)
-    )
-  ).sort();
+  // Get all available districts for the selected classification
+  const availableDistricts = getDistrictsByClassification(selectedClassification);
   
   // Get standings
-  const standings = getStandings(selectedGender, selectedClassification, selectedDistrict);
+  const standings = getStandings(selectedGender, selectedClassification, selectedDistrictId);
+  
+  // Get selected district name for display
+  const selectedDistrictName = selectedDistrictId 
+    ? districts.find(d => d.id === selectedDistrictId)?.name
+    : undefined;
   
   return (
     <div className="space-y-6">
@@ -54,7 +53,7 @@ const Standings = () => {
             value={selectedClassification}
             onValueChange={(value) => {
               setSelectedClassification(value as Classification);
-              setSelectedDistrict(undefined);
+              setSelectedDistrictId(undefined);
             }}
           >
             <SelectTrigger>
@@ -71,17 +70,17 @@ const Standings = () => {
         <div className="space-y-2">
           <Label htmlFor="district">District/Conference</Label>
           <Select
-            value={selectedDistrict || ''}
-            onValueChange={(value) => setSelectedDistrict(value || undefined)}
+            value={selectedDistrictId || ''}
+            onValueChange={(value) => setSelectedDistrictId(value || undefined)}
           >
             <SelectTrigger>
               <SelectValue placeholder="All Districts" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Districts</SelectItem>
-              {districts.map(district => (
-                <SelectItem key={district} value={district}>
-                  {district}
+              <SelectItem value="">All Districts</SelectItem>
+              {availableDistricts.map(district => (
+                <SelectItem key={district.id} value={district.id}>
+                  {district.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -93,7 +92,7 @@ const Standings = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Award className="h-5 w-5 mr-2 text-tennis-blue" />
-            {selectedGender} {selectedClassification} {selectedDistrict ? `- ${selectedDistrict}` : ''} Standings
+            {selectedGender} {selectedClassification} {selectedDistrictName ? `- ${selectedDistrictName}` : ''} Standings
           </CardTitle>
         </CardHeader>
         <CardContent>

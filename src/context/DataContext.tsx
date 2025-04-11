@@ -1,16 +1,16 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { School, Team, Player, Match, TeamStanding, Gender, Classification } from '@/types';
+import { School, Team, Player, Match, TeamStanding, Gender, Classification, District } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 
 // Sample data for demonstration
-import { sampleSchools, sampleTeams, samplePlayers, sampleMatches } from '@/data/sampleData';
+import { sampleSchools, sampleTeams, samplePlayers, sampleMatches, sampleDistricts } from '@/data/sampleData';
 
 interface DataContextType {
   schools: School[];
   teams: Team[];
   players: Player[];
   matches: Match[];
+  districts: District[];
   
   // School operations
   addSchool: (school: Omit<School, 'id'>) => void;
@@ -31,6 +31,12 @@ interface DataContextType {
   addMatch: (match: Omit<Match, 'id'>) => void;
   updateMatch: (match: Match) => void;
   deleteMatch: (id: string) => void;
+
+  // District operations
+  addDistrict: (district: Omit<District, 'id'>) => void;
+  updateDistrict: (district: District) => void;
+  deleteDistrict: (id: string) => void;
+  getDistrictsByClassification: (classification: Classification) => District[];
   
   // Filtering operations
   getTeamsBySchool: (schoolId: string) => Team[];
@@ -38,7 +44,7 @@ interface DataContextType {
   getMatchesByTeam: (teamId: string) => Match[];
   
   // Standings
-  getStandings: (gender: Gender, classification: Classification, district?: string) => TeamStanding[];
+  getStandings: (gender: Gender, classification: Classification, districtId?: string) => TeamStanding[];
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -56,6 +62,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [teams, setTeams] = useState<Team[]>(sampleTeams);
   const [players, setPlayers] = useState<Player[]>(samplePlayers);
   const [matches, setMatches] = useState<Match[]>(sampleMatches);
+  const [districts, setDistricts] = useState<District[]>(sampleDistricts);
   const { toast } = useToast();
   
   // In a real app, this would fetch from an API
@@ -96,6 +103,40 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title: 'School Deleted',
       description: `${school?.name || 'School'} has been deleted successfully.`
     });
+  };
+  
+  // District operations
+  const addDistrict = (district: Omit<District, 'id'>) => {
+    const newDistrict: District = {
+      ...district,
+      id: crypto.randomUUID()
+    };
+    setDistricts([...districts, newDistrict]);
+    toast({
+      title: 'District Added',
+      description: `${newDistrict.name} has been added successfully.`
+    });
+  };
+  
+  const updateDistrict = (district: District) => {
+    setDistricts(districts.map(d => d.id === district.id ? district : d));
+    toast({
+      title: 'District Updated',
+      description: `${district.name} has been updated successfully.`
+    });
+  };
+  
+  const deleteDistrict = (id: string) => {
+    const district = districts.find(d => d.id === id);
+    setDistricts(districts.filter(d => d.id !== id));
+    toast({
+      title: 'District Deleted',
+      description: `${district?.name || 'District'} has been deleted successfully.`
+    });
+  };
+  
+  const getDistrictsByClassification = (classification: Classification) => {
+    return districts.filter(district => district.classification === classification);
   };
   
   // Team operations
@@ -204,16 +245,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Calculate standings based on match results
-  const getStandings = (gender: Gender, classification: Classification, district?: string): TeamStanding[] => {
+  const getStandings = (gender: Gender, classification: Classification, districtId?: string): TeamStanding[] => {
     const relevantTeams = teams.filter(team => {
       const school = schools.find(s => s.id === team.schoolId);
       return team.gender === gender 
         && school?.classification === classification
-        && (!district || school?.district === district);
+        && (!districtId || school?.districtId === districtId);
     });
     
     const standings: TeamStanding[] = relevantTeams.map(team => {
       const school = schools.find(s => s.id === team.schoolId)!;
+      const district = districts.find(d => d.id === school.districtId)!;
       
       const teamMatches = matches.filter(
         m => (m.homeTeamId === team.id || m.awayTeamId === team.id) && m.isComplete
@@ -243,7 +285,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         schoolName: school.name,
         gender: team.gender,
         classification: school.classification,
-        district: school.district,
+        districtName: district?.name || 'Unknown District',
         overallWins,
         overallLosses,
         leagueWins,
@@ -272,6 +314,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       teams,
       players,
       matches,
+      districts,
       addSchool,
       updateSchool,
       deleteSchool,
@@ -284,6 +327,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addMatch,
       updateMatch,
       deleteMatch,
+      addDistrict,
+      updateDistrict,
+      deleteDistrict,
+      getDistrictsByClassification,
       getTeamsBySchool,
       getPlayersByTeam,
       getMatchesByTeam,

@@ -1,11 +1,18 @@
+
 export type Gender = 'Boys' | 'Girls';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
+
+export interface District {
+  id: string;
+  name: string;
+  classification: Classification;
+}
 
 export interface School {
   id: string;
   name: string;
   classification: Classification;
-  district: string;
+  districtId: string; // Changed from district string to districtId reference
   teams: Team[];
 }
 
@@ -77,7 +84,7 @@ export interface TeamStanding {
   schoolName: string;
   gender: Gender;
   classification: Classification;
-  district: string;
+  districtName: string; // Changed from district to districtName
   overallWins: number;
   overallLosses: number;
   leagueWins: number;
