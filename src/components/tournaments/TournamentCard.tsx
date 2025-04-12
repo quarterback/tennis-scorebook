@@ -2,10 +2,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Gender, Classification } from '@/types';
-import { Medal, Calendar, ChevronRight } from 'lucide-react';
+import { Medal, Calendar, ChevronRight, Users, Info } from 'lucide-react';
+import { useData } from '@/context/DataContext';
 
 interface TournamentCardProps {
-  type: 'Singles' | 'Doubles' | 'Team';
+  type: 'Singles' | 'Doubles';
   gender: Gender;
   classification: Classification;
   districtName?: string;
@@ -17,7 +18,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   classification,
   districtName
 }) => {
+  const { getStandings } = useData();
   const isDistrict = !!districtName;
+  
+  // Tournament dates
   const tournamentDate = isDistrict
     ? new Date(2025, 4, 15) // May 15, 2025 for districts
     : new Date(2025, 4, 30); // May 30, 2025 for state
@@ -29,11 +33,19 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     year: 'numeric'
   });
   
-  // Placeholder for tournament brackets
-  const placeholderData = Array(8).fill(null).map((_, index) => ({
+  // Generate bracket size based on tournament type
+  const bracketSize = isDistrict ? 16 : 32; // Districts can have up to 16, State can have up to 32
+  
+  // For state tournaments, we show qualifying information
+  const qualificationInfo = !isDistrict ? 
+    "Top 4 qualifiers from each district tournament advance to state" : "";
+  
+  // Generate placeholder data for the bracket
+  // In a real app, this would come from a database
+  const placeholderData = Array(Math.min(8, bracketSize)).fill(null).map((_, index) => ({
     id: `${type.toLowerCase()}-${index}`,
     position: index + 1,
-    name: `Competitor ${index + 1}`,
+    name: isDistrict ? `Player ${index + 1}` : `District ${Math.floor(index/4) + 1} Qualifier ${(index % 4) + 1}`,
     school: `School ${index + 1}`
   }));
   
@@ -50,6 +62,23 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
             <span>{formattedDate}</span>
           </div>
         </div>
+        
+        {/* Bracket Size Info */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center text-sm text-gray-500">
+            <Users className="h-4 w-4 mr-1" /> 
+            <span>Bracket Size: Up to {bracketSize} participants</span>
+          </div>
+        </div>
+        
+        {!isDistrict && qualificationInfo && (
+          <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-100 text-sm">
+            <div className="flex items-start">
+              <Info className="h-4 w-4 mr-2 text-tennis-blue mt-0.5" />
+              <p>{qualificationInfo}</p>
+            </div>
+          </div>
+        )}
         
         {/* Tournament participants */}
         <div className="space-y-2">
@@ -74,6 +103,14 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
               </div>
             ))}
           </div>
+          
+          {bracketSize > 8 && (
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500">
+                {bracketSize - 8} more participants not shown
+              </p>
+            </div>
+          )}
         </div>
         
         <div className="mt-4 text-center">

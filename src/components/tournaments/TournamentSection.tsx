@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gender, Classification } from '@/types';
-import { Trophy, Award, Flag } from 'lucide-react';
+import { Trophy, Flag } from 'lucide-react';
 import TournamentCard from './TournamentCard';
 
 interface TournamentSectionProps {
@@ -40,7 +40,6 @@ const TournamentSection: React.FC<TournamentSectionProps> = ({
           <TabsList className="mb-4">
             <TabsTrigger value="singles">Singles</TabsTrigger>
             <TabsTrigger value="doubles">Doubles</TabsTrigger>
-            <TabsTrigger value="team">Team</TabsTrigger>
           </TabsList>
           
           <TabsContent value="singles" className="space-y-4">
@@ -57,15 +56,6 @@ const TournamentSection: React.FC<TournamentSectionProps> = ({
               type="Doubles"
               gender={gender}
               classification={classification}
-              districtName={districtName}
-            />
-          </TabsContent>
-          
-          <TabsContent value="team" className="space-y-4">
-            <TournamentCard 
-              type="Team"
-              gender={gender}
-              classification={classification} 
               districtName={districtName}
             />
           </TabsContent>
