@@ -15,6 +15,7 @@ export default function Teams() {
   const { schools } = useData();
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   return (
     <div>
@@ -65,8 +66,17 @@ export default function Teams() {
 
       {isAddDialogOpen && (
         <TeamManager 
-          isOpen={isAddDialogOpen} 
-          onClose={() => setIsAddDialogOpen(false)} 
+          selectedTeamId={null}
+          canEditTeam={() => true}
+          isAddPlayerDialogOpen={false}
+          setIsAddPlayerDialogOpen={() => {}}
+          playerFormData={{
+            name: '',
+            grade: 9,
+            teamId: ''
+          }}
+          setPlayerFormData={() => {}}
+          handleAddPlayer={() => {}}
         />
       )}
     </div>
