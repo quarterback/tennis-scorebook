@@ -85,5 +85,11 @@ export const useStandingsCalculator = (
     });
   };
 
-  return { getStandings };
+  // Get qualifying teams for tournaments based on standings
+  const getQualifyingTeams = (gender: Gender, classification: Classification, districtId: string, limit: number = 4) => {
+    const standings = getStandings(gender, classification, districtId);
+    return standings.slice(0, limit);
+  };
+
+  return { getStandings, getQualifyingTeams };
 };
