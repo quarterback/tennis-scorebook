@@ -1,4 +1,4 @@
-import { School, Team, Player, Match, Flight, Set, District } from '@/types';
+import { School, Team, Player, Match, Flight, Set, District, PlayerStatus } from '@/types';
 
 export const sampleDistricts: District[] = [
   // 6A Districts/Leagues
@@ -767,7 +767,6 @@ export const sampleSchools: School[] = [
   }
 ];
 
-// Create teams for all schools - focused on girls teams per your requirements
 export const sampleTeams: Team[] = [
   // Generate girls teams for all schools
   ...sampleSchools.map(school => ({
@@ -788,9 +787,8 @@ export const sampleTeams: Team[] = [
   }))
 ];
 
-// Create basic player data for each team
 export const samplePlayers: Player[] = [
-  // Generate placeholder players for teams (just a few per team for simulation)
+  // Generate placeholder players for teams (just a few per team)
   ...sampleTeams.flatMap(team => {
     // Generate 4-6 players per team
     const numPlayers = 4 + Math.floor(Math.random() * 3);
@@ -806,7 +804,6 @@ export const samplePlayers: Player[] = [
   })
 ];
 
-// Helper functions for match generation
 const createSet = (homeScore: number, awayScore: number, hasTiebreak = false): Set => {
   const set: Set = {
     homeScore,
@@ -823,7 +820,6 @@ const createSet = (homeScore: number, awayScore: number, hasTiebreak = false): S
   return set;
 };
 
-// Helper function to create a flight
 const createFlight = (id: string, matchId: string, type: 'singles' | 'doubles', position: number, 
                       level: 'varsity' | 'jv', homePlayers: string[], awayPlayers: string[], 
                       homeWins: boolean): Flight => {
@@ -851,7 +847,6 @@ const createFlight = (id: string, matchId: string, type: 'singles' | 'doubles', 
   };
 };
 
-// Create a complete match with all flights
 const createFullMatch = (id: string, date: string, homeTeamId: string, awayTeamId: string, 
                           isLeague: boolean, homeTeamWins: boolean): Match => {
   // Get team players
@@ -927,7 +922,6 @@ const createFullMatch = (id: string, date: string, homeTeamId: string, awayTeamI
   };
 };
 
-// Generate dates between March 1 and May 10, 2025
 const generateMatchDate = (index: number, totalMatches: number) => {
   const start = new Date(2025, 2, 1); // March 1, 2025
   const end = new Date(2025, 4, 10);   // May 10, 2025
@@ -942,7 +936,6 @@ const generateMatchDate = (index: number, totalMatches: number) => {
   return matchDate.toISOString().split('T')[0];
 };
 
-// Generate matches for all teams
 export const sampleMatches: Match[] = (() => {
   const matches: Match[] = [];
   const girlsTeams = sampleTeams.filter(team => team.gender === 'Girls');
