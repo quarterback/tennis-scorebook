@@ -8,7 +8,7 @@ import { sampleSchools, sampleTeams, samplePlayers, sampleMatches, sampleDistric
 // Import the operation hooks
 import { useSchoolOperations } from '@/hooks/useSchoolOperations';
 import { useTeamOperations } from '@/hooks/useTeamOperations';
-import { usePlayerOperations } from '@/hooks/usePlayerOperations';
+import { usePlayersData } from '@/hooks/usePlayersData';
 import { useMatchOperations } from '@/hooks/useMatchOperations';
 import { useDistrictOperations } from '@/hooks/useDistrictOperations';
 import { useFilterOperations } from '@/hooks/useFilterOperations';
@@ -35,6 +35,8 @@ interface DataContextType {
   addPlayer: (player: Omit<Player, 'id'>) => void;
   updatePlayer: (player: Player) => void;
   deletePlayer: (id: string) => void;
+  getPlayerById: (id: string) => Player | undefined;
+  getPlayersByTeam: (teamId: string) => Player[];
   
   // Match operations
   addMatch: (match: Omit<Match, 'id'>) => void;
@@ -49,7 +51,6 @@ interface DataContextType {
   
   // Filtering operations
   getTeamsBySchool: (schoolId: string) => Team[];
-  getPlayersByTeam: (teamId: string) => Player[];
   getMatchesByTeam: (teamId: string) => Match[];
   
   // Standings
@@ -77,8 +78,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useTeamOperations(sampleTeams);
   
   const { 
-    players, setPlayers, addPlayer, updatePlayer, deletePlayer 
-  } = usePlayerOperations(samplePlayers);
+    players, addPlayer, updatePlayer, deletePlayer, getPlayerById, getPlayersByTeam, loadPlayersData
+  } = usePlayersData();
   
   const { 
     matches, setMatches, addMatch, updateMatch, deleteMatch 
@@ -88,19 +89,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     districts, setDistricts, addDistrict, updateDistrict, deleteDistrict, getDistrictsByClassification 
   } = useDistrictOperations(sampleDistricts);
   
+  // Load initial sample data
+  useEffect(() => {
+    loadPlayersData(samplePlayers);
+  }, []);
+  
   // Set up filter operations that depend on the current state
   const { 
-    getTeamsBySchool, getPlayersByTeam, getMatchesByTeam 
+    getTeamsBySchool, getMatchesByTeam 
   } = useFilterOperations(teams, players, matches);
   
   // Set up standings calculator
   const { getStandings } = useStandingsCalculator(teams, schools, matches, districts);
-  
-  // In a real app, this would fetch from an API
-  useEffect(() => {
-    // Mock loading data
-    console.log('Data loaded');
-  }, []);
   
   // Create the context value with all operations
   const value: DataContextType = {
@@ -122,6 +122,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addPlayer,
     updatePlayer,
     deletePlayer,
+    getPlayerById,
+    getPlayersByTeam,
     
     addMatch,
     updateMatch,
@@ -133,7 +135,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getDistrictsByClassification,
     
     getTeamsBySchool,
-    getPlayersByTeam,
     getMatchesByTeam,
     
     getStandings

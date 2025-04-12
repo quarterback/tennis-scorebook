@@ -7,12 +7,11 @@ import { UserPlus, Plus } from 'lucide-react';
 import { Player } from '@/types';
 import TeamRoster from './TeamRoster';
 import AddPlayerDialog from './AddPlayerDialog';
+import { useData } from '@/context/DataContext';
 
 interface TeamManagerProps {
   selectedTeamId: string | null;
-  teamPlayers: Player[];
   canEditTeam: (teamId: string) => boolean;
-  handleRemovePlayer: (playerId: string) => void;
   isAddPlayerDialogOpen: boolean;
   setIsAddPlayerDialogOpen: (isOpen: boolean) => void;
   playerFormData: Omit<Player, 'id'>;
@@ -22,15 +21,23 @@ interface TeamManagerProps {
 
 const TeamManager = ({
   selectedTeamId,
-  teamPlayers,
   canEditTeam,
-  handleRemovePlayer,
   isAddPlayerDialogOpen,
   setIsAddPlayerDialogOpen,
   playerFormData,
   setPlayerFormData,
   handleAddPlayer
 }: TeamManagerProps) => {
+  const { getPlayersByTeam, deletePlayer } = useData();
+  
+  // Get players for the selected team
+  const teamPlayers = selectedTeamId ? getPlayersByTeam(selectedTeamId) : [];
+  
+  // Handle removing a player
+  const handleRemovePlayer = (playerId: string) => {
+    deletePlayer(playerId);
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
