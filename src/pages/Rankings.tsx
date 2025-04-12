@@ -1,24 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Award, Medal, TrendingUp, BarChart3, AlertTriangle, Zap, PieChart, ActivitySquare, Filter } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { Gender, Classification } from '@/types';
 import { useRankingCalculator } from '@/hooks/rankings/useRankingCalculator';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RankingsHeader } from '@/components/rankings/RankingsHeader';
+import { RankingsFilter } from '@/components/rankings/RankingsFilter';
 import { TeamRankingsTable } from '@/components/rankings/TeamRankingsTable';
 import { UnqualifiedTeamsTable } from '@/components/rankings/UnqualifiedTeamsTable';
-import { LeagueStandingsCard } from '@/components/rankings/LeagueStandingsCard';
+import { LeagueStandingsView } from '@/components/rankings/LeagueStandingsView';
 import { RankingCalculationDetails } from '@/components/rankings/RankingCalculationDetails';
 import { RankingSystemExplanation } from '@/components/rankings/RankingSystemExplanation';
 import { EdgeCasesCard } from '@/components/rankings/EdgeCasesCard';
 import { RankingInsights } from '@/components/rankings/RankingInsights';
 
 const Rankings = () => {
-  const { schools, getDistrictsByClassification, districts } = useData();
+  const { schools, getDistrictsByClassification } = useData();
   const { calculateRankings, defaultConfig, historicalData, generateInsights, findKeyMatchups } = useRankingCalculator();
   
   const [selectedGender, setSelectedGender] = useState<Gender>('Boys');
@@ -119,7 +118,7 @@ const Rankings = () => {
   const today = new Date();
   const cutoffDate = new Date(defaultConfig.cutoffDate);
   const daysUntilCutoff = Math.ceil((cutoffDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-  
+
   // Helper function to find teams with identical records
   function findTeamsWithIdenticalRecords(teams: typeof qualifiedTeams) {
     const recordGroups: Record<string, typeof qualifiedTeams> = {};
@@ -140,90 +139,20 @@ const Rankings = () => {
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold flex items-center">
-          <BarChart3 className="h-7 w-7 mr-2 text-tennis-blue" />
-          Tennis Rankings
-        </h1>
-        
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Current Season: Spring 2025</p>
-          <p className="text-sm text-gray-500">
-            {daysUntilCutoff > 0 
-              ? `${daysUntilCutoff} days until rankings cutoff`
-              : `Rankings cutoff: ${cutoffDate.toLocaleDateString()}`
-            }
-          </p>
-        </div>
-      </div>
+      <RankingsHeader daysUntilCutoff={daysUntilCutoff} cutoffDate={cutoffDate} />
       
-      <Card className="bg-white">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
-            <Filter className="h-5 w-5 mr-2 text-tennis-blue" />
-            Filter Options
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender</Label>
-              <Select
-                value={selectedGender}
-                onValueChange={(value) => setSelectedGender(value as Gender)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Boys">Boys</SelectItem>
-                  <SelectItem value="Girls">Girls</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="classification">Classification</Label>
-              <Select
-                value={selectedClassification}
-                onValueChange={(value) => {
-                  setSelectedClassification(value as Classification);
-                  setSelectedDistrict('all'); // Reset district when classification changes
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select classification" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6A">6A</SelectItem>
-                  <SelectItem value="5A">5A</SelectItem>
-                  <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="league">Source League</Label>
-              <Select
-                value={selectedDistrict}
-                onValueChange={setSelectedDistrict}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select league" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Leagues</SelectItem>
-                  {availableDistricts.map(district => (
-                    <SelectItem key={district.id} value={district.name}>
-                      {district.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <RankingsFilter 
+        selectedGender={selectedGender}
+        selectedClassification={selectedClassification}
+        selectedDistrict={selectedDistrict}
+        availableDistricts={availableDistricts}
+        onGenderChange={(value) => setSelectedGender(value as Gender)}
+        onClassificationChange={(value) => {
+          setSelectedClassification(value as Classification);
+          setSelectedDistrict('all'); // Reset district when classification changes
+        }}
+        onDistrictChange={setSelectedDistrict}
+      />
       
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-4">
@@ -246,26 +175,10 @@ const Rankings = () => {
         </TabsContent>
         
         <TabsContent value="leagues">
-          <div className="space-y-6">
-            {Object.keys(teamsByDistrict).map(district => (
-              <LeagueStandingsCard 
-                key={district} 
-                district={district} 
-                teams={teamsByDistrict[district]} 
-                qualifiedTeams={qualifiedTeams} 
-              />
-            ))}
-            
-            {Object.keys(teamsByDistrict).length === 0 && (
-              <div className="text-center py-12 px-4 bg-white rounded-lg">
-                <AlertTriangle className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                <h3 className="text-lg font-medium text-gray-900">No league standings available</h3>
-                <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                  There are no qualified teams in any leagues for this selection.
-                </p>
-              </div>
-            )}
-          </div>
+          <LeagueStandingsView 
+            teamsByDistrict={teamsByDistrict} 
+            qualifiedTeams={qualifiedTeams} 
+          />
         </TabsContent>
         
         <TabsContent value="calculation">
