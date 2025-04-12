@@ -30,9 +30,9 @@ export const LeagueStandingsCard: React.FC<LeagueStandingsCardProps> = ({
             <TableRow>
               <TableHead className="w-[80px]">Rank</TableHead>
               <TableHead>Team</TableHead>
-              <TableHead className="text-center">Record</TableHead>
+              <TableHead className="text-center">League Record</TableHead>
               <TableHead className="text-center">Win %</TableHead>
-              <TableHead className="text-center">FWS</TableHead>
+              <TableHead className="text-center">Overall Record</TableHead>
               <TableHead className="text-center">Overall Rank</TableHead>
             </TableRow>
           </TableHeader>
@@ -40,6 +40,13 @@ export const LeagueStandingsCard: React.FC<LeagueStandingsCardProps> = ({
             {teams.map((team, index) => {
               // Find overall ranking
               const overallRank = qualifiedTeams.findIndex(t => t.teamId === team.teamId) + 1;
+              
+              // Calculate league record (we'll use leagueRecord property if it exists, otherwise calculate it)
+              const leagueWins = team.leagueWins || 0;
+              const leagueLosses = team.leagueLosses || 0;
+              const leagueWinPct = leagueWins + leagueLosses > 0 
+                ? leagueWins / (leagueWins + leagueLosses) 
+                : 0;
               
               return (
                 <TableRow key={team.teamId}>
@@ -54,11 +61,11 @@ export const LeagueStandingsCard: React.FC<LeagueStandingsCardProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>{team.teamName}</TableCell>
-                  <TableCell className="text-center">{team.wins}-{team.losses}</TableCell>
+                  <TableCell className="text-center">{leagueWins}-{leagueLosses}</TableCell>
                   <TableCell className="text-center">
-                    {(team.winPercentage || 0).toFixed(3)}
+                    {leagueWinPct.toFixed(3)}
                   </TableCell>
-                  <TableCell className="text-center">{team.flightWeightedScore.toFixed(2)}</TableCell>
+                  <TableCell className="text-center">{team.wins}-{team.losses}</TableCell>
                   <TableCell className="text-center">
                     <span className="px-2 py-1 bg-tennis-blue text-white rounded-full text-xs">
                       #{overallRank}

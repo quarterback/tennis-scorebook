@@ -18,6 +18,10 @@ interface RankingInsightsProps {
     }>;
     totalQualifiedTeams: number;
     totalTeams: number;
+    leagueInsights?: {
+      avgLeagueMatches: number;
+      avgLeagueWinPct: number;
+    };
   };
   keyMatchups: Array<{
     teamA: TeamRanking;
@@ -65,13 +69,23 @@ export const RankingInsights: React.FC<RankingInsightsProps> = ({
               </div>
             </div>
             
-            <div className="bg-gray-50 p-3 rounded-md">
-              <h4 className="text-sm text-gray-500">Average Win %</h4>
-              <p className="text-2xl font-bold">{(insights.avgWinPct * 100).toFixed(1)}%</p>
-              <p className="text-xs text-gray-500">
-                {selectedGender} {selectedClassification} teams
-                {selectedDistrict !== 'all' && ` in ${selectedDistrict}`}
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-md">
+                <h4 className="text-sm text-gray-500">Overall Win %</h4>
+                <p className="text-2xl font-bold">{(insights.avgWinPct * 100).toFixed(1)}%</p>
+                <p className="text-xs text-gray-500">
+                  {selectedGender} {selectedClassification} teams
+                  {selectedDistrict !== 'all' && ` in ${selectedDistrict}`}
+                </p>
+              </div>
+              
+              {insights.leagueInsights && (
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <h4 className="text-sm text-gray-500">League Win %</h4>
+                  <p className="text-2xl font-bold">{(insights.leagueInsights.avgLeagueWinPct * 100).toFixed(1)}%</p>
+                  <p className="text-xs text-gray-500">in league matches only</p>
+                </div>
+              )}
             </div>
             
             <div>

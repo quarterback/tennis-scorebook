@@ -6,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Award, Medal, TrendingUp, ListOrdered } from 'lucide-react';
 import { Gender, Classification } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 const Standings = () => {
   const { schools, getStandings, districts, getDistrictsByClassification } = useData();
+  const { user } = useAuth();
   const [selectedGender, setSelectedGender] = useState<Gender>('Boys');
   const [selectedClassification, setSelectedClassification] = useState<Classification>('6A');
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | undefined>(undefined);
@@ -23,6 +25,9 @@ const Standings = () => {
   const selectedDistrictName = selectedDistrictId 
     ? districts.find(d => d.id === selectedDistrictId)?.name
     : undefined;
+
+  // Coach-specific view
+  const isCoach = user?.role === 'coach';
   
   return (
     <div className="space-y-6">
@@ -79,16 +84,16 @@ const Standings = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="district">District/Conference</Label>
+              <Label htmlFor="district">League/Conference</Label>
               <Select
                 value={selectedDistrictId || 'all'}
                 onValueChange={(value) => setSelectedDistrictId(value === 'all' ? undefined : value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Districts" />
+                  <SelectValue placeholder="All Leagues" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Districts</SelectItem>
+                  <SelectItem value="all">All Leagues</SelectItem>
                   {availableDistricts.map(district => (
                     <SelectItem key={district.id} value={district.id}>
                       {district.name}
@@ -150,7 +155,9 @@ const Standings = () => {
                         <td className="py-3 px-4">
                           <div>
                             <div className="font-medium">{standing.teamName}</div>
-                            <div className="text-sm text-gray-500">{standing.districtName}</div>
+                            {!isCoach && (
+                              <div className="text-sm text-gray-500">{standing.districtName}</div>
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center font-medium">

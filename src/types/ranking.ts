@@ -26,12 +26,16 @@ export interface TeamRanking {
   matchesPlayed: number;
   wins: number;
   losses: number;
+  leagueWins: number;
+  leagueLosses: number;
+  leagueMatchesPlayed: number;
   flightWeightedScore: number;
   leagueStrengthCoefficient: number;
   opponentStrengthIndex: number;
   compositeScore: number;
   qualifiedForRanking: boolean; // True if team has played minimum 6 matches
   winPercentage?: number; // Added for display
+  leagueWinPercentage?: number; // Added for display
 }
 
 export interface RankingConfig {
