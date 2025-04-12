@@ -14,8 +14,8 @@ interface TeamManagerProps {
   canEditTeam: (teamId: string) => boolean;
   isAddPlayerDialogOpen: boolean;
   setIsAddPlayerDialogOpen: (isOpen: boolean) => void;
-  playerFormData: Omit<Player, 'id'>;
-  setPlayerFormData: React.Dispatch<React.SetStateAction<Omit<Player, 'id'>>>;
+  playerFormData: Omit<Player, 'id' | 'status' | 'seasonId'>;
+  setPlayerFormData: React.Dispatch<React.SetStateAction<Omit<Player, 'id' | 'status' | 'seasonId'>>>;
   handleAddPlayer: (e: React.FormEvent) => void;
 }
 

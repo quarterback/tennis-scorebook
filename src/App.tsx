@@ -15,6 +15,7 @@ import Matches from "@/pages/Matches";
 import Standings from "@/pages/Standings";
 import Rankings from "@/pages/Rankings";
 import Districts from "@/pages/Districts";
+import PlayerManagement from "@/pages/PlayerManagement";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <Districts />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/players" element={
+        <ProtectedRoute>
+          <Layout>
+            <PlayerManagement />
           </Layout>
         </ProtectedRoute>
       } />

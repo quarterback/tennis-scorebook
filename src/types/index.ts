@@ -1,4 +1,3 @@
-
 export type Gender = 'Boys' | 'Girls';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
 
@@ -6,6 +5,15 @@ export interface District {
   id: string;
   name: string;
   classification: Classification;
+}
+
+export type PlayerStatus = 'active' | 'retired' | 'transferred';
+
+export interface Season {
+  id: string;
+  year: number;
+  name: string; // e.g., "Fall 2024", "Spring 2025"
+  isCurrent: boolean;
 }
 
 export interface School {
@@ -29,6 +37,10 @@ export interface Player {
   name: string;
   grade: number; // 9, 10, 11, 12
   teamId: string;
+  seasonId: string; // The current season ID
+  status: PlayerStatus;
+  previousTeams?: string[]; // Array of previous team IDs
+  seasons?: string[]; // Array of seasons the player participated in
 }
 
 export interface User {
@@ -114,4 +126,13 @@ export interface MatchFormData {
     retired?: boolean;
     defaulted?: boolean;
   }>;
+}
+
+export interface PlayerTransfer {
+  id: string;
+  playerId: string;
+  fromTeamId: string;
+  toTeamId: string;
+  date: string;
+  seasonId: string;
 }

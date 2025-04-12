@@ -29,7 +29,7 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
     gender: 'Boys'
   });
   
-  const [playerFormData, setPlayerFormData] = useState<Omit<Player, 'id'>>({
+  const [playerFormData, setPlayerFormData] = useState<Omit<Player, 'id' | 'status' | 'seasonId'>>({
     name: '',
     grade: 9,
     teamId: ''
@@ -84,12 +84,6 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
         teamId: selectedTeamId
       });
       setIsAddPlayerDialogOpen(false);
-    }
-  };
-  
-  const handleRemovePlayer = (playerId: string) => {
-    if (confirm('Are you sure you want to remove this player?')) {
-      deletePlayer(playerId);
     }
   };
   

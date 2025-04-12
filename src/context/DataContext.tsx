@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useEffect } from 'react';
-import { School, Team, Player, Match, TeamStanding, Gender, Classification, District } from '@/types';
+import { School, Team, Player, Match, TeamStanding, Gender, Classification, District, Season, PlayerTransfer } from '@/types';
 
 // Sample data for demonstration
 import { sampleSchools, sampleTeams, samplePlayers, sampleMatches, sampleDistricts } from '@/data/sampleData';
@@ -21,39 +20,41 @@ interface DataContextType {
   matches: Match[];
   districts: District[];
   
-  // School operations
+  seasons: Season[];
+  transfers: PlayerTransfer[];
+  currentSeason: Season;
+  
   addSchool: (school: Omit<School, 'id'>) => void;
   updateSchool: (school: School) => void;
   deleteSchool: (id: string) => void;
   
-  // Team operations
   addTeam: (team: Omit<Team, 'id'>) => void;
   updateTeam: (team: Team) => void;
   deleteTeam: (id: string) => void;
   
-  // Player operations
-  addPlayer: (player: Omit<Player, 'id'>) => void;
+  addPlayer: (player: Omit<Player, 'id' | 'status' | 'seasonId'>) => void;
   updatePlayer: (player: Player) => void;
   deletePlayer: (id: string) => void;
   getPlayerById: (id: string) => Player | undefined;
   getPlayersByTeam: (teamId: string) => Player[];
+  transferPlayer: (playerId: string, toTeamId: string) => void;
+  retirePlayer: (playerId: string) => void;
+  progressSeasons: () => Season;
+  getArchivedSeasons: () => Season[];
+  getPlayersByseason: (seasonId: string) => Player[];
   
-  // Match operations
   addMatch: (match: Omit<Match, 'id'>) => void;
   updateMatch: (match: Match) => void;
   deleteMatch: (id: string) => void;
 
-  // District operations
   addDistrict: (district: Omit<District, 'id'>) => void;
   updateDistrict: (district: District) => void;
   deleteDistrict: (id: string) => void;
   getDistrictsByClassification: (classification: Classification) => District[];
   
-  // Filtering operations
   getTeamsBySchool: (schoolId: string) => Team[];
   getMatchesByTeam: (teamId: string) => Match[];
   
-  // Standings
   getStandings: (gender: Gender, classification: Classification, districtId?: string) => TeamStanding[];
 }
 
@@ -68,7 +69,6 @@ export const useData = () => {
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize all the hook operations
   const { 
     schools, setSchools, addSchool, updateSchool, deleteSchool 
   } = useSchoolOperations(sampleSchools);
@@ -78,7 +78,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useTeamOperations(sampleTeams);
   
   const { 
-    players, addPlayer, updatePlayer, deletePlayer, getPlayerById, getPlayersByTeam, loadPlayersData
+    players, addPlayer, updatePlayer, deletePlayer, getPlayerById, getPlayersByTeam, loadPlayersData,
+    transfers, seasons, transferPlayer, retirePlayer, progressSeasons, getCurrentSeason, getArchivedSeasons,
+    getPlayersByseason
   } = usePlayersData();
   
   const { 
@@ -89,28 +91,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     districts, setDistricts, addDistrict, updateDistrict, deleteDistrict, getDistrictsByClassification 
   } = useDistrictOperations(sampleDistricts);
   
-  // Load initial sample data
   useEffect(() => {
     loadPlayersData(samplePlayers);
   }, []);
   
-  // Set up filter operations that depend on the current state
   const { 
     getTeamsBySchool, getMatchesByTeam 
   } = useFilterOperations(teams, players, matches);
   
-  // Set up standings calculator
   const { getStandings } = useStandingsCalculator(teams, schools, matches, districts);
   
-  // Create the context value with all operations
   const value: DataContextType = {
     schools,
     teams,
     players,
     matches,
     districts,
+    seasons,
+    transfers,
+    currentSeason: getCurrentSeason(),
     
-    // Export all operations
     addSchool,
     updateSchool,
     deleteSchool,
@@ -124,6 +124,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deletePlayer,
     getPlayerById,
     getPlayersByTeam,
+    transferPlayer,
+    retirePlayer,
+    progressSeasons,
+    getArchivedSeasons,
+    getPlayersByseason,
     
     addMatch,
     updateMatch,
@@ -140,24 +145,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getStandings
   };
   
-  // Handle cascade deletes for schools
   const handleSchoolDelete = (id: string) => {
     const school = schools.find(s => s.id === id);
     if (school) {
-      // Delete the school
       deleteSchool(id);
       
-      // Find all teams associated with this school
       const schoolTeams = teams.filter(t => t.schoolId === id);
       
-      // Delete all teams
       schoolTeams.forEach(team => {
-        // Delete all players associated with this team
         players.filter(p => p.teamId === team.id).forEach(player => {
           deletePlayer(player.id);
         });
         
-        // Delete the team
         deleteTeam(team.id);
       });
     }
