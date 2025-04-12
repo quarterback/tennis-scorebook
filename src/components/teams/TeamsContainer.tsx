@@ -59,12 +59,6 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
   // Get the selected school
   const selectedSchool = schools.find(s => s.id === selectedSchoolId);
   
-  // Get players for the selected team
-  const teamPlayers = selectedTeamId
-    ? players.filter(player => player.teamId === selectedTeamId)
-      .sort((a, b) => b.grade - a.grade || a.name.localeCompare(b.name))
-    : [];
-  
   const handleAddTeam = (e: React.FormEvent) => {
     e.preventDefault();
     addTeam({
@@ -173,9 +167,7 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
       <div className="lg:col-span-2">
         <TeamManager 
           selectedTeamId={selectedTeamId}
-          teamPlayers={teamPlayers}
           canEditTeam={canEditTeam}
-          handleRemovePlayer={handleRemovePlayer}
           isAddPlayerDialogOpen={isAddPlayerDialogOpen}
           setIsAddPlayerDialogOpen={setIsAddPlayerDialogOpen}
           playerFormData={playerFormData}
