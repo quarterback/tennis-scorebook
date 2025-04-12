@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Gender, Classification } from '@/types';
 import { Medal, Calendar, Info } from 'lucide-react';
 import TournamentBracket from './TournamentBracket';
+import { Badge } from '@/components/ui/badge';
 
 interface TournamentCardProps {
   type: 'Singles' | 'Doubles';
@@ -37,23 +38,23 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     "Top 4 qualifiers from each district tournament advance to state" : "";
   
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="mb-4 flex items-center justify-between">
+    <Card className="shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-3">
+        <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center">
-            <Medal className="h-5 w-5 mr-2 text-tennis-blue" />
-            <h3 className="font-medium text-lg">{type} Tournament</h3>
+            <Medal className="h-4 w-4 mr-2 text-tennis-blue" />
+            <h3 className="font-medium text-base">{type} Tournament</h3>
           </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <Calendar className="h-4 w-4 mr-1" />
+          <Badge variant="outline" className="flex items-center text-xs">
+            <Calendar className="h-3 w-3 mr-1" />
             <span>{formattedDate}</span>
-          </div>
+          </Badge>
         </div>
         
         {!isDistrict && qualificationInfo && (
-          <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-100 text-sm">
+          <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-100 text-xs">
             <div className="flex items-start">
-              <Info className="h-4 w-4 mr-2 text-tennis-blue mt-0.5" />
+              <Info className="h-3 w-3 mr-1.5 text-tennis-blue mt-0.5 flex-shrink-0" />
               <p>{qualificationInfo}</p>
             </div>
           </div>
@@ -66,8 +67,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           districtName={districtName}
         />
         
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="mt-3 text-center">
+          <p className="text-xs text-gray-500">
             {isDistrict 
               ? `${districtName} qualifier for the ${classification} ${gender} State Championship`
               : `${classification} ${gender} State Championship Tournament`}
