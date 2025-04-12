@@ -1,17 +1,62 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Activity, Users, Award, Calendar, School, LogOut, FolderTree, BarChart3 } from 'lucide-react';
+import { 
+  Activity, 
+  Users, 
+  Award, 
+  Calendar, 
+  School, 
+  LogOut, 
+  FolderTree, 
+  BarChart3,
+  Menu,
+  X
+} from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerClose
+} from '@/components/ui/drawer';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+
+  const navLinks = [
+    { path: '/', icon: <Award className="h-4 w-4 mr-2" />, label: 'Dashboard' },
+    { path: '/schools', icon: <School className="h-4 w-4 mr-2" />, label: 'Schools' },
+    { path: '/districts', icon: <FolderTree className="h-4 w-4 mr-2" />, label: 'Districts' },
+    { path: '/teams', icon: <Users className="h-4 w-4 mr-2" />, label: 'Teams' },
+    { path: '/matches', icon: <Calendar className="h-4 w-4 mr-2" />, label: 'Matches' },
+    { path: '/standings', icon: <Award className="h-4 w-4 mr-2" />, label: 'Standings' },
+    { path: '/rankings', icon: <BarChart3 className="h-4 w-4 mr-2" />, label: 'Rankings' },
+  ];
+  
+  const renderNavLinks = () => (
+    navLinks.map(link => (
+      <li key={link.path}>
+        <Link 
+          to={link.path} 
+          className={`px-4 py-2 rounded-md inline-flex items-center ${isActive(link.path) ? 'bg-white/20' : 'hover:bg-white/10'}`}
+          onClick={() => isMobile && setIsDrawerOpen(false)}
+        >
+          {link.icon}
+          {link.label}
+        </Link>
+      </li>
+    ))
+  );
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -24,67 +69,66 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           
           {user && (
             <div className="flex items-center gap-4">
-              <span>Welcome, {user.name}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="bg-transparent hover:bg-white/20 text-white border-white"
-                onClick={logout}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <span className="hidden sm:inline">Welcome, {user.name}</span>
+              {isMobile ? (
+                <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                  <DrawerTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="bg-transparent hover:bg-white/20 text-white border-white"
+                    >
+                      <Menu className="h-4 w-4" />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="h-[80vh]">
+                    <div className="p-4 flex flex-col">
+                      <DrawerClose className="ml-auto">
+                        <Button variant="ghost" size="icon">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </DrawerClose>
+                      <div className="py-6">
+                        <span className="text-lg font-medium mb-4 block">Menu</span>
+                        <ul className="space-y-2">
+                          {renderNavLinks()}
+                        </ul>
+                        <div className="mt-6 pt-6 border-t">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full"
+                            onClick={logout}
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-transparent hover:bg-white/20 text-white border-white"
+                  onClick={logout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              )}
             </div>
           )}
         </div>
       </header>
       
-      {user && (
-        <div className="bg-tennis-green text-white">
+      {user && !isMobile && (
+        <div className="bg-tennis-green text-white overflow-x-auto">
           <nav className="container mx-auto py-2">
-            <ul className="flex space-x-1">
-              <li>
-                <Link to="/" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <Award className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link to="/schools" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/schools') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <School className="h-4 w-4 mr-2" />
-                  Schools
-                </Link>
-              </li>
-              <li>
-                <Link to="/districts" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/districts') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <FolderTree className="h-4 w-4 mr-2" />
-                  Districts
-                </Link>
-              </li>
-              <li>
-                <Link to="/teams" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/teams') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Teams
-                </Link>
-              </li>
-              <li>
-                <Link to="/matches" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/matches') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Matches
-                </Link>
-              </li>
-              <li>
-                <Link to="/standings" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/standings') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <Award className="h-4 w-4 mr-2" />
-                  Standings
-                </Link>
-              </li>
-              <li>
-                <Link to="/rankings" className={`px-4 py-2 rounded-md inline-flex items-center ${isActive('/rankings') ? 'bg-white/20' : 'hover:bg-white/10'}`}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Rankings
-                </Link>
-              </li>
+            <ul className="flex flex-nowrap space-x-1 min-w-max">
+              {renderNavLinks()}
             </ul>
           </nav>
         </div>
