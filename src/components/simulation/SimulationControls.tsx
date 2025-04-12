@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { MatchGenerationConfig } from '@/types/ranking';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Settings2, FlaskConical, AlertCircle } from 'lucide-react';
+import { Calendar, Settings2, FlaskConical, AlertCircle, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const SimulationControls: React.FC = () => {
   const { 
@@ -24,7 +26,7 @@ const SimulationControls: React.FC = () => {
   
   const [showSimulationControls, setShowSimulationControls] = useState(false);
   
-  // Date states
+  // Date states - default to a longer season (early March to mid-May)
   const defaultStartDate = new Date('2025-03-01');
   const defaultEndDate = new Date('2025-05-15');
   
@@ -37,6 +39,26 @@ const SimulationControls: React.FC = () => {
   const [maxRegularMatches, setMaxRegularMatches] = useState(16);
   const [maxTotalMatches, setMaxTotalMatches] = useState(20);
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(true);
+  
+  // Calculate season duration in weeks to show info to the user
+  const calculateWeeks = () => {
+    if (!startDate || !endDate) return 0;
+    const days = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.ceil(days / 7);
+  };
+  
+  const seasonWeeks = calculateWeeks();
+  
+  // Calculate theoretical max matches based on season length
+  const calculateMaxMatches = () => {
+    if (!startDate || !endDate) return 0;
+    const days = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weeks = Math.ceil(days / 7);
+    // 3 regular matches per week, plus some weekend tournaments
+    return (weeks * 3) - 1; // Subtract 1 week for spring break
+  };
+  
+  const theoreticalMaxMatches = calculateMaxMatches();
   
   const handleGenerateData = async () => {
     if (!startDate || !endDate) {
@@ -182,7 +204,19 @@ const SimulationControls: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="max-regular">Max Regular Season Matches</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="max-regular">Max Regular Season Matches</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-slate-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">The maximum number of regular season dual matches each team will play.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="max-regular"
                   type="number"
@@ -195,7 +229,19 @@ const SimulationControls: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="max-total">Max Total Matches (with tournaments)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="max-total">Max Total Matches (with tournaments)</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-slate-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">The maximum total matches including tournaments. Must be greater than regular season matches.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="max-total"
                   type="number"
@@ -219,6 +265,17 @@ const SimulationControls: React.FC = () => {
                 </Label>
               </div>
             </div>
+            
+            <Alert className="bg-blue-50 border-blue-200">
+              <Info className="h-5 w-5 text-blue-500" />
+              <AlertDescription className="text-blue-800">
+                Season length: <span className="font-medium">{seasonWeeks} weeks</span> ({startDate && endDate ? `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}` : 'Not set'})
+                <br />
+                <span className="text-sm">This season can theoretically support up to ~{theoreticalMaxMatches} matches per team</span>
+                <br />
+                <span className="text-xs">(Accounts for 3 matches/week, with spring break in late March)</span>
+              </AlertDescription>
+            </Alert>
             
             <div className="bg-amber-50 border border-amber-200 rounded p-3 text-amber-800 text-sm flex items-start space-x-2.5">
               <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />

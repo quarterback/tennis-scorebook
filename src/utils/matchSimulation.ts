@@ -1,6 +1,6 @@
 
 import { Match, Flight, Team, School, Player } from '@/types';
-import type { Set } from '@/types'; // Changed to type-only import to avoid conflict with global Set
+import type { Set } from '@/types'; // Type-only import to avoid conflict with global Set
 import { TeamLadder } from '@/types/ranking';
 import { getPlayerWithRank } from './playerSimulation';
 
@@ -395,22 +395,42 @@ export const generateMatchDates = (
   const end = new Date(endDate);
   const daysBetween = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   
-  // Ensure we have enough days
-  if (daysBetween < count) {
-    throw new Error('Season too short for requested match count');
+  // Calculate max possible match days
+  // For high school tennis, matches can be scheduled 3 times per week:
+  // - Typically Monday, Wednesday, Friday for league matches
+  // - Weekend tournaments on Friday-Saturday
+  const matchesPerWeek = 3;
+  const weeksInSeason = Math.ceil(daysBetween / 7);
+  const potentialMatchDays = weeksInSeason * matchesPerWeek;
+  
+  // Check if we have enough days, accounting for a more realistic schedule
+  if (potentialMatchDays < count) {
+    console.warn(`Warning: Requested ${count} matches but only have capacity for approximately ${potentialMatchDays} based on season length.`);
+    // Continue anyway, we'll fit as many as we can
   }
   
   const dates: string[] = [];
   const usedDates = new Set<string>();
   
-  // Set days of week for matches (typically Tue/Thu for tennis)
-  const matchDays = [2, 4]; // Tuesday and Thursday
+  // Set days of week for matches (typically Mon/Wed/Fri for tennis)
+  const matchDays = [1, 3, 5]; // Monday, Wednesday, Friday
+  const tournamentDays = [5, 6]; // Friday, Saturday for tournaments
   
   // First round
   let currentDate = new Date(start);
   const firstRoundCount = doubleRoundRobin ? Math.ceil(count / 2) : count;
   
+  // Skip spring break (last week of March)
+  const springBreakStart = new Date(start.getFullYear(), 2, 24); // March 24th
+  const springBreakEnd = new Date(start.getFullYear(), 2, 31); // March 31st
+  
   while (dates.length < firstRoundCount && currentDate <= end) {
+    // Skip spring break
+    if (currentDate >= springBreakStart && currentDate <= springBreakEnd) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
+    
     // Check if current day is a match day
     if (matchDays.includes(currentDate.getDay())) {
       const dateStr = currentDate.toISOString().split('T')[0];
@@ -425,7 +445,7 @@ export const generateMatchDates = (
   }
   
   // If double round robin, add second round with 2-3 week gap
-  if (doubleRoundRobin) {
+  if (doubleRoundRobin && dates.length >= firstRoundCount) {
     const secondRoundDelay = 14 + Math.floor(Math.random() * 7); // 2-3 weeks
     const firstRoundDates = [...dates];
     
@@ -435,6 +455,11 @@ export const generateMatchDates = (
       const originalDate = new Date(dateStr);
       const newDate = new Date(originalDate);
       newDate.setDate(newDate.getDate() + secondRoundDelay);
+      
+      // Skip spring break
+      if (newDate >= springBreakStart && newDate <= springBreakEnd) {
+        newDate.setDate(newDate.getDate() + 7); // Skip a week
+      }
       
       // Ensure new date is still in season
       if (newDate <= end) {
@@ -447,11 +472,50 @@ export const generateMatchDates = (
     }
   }
   
-  // If we still don't have enough dates, add more
+  // If we still don't have enough dates, add some weekend tournament dates
   currentDate = new Date(start);
+  let weekendCount = 0;
+  const maxTournamentWeekends = 4; // Limit to 4 tournament weekends in a season
+  
+  while (dates.length < count && currentDate <= end && weekendCount < maxTournamentWeekends) {
+    // Focus on weekends for tournaments
+    if (tournamentDays.includes(currentDate.getDay())) {
+      // Skip spring break
+      if (currentDate >= springBreakStart && currentDate <= springBreakEnd) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue;
+      }
+      
+      const dateStr = currentDate.toISOString().split('T')[0];
+      if (!usedDates.has(dateStr)) {
+        dates.push(dateStr);
+        usedDates.add(dateStr);
+        
+        // Count weekends (consider only Fridays to avoid double counting)
+        if (currentDate.getDay() === 5) {
+          weekendCount++;
+        }
+      }
+    }
+    
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  // If we STILL don't have enough dates, add more weekday matches
+  // This is less realistic but ensures we can satisfy the requested count
+  currentDate = new Date(start);
+  const additionalMatchDays = [2, 4]; // Add Tuesday and Thursday as potential match days
+  
   while (dates.length < count && currentDate <= end) {
-    // Skip match days already handled
-    if (!matchDays.includes(currentDate.getDay())) {
+    // Skip spring break
+    if (currentDate >= springBreakStart && currentDate <= springBreakEnd) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
+    
+    // Try additional weekdays
+    if (additionalMatchDays.includes(currentDate.getDay())) {
       const dateStr = currentDate.toISOString().split('T')[0];
       if (!usedDates.has(dateStr)) {
         dates.push(dateStr);
@@ -463,6 +527,7 @@ export const generateMatchDates = (
     currentDate.setDate(currentDate.getDate() + 1);
   }
   
+  // Sort dates chronologically
   return dates.sort((a, b) => a.localeCompare(b));
 };
 
