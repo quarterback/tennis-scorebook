@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Player, PlayerStatus, Season, PlayerTransfer } from '@/types';
@@ -40,7 +41,7 @@ export const usePlayersData = () => {
     const newPlayer: Player = {
       ...player,
       id: crypto.randomUUID(),
-      status: 'active',
+      status: 'active' as PlayerStatus,
       seasonId: currentSeason.id,
       seasons: [currentSeason.id]
     };
@@ -122,7 +123,7 @@ export const usePlayersData = () => {
       ...player,
       teamId: toTeamId,
       previousTeams: [...(player.previousTeams || []), fromTeamId],
-      status: 'active'
+      status: 'active' as PlayerStatus
     };
     
     updatePlayer(updatedPlayer);
@@ -147,7 +148,7 @@ export const usePlayersData = () => {
     
     const updatedPlayer: Player = {
       ...player,
-      status: 'retired'
+      status: 'retired' as PlayerStatus
     };
     
     updatePlayer(updatedPlayer);
@@ -188,7 +189,7 @@ export const usePlayersData = () => {
         if (player.grade === 12) {
           return {
             ...player,
-            status: 'retired',
+            status: 'retired' as PlayerStatus,
             seasons: [...(player.seasons || []), newSeason.id]
           };
         }

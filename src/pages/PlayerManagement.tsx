@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-  Users, UserPlus, School, Transfer, History, 
+  Users, UserPlus, School, ArrowRightLeft, History, 
   ArrowRight, Archive, GraduationCap, UserMinus
 } from 'lucide-react';
 import { Player, Team, School as SchoolType } from '@/types';
@@ -33,9 +32,7 @@ const PlayerManagement = () => {
   const [isAdvanceSeasonDialogOpen, setIsAdvanceSeasonDialogOpen] = useState(false);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>(currentSeason.id);
   
-  // Filter according to user role and active tab
   const filteredPlayers = players.filter(player => {
-    // Role-based filtering
     if (user?.role === 'coach' && user.schoolId) {
       const playerTeam = teams.find(team => team.id === player.teamId);
       if (!playerTeam || playerTeam.schoolId !== user.schoolId) {
@@ -43,7 +40,6 @@ const PlayerManagement = () => {
       }
     }
     
-    // Tab-based filtering
     if (activeTab === 'active') {
       return player.status === 'active';
     } else if (activeTab === 'retired') {
@@ -55,7 +51,6 @@ const PlayerManagement = () => {
     return true;
   });
   
-  // Get school and team info for a player
   const getPlayerSchool = (player: Player): SchoolType | undefined => {
     const team = teams.find(t => t.id === player.teamId);
     if (!team) return undefined;
@@ -105,7 +100,6 @@ const PlayerManagement = () => {
     }
   };
   
-  // Only admins can access this page
   if (user?.role !== 'admin' && user?.role !== 'coach') {
     return (
       <div className="flex flex-col items-center justify-center h-96">
@@ -216,7 +210,7 @@ const PlayerManagement = () => {
                                   setIsTransferDialogOpen(true);
                                 }}
                               >
-                                <Transfer className="h-4 w-4 text-blue-500" />
+                                <ArrowRightLeft className="h-4 w-4 text-blue-500" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -367,7 +361,6 @@ const PlayerManagement = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Transfer Player Dialog */}
       <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -411,7 +404,7 @@ const PlayerManagement = () => {
                   className="w-full"
                   disabled={!transferTeamId}
                 >
-                  <Transfer className="h-4 w-4 mr-2" />
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
                   Complete Transfer
                 </Button>
               </>
