@@ -31,21 +31,21 @@ const TournamentRound: React.FC<TournamentRoundProps> = ({ name, matches }) => {
   return (
     <div className="border-b last:border-b-0">
       <div 
-        className="flex justify-between items-center p-2 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+        className="flex justify-between items-center p-1.5 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
         onClick={toggleExpanded}
       >
-        <h3 className="font-medium text-sm">{name}</h3>
+        <h3 className="font-medium text-xs">{name}</h3>
         <div className="flex items-center text-gray-500">
-          <span className="mr-2 text-xs">{matches.length} matches</span>
+          <span className="mr-1 text-xs">{matches.length} matches</span>
           {expanded ? 
-            <ChevronUp className="h-3.5 w-3.5" /> : 
-            <ChevronDown className="h-3.5 w-3.5" />
+            <ChevronUp className="h-3 w-3" /> : 
+            <ChevronDown className="h-3 w-3" />
           }
         </div>
       </div>
       
       {expanded && (
-        <div className="p-1.5 divide-y divide-gray-50 bg-white">
+        <div className="p-1 space-y-1 bg-white">
           {matches.map((match) => (
             <TournamentMatch 
               key={match.id}
