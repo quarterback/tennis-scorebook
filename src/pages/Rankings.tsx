@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,24 +24,19 @@ const Rankings = () => {
   const [selectedTab, setSelectedTab] = useState<string>('rankings');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
   
-  // Get all available districts for the selected classification
   const availableDistricts = getDistrictsByClassification(selectedClassification);
   
-  // Calculate rankings
   const rankings = calculateRankings(defaultConfig);
   
-  // Filter rankings based on selected criteria
   const filteredRankings = rankings.filter(ranking => 
     ranking.gender === selectedGender && 
     ranking.classification === selectedClassification &&
     (selectedDistrict === 'all' || ranking.districtName === selectedDistrict)
   );
   
-  // Get qualified and unqualified teams
   const qualifiedTeams = filteredRankings.filter(r => r.qualifiedForRanking);
   const unqualifiedTeams = filteredRankings.filter(r => !r.qualifiedForRanking);
   
-  // Calculate league-specific insights
   const leagueInsights = {
     avgLeagueMatches: qualifiedTeams.reduce((sum, team) => sum + team.leagueMatchesPlayed, 0) / 
       (qualifiedTeams.length || 1),
@@ -50,16 +44,13 @@ const Rankings = () => {
       (qualifiedTeams.length || 1)
   };
   
-  // Get analytics insights with league data
   const insights = {
     ...generateInsights(filteredRankings),
     leagueInsights
   };
   
-  // Find close matchups
   const keyMatchups = findKeyMatchups(qualifiedTeams);
   
-  // Group teams by district/league for standings view
   const teamsByDistrict = qualifiedTeams.reduce((acc, team) => {
     const district = team.districtName;
     if (!acc[district]) {
@@ -69,10 +60,8 @@ const Rankings = () => {
     return acc;
   }, {} as Record<string, typeof qualifiedTeams>);
   
-  // For each district, sort teams by league wins within that district
   Object.keys(teamsByDistrict).forEach(district => {
     teamsByDistrict[district].sort((a, b) => {
-      // Primary sort by league win percentage
       const aLeagueWinPct = a.leagueWinPercentage || 0;
       const bLeagueWinPct = b.leagueWinPercentage || 0;
       
@@ -80,17 +69,14 @@ const Rankings = () => {
         return bLeagueWinPct - aLeagueWinPct;
       }
       
-      // Secondary sort by league wins
       if (a.leagueWins !== b.leagueWins) {
         return b.leagueWins - a.leagueWins;
       }
       
-      // Tertiary sort by overall win percentage
       return (b.winPercentage || 0) - (a.winPercentage || 0);
     });
   });
   
-  // Edge cases examples
   const edgeCases = [
     {
       case: "Weather Impact",
@@ -114,12 +100,10 @@ const Rankings = () => {
     }
   ];
   
-  // Get current season info
   const today = new Date();
   const cutoffDate = new Date(defaultConfig.cutoffDate);
   const daysUntilCutoff = Math.ceil((cutoffDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
-  // Helper function to find teams with identical records
   function findTeamsWithIdenticalRecords(teams: typeof qualifiedTeams) {
     const recordGroups: Record<string, typeof qualifiedTeams> = {};
     
@@ -131,7 +115,6 @@ const Rankings = () => {
       recordGroups[key].push(team);
     });
     
-    // Return teams that have the same record as another team
     return Object.values(recordGroups)
       .filter(group => group.length > 1)
       .flat();
@@ -139,7 +122,11 @@ const Rankings = () => {
   
   return (
     <div className="space-y-6">
-      <RankingsHeader daysUntilCutoff={daysUntilCutoff} cutoffDate={cutoffDate} />
+      <RankingsHeader 
+        daysUntilCutoff={daysUntilCutoff} 
+        cutoffDate={cutoffDate} 
+        selectedClassification={selectedClassification}
+      />
       
       <RankingsFilter 
         selectedGender={selectedGender}
