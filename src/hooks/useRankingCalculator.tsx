@@ -1,3 +1,4 @@
+
 import { useData } from '@/context/DataContext';
 import { Team, School, Match, Flight, District } from '@/types';
 import { TeamRanking, LeagueStrengthData, RankingConfig, HistoricalData } from '@/types/ranking';
@@ -5,10 +6,10 @@ import { TeamRanking, LeagueStrengthData, RankingConfig, HistoricalData } from '
 export const useRankingCalculator = () => {
   const { teams, schools, matches, districts } = useData();
   
-  // Default ranking configuration
+  // Default ranking configuration with current season cutoff
   const defaultConfig: RankingConfig = {
     minimumMatches: 6,
-    cutoffDate: '2025-05-07', // Example cutoff date, first week of May
+    cutoffDate: '2025-05-12', // Updated cutoff date for current season
     weights: {
       singles1: 1.0,
       singles2: 0.75,

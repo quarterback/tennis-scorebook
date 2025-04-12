@@ -3,7 +3,7 @@ import React from 'react';
 import { TeamRanking, RankingConfig } from '@/types/ranking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Award, Medal } from 'lucide-react';
+import { Award, Medal, Calendar } from 'lucide-react';
 
 interface TeamRankingsTableProps {
   qualifiedTeams: TeamRanking[];
@@ -11,15 +11,26 @@ interface TeamRankingsTableProps {
 }
 
 export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedTeams, defaultConfig }) => {
+  // Get current date and cutoff date for comparison
+  const today = new Date();
+  const cutoffDate = new Date(defaultConfig.cutoffDate);
+  const isBeforeCutoff = today < cutoffDate;
+
   return (
     <Card>
       <CardHeader className="bg-tennis-gray pb-2">
-        <CardTitle className="flex items-center">
-          <Award className="h-5 w-5 mr-2 text-tennis-blue" />
-          Overall Rankings
-          <span className="ml-2 text-sm font-normal text-gray-500">
-            (Minimum {defaultConfig.minimumMatches} matches required)
-          </span>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Award className="h-5 w-5 mr-2 text-tennis-blue" />
+            Overall Rankings
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              (Minimum {defaultConfig.minimumMatches} matches required)
+            </span>
+          </div>
+          <div className="flex items-center text-sm font-normal text-gray-500">
+            <Calendar className="h-4 w-4 mr-1" />
+            {isBeforeCutoff ? 'Projected Rankings' : 'Final Rankings'}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">

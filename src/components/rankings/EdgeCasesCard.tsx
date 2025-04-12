@@ -39,6 +39,11 @@ export const EdgeCasesCard: React.FC<EdgeCasesCardProps> = ({ edgeCases }) => {
                           Composite: {team.compositeScore.toFixed(2)}, 
                           OSI: {team.opponentStrengthIndex.toFixed(2)}
                         </span>
+                        {team.matchesPlayed < 6 && (
+                          <span className="ml-1 text-xs text-red-500">
+                            (Only {team.matchesPlayed} matches played)
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>
