@@ -1,4 +1,3 @@
-
 import { School, Team, Player, Match, Flight, Set, District } from '@/types';
 
 export const sampleDistricts: District[] = [
@@ -799,7 +798,10 @@ export const samplePlayers: Player[] = [
       id: `${team.id}-player${index + 1}`,
       name: `Player ${index + 1}`,
       grade: 9 + Math.floor(Math.random() * 4), // Random grade 9-12
-      teamId: team.id
+      teamId: team.id,
+      seasonId: 'current-season', // Using the ID from initialSeasonsData in usePlayersData
+      status: 'active' as PlayerStatus,
+      seasons: ['current-season'] // Include the current season in the seasons array
     }));
   })
 ];
