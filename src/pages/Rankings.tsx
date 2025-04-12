@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Award, Medal, TrendingUp, BarChart3, AlertTriangle, Zap, PieChart, ActivitySquare, Filter } from 'lucide-react';
 import { Gender, Classification } from '@/types';
-import { useRankingCalculator } from '@/hooks/useRankingCalculator';
+import { useRankingCalculator } from '@/hooks/rankings/useRankingCalculator';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { TeamRankingsTable } from '@/components/rankings/TeamRankingsTable';
 import { UnqualifiedTeamsTable } from '@/components/rankings/UnqualifiedTeamsTable';
