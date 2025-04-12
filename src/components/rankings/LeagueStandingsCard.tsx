@@ -41,13 +41,24 @@ export const LeagueStandingsCard: React.FC<LeagueStandingsCardProps> = ({
               // Find overall ranking
               const overallRank = qualifiedTeams.findIndex(t => t.teamId === team.teamId) + 1;
               
+              // Highlight based on position
+              const isFirstPlace = index === 0;
+              const isSecondPlace = index === 1;
+              const isThirdPlace = index === 2;
+              
               return (
-                <TableRow key={team.teamId}>
+                <TableRow key={team.teamId} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <TableCell className="font-medium">
                     <div className="flex items-center">
-                      {index === 0 ? (
+                      {isFirstPlace ? (
                         <span className="min-w-8 h-8 flex items-center justify-center rounded-full 
                         bg-yellow-100 text-yellow-800">1</span>
+                      ) : isSecondPlace ? (
+                        <span className="min-w-8 h-8 flex items-center justify-center rounded-full 
+                        bg-gray-100 text-gray-800">2</span>
+                      ) : isThirdPlace ? (
+                        <span className="min-w-8 h-8 flex items-center justify-center rounded-full 
+                        bg-amber-100 text-amber-800">3</span>
                       ) : (
                         <span>{index + 1}</span>
                       )}
