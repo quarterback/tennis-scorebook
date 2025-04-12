@@ -85,3 +85,58 @@ export interface RankingInsight {
     avgLeagueWinPct: number;
   };
 }
+
+// Player ladder position type
+export interface PlayerLadderPosition {
+  playerId: string;
+  rank: number; // 1 = top player, 2 = second best, etc.
+  previousRanks: number[]; // History of rankings for tracking movement
+}
+
+// Team ladder (ordered list of players by skill)
+export interface TeamLadder {
+  teamId: string;
+  seasonId: string;
+  rankings: PlayerLadderPosition[];
+  lastUpdated: string; // ISO date
+}
+
+// Match generation configuration
+export interface MatchGenerationConfig {
+  startDate: string; // ISO date for season start
+  endDate: string; // ISO date for season end
+  maxRegularSeasonMatches: number; // Default 16
+  maxTotalMatches: number; // Default 20 (including tournaments)
+  doubleRoundRobin: boolean; // Whether to schedule double round-robin for districts
+}
+
+// Tournament structure
+export interface TournamentStructure {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  type: 'regular' | 'championship'; // Regular or championship tournament
+  teams: string[]; // Array of team IDs
+  bracket: TournamentBracket;
+}
+
+// Tournament bracket
+export interface TournamentBracket {
+  rounds: TournamentRound[];
+}
+
+// Tournament round
+export interface TournamentRound {
+  name: string; // e.g., "Quarterfinals", "Semifinals", "Championship"
+  matchups: TournamentMatchup[];
+}
+
+// Tournament matchup
+export interface TournamentMatchup {
+  id: string;
+  teamOne: string; // Team ID
+  teamTwo: string; // Team ID
+  winner?: string; // Team ID of winner
+  score?: [number, number]; // Team scores [teamOne, teamTwo]
+}
