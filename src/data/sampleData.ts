@@ -28,6 +28,16 @@ export const sampleDistricts: District[] = [
     classification: '6A'
   },
   {
+    id: 'central-valley',
+    name: 'Central Valley Conference',
+    classification: '6A'
+  },
+  {
+    id: 'southwest',
+    name: 'Southwest Conference',
+    classification: '6A'
+  },
+  {
     id: 'northwest-oregon',
     name: 'Northwest Oregon Conference',
     classification: '5A'
@@ -43,8 +53,33 @@ export const sampleDistricts: District[] = [
     classification: '5A'
   },
   {
+    id: 'intermountain',
+    name: 'Intermountain Conference',
+    classification: '5A'
+  },
+  {
     id: 'sd1',
     name: 'Special District 1',
+    classification: '4A/3A/2A/1A'
+  },
+  {
+    id: 'sd2',
+    name: 'Special District 2',
+    classification: '4A/3A/2A/1A'
+  },
+  {
+    id: 'sd3',
+    name: 'Special District 3',
+    classification: '4A/3A/2A/1A'
+  },
+  {
+    id: 'sd4',
+    name: 'Special District 4',
+    classification: '4A/3A/2A/1A'
+  },
+  {
+    id: 'sd5',
+    name: 'Special District 5',
     classification: '4A/3A/2A/1A'
   }
 ];
@@ -72,6 +107,27 @@ export const sampleSchools: School[] = [
     districtId: 'metro',
     teams: []
   },
+  {
+    id: 'westview',
+    name: 'Westview',
+    classification: '6A',
+    districtId: 'metro',
+    teams: []
+  },
+  {
+    id: 'mountainside',
+    name: 'Mountainside',
+    classification: '6A',
+    districtId: 'metro',
+    teams: []
+  },
+  {
+    id: 'aloha',
+    name: 'Aloha',
+    classification: '6A',
+    districtId: 'metro',
+    teams: []
+  },
   
   // 6A Schools - PIL
   {
@@ -84,6 +140,27 @@ export const sampleSchools: School[] = [
   {
     id: 'grant',
     name: 'Grant',
+    classification: '6A',
+    districtId: 'pil',
+    teams: []
+  },
+  {
+    id: 'franklin',
+    name: 'Franklin',
+    classification: '6A',
+    districtId: 'pil',
+    teams: []
+  },
+  {
+    id: 'cleveland',
+    name: 'Cleveland',
+    classification: '6A',
+    districtId: 'pil',
+    teams: []
+  },
+  {
+    id: 'roosevelt',
+    name: 'Roosevelt',
     classification: '6A',
     districtId: 'pil',
     teams: []
@@ -104,6 +181,64 @@ export const sampleSchools: School[] = [
     districtId: 'three-rivers',
     teams: []
   },
+  {
+    id: 'west-linn',
+    name: 'West Linn',
+    classification: '6A',
+    districtId: 'three-rivers',
+    teams: []
+  },
+  {
+    id: 'tigard',
+    name: 'Tigard',
+    classification: '6A',
+    districtId: 'three-rivers',
+    teams: []
+  },
+  {
+    id: 'tualatin',
+    name: 'Tualatin',
+    classification: '6A',
+    districtId: 'three-rivers',
+    teams: []
+  },
+  
+  // 6A Schools - Pacific
+  {
+    id: 'century',
+    name: 'Century',
+    classification: '6A',
+    districtId: 'pacific',
+    teams: []
+  },
+  {
+    id: 'glencoe',
+    name: 'Glencoe',
+    classification: '6A',
+    districtId: 'pacific',
+    teams: []
+  },
+  {
+    id: 'liberty',
+    name: 'Liberty',
+    classification: '6A',
+    districtId: 'pacific',
+    teams: []
+  },
+  {
+    id: 'mcminnville',
+    name: 'McMinnville',
+    classification: '6A',
+    districtId: 'pacific',
+    teams: []
+  },
+  {
+    id: 'sherwood',
+    name: 'Sherwood',
+    classification: '6A',
+    districtId: 'pacific',
+    teams: []
+  },
   
   // 5A Schools
   {
@@ -120,6 +255,27 @@ export const sampleSchools: School[] = [
     districtId: 'midwestern',
     teams: []
   },
+  {
+    id: 'summit',
+    name: 'Summit',
+    classification: '5A',
+    districtId: 'intermountain',
+    teams: []
+  },
+  {
+    id: 'wilsonville',
+    name: 'Wilsonville',
+    classification: '5A',
+    districtId: 'northwest-oregon',
+    teams: []
+  },
+  {
+    id: 'corvallis',
+    name: 'Corvallis',
+    classification: '5A',
+    districtId: 'mid-willamette',
+    teams: []
+  },
   
   // 4A/3A/2A/1A Schools
   {
@@ -134,6 +290,27 @@ export const sampleSchools: School[] = [
     name: 'Oregon Episcopal',
     classification: '4A/3A/2A/1A',
     districtId: 'sd1',
+    teams: []
+  },
+  {
+    id: 'valley-catholic',
+    name: 'Valley Catholic',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd1',
+    teams: []
+  },
+  {
+    id: 'north-bend',
+    name: 'North Bend',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'marist',
+    name: 'Marist Catholic',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
     teams: []
   }
 ];
@@ -175,6 +352,41 @@ export const sampleTeams: Team[] = [
     players: [],
     coaches: []
   },
+  {
+    id: 'beaverton-girls',
+    schoolId: 'beaverton',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'westview-boys',
+    schoolId: 'westview',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'westview-girls',
+    schoolId: 'westview',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'mountainside-boys',
+    schoolId: 'mountainside',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'aloha-boys',
+    schoolId: 'aloha',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
   
   // PIL Teams
   {
@@ -198,6 +410,34 @@ export const sampleTeams: Team[] = [
     players: [],
     coaches: []
   },
+  {
+    id: 'grant-girls',
+    schoolId: 'grant',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'franklin-boys',
+    schoolId: 'franklin',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'cleveland-girls',
+    schoolId: 'cleveland',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'roosevelt-boys',
+    schoolId: 'roosevelt',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
   
   // Three Rivers Teams
   {
@@ -208,8 +448,66 @@ export const sampleTeams: Team[] = [
     coaches: []
   },
   {
+    id: 'lake-oswego-girls',
+    schoolId: 'lake-oswego',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'lakeridge-boys',
+    schoolId: 'lakeridge',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
     id: 'lakeridge-girls',
     schoolId: 'lakeridge',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'west-linn-boys',
+    schoolId: 'west-linn',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'tigard-boys',
+    schoolId: 'tigard',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'tualatin-girls',
+    schoolId: 'tualatin',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  
+  // Pacific Teams
+  {
+    id: 'century-boys',
+    schoolId: 'century',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'liberty-boys',
+    schoolId: 'liberty',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'sherwood-girls',
+    schoolId: 'sherwood',
     gender: 'Girls',
     players: [],
     coaches: []
@@ -224,9 +522,30 @@ export const sampleTeams: Team[] = [
     coaches: []
   },
   {
+    id: 'summit-boys',
+    schoolId: 'summit',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'wilsonville-girls',
+    schoolId: 'wilsonville',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
     id: 'south-eugene-girls',
     schoolId: 'south-eugene',
     gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'corvallis-boys',
+    schoolId: 'corvallis',
+    gender: 'Boys',
     players: [],
     coaches: []
   },
@@ -242,6 +561,27 @@ export const sampleTeams: Team[] = [
   {
     id: 'oregon-episcopal-girls',
     schoolId: 'oregon-episcopal',
+    gender: 'Girls',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'valley-catholic-boys',
+    schoolId: 'valley-catholic',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'north-bend-boys',
+    schoolId: 'north-bend',
+    gender: 'Boys',
+    players: [],
+    coaches: []
+  },
+  {
+    id: 'marist-girls',
+    schoolId: 'marist',
     gender: 'Girls',
     players: [],
     coaches: []
@@ -274,6 +614,18 @@ export const samplePlayers: Player[] = [
     grade: 10,
     teamId: 'jesuit-boys'
   },
+  {
+    id: 'jb-player5',
+    name: 'Thomas Rodriguez',
+    grade: 11,
+    teamId: 'jesuit-boys'
+  },
+  {
+    id: 'jb-player6',
+    name: 'Alex Kim',
+    grade: 12,
+    teamId: 'jesuit-boys'
+  },
   
   // Jesuit Girls
   {
@@ -286,6 +638,18 @@ export const samplePlayers: Player[] = [
     id: 'jg-player2',
     name: 'Sophia Martinez',
     grade: 11,
+    teamId: 'jesuit-girls'
+  },
+  {
+    id: 'jg-player3',
+    name: 'Olivia Johnson',
+    grade: 12,
+    teamId: 'jesuit-girls'
+  },
+  {
+    id: 'jg-player4',
+    name: 'Isabella Taylor',
+    grade: 10,
     teamId: 'jesuit-girls'
   },
   
@@ -302,6 +666,32 @@ export const samplePlayers: Player[] = [
     grade: 11,
     teamId: 'sunset-boys'
   },
+  {
+    id: 'sb-player3',
+    name: 'Jack Anderson',
+    grade: 12,
+    teamId: 'sunset-boys'
+  },
+  {
+    id: 'sb-player4',
+    name: 'Brandon Williams',
+    grade: 11,
+    teamId: 'sunset-boys'
+  },
+  
+  // Sunset Girls
+  {
+    id: 'sg-player1',
+    name: 'Sarah Miller',
+    grade: 12,
+    teamId: 'sunset-girls'
+  },
+  {
+    id: 'sg-player2',
+    name: 'Rachel White',
+    grade: 11,
+    teamId: 'sunset-girls'
+  },
   
   // Lincoln Boys
   {
@@ -316,6 +706,32 @@ export const samplePlayers: Player[] = [
     grade: 11,
     teamId: 'lincoln-boys'
   },
+  {
+    id: 'lb-player3',
+    name: 'Ethan Phillips',
+    grade: 12,
+    teamId: 'lincoln-boys'
+  },
+  {
+    id: 'lb-player4',
+    name: 'Joshua Baker',
+    grade: 10,
+    teamId: 'lincoln-boys'
+  },
+  
+  // Lincoln Girls
+  {
+    id: 'lg-player1',
+    name: 'Ava Thomas',
+    grade: 12,
+    teamId: 'lincoln-girls'
+  },
+  {
+    id: 'lg-player2',
+    name: 'Madison Chen',
+    grade: 11,
+    teamId: 'lincoln-girls'
+  },
   
   // Lake Oswego Boys
   {
@@ -328,6 +744,18 @@ export const samplePlayers: Player[] = [
     id: 'lob-player2',
     name: 'Mason Davis',
     grade: 11,
+    teamId: 'lake-oswego-boys'
+  },
+  {
+    id: 'lob-player3',
+    name: 'Logan Evans',
+    grade: 10,
+    teamId: 'lake-oswego-boys'
+  },
+  {
+    id: 'lob-player4',
+    name: 'William Turner',
+    grade: 12,
     teamId: 'lake-oswego-boys'
   },
   
@@ -345,6 +773,34 @@ export const samplePlayers: Player[] = [
     teamId: 'crescent-valley-boys'
   },
   
+  // South Eugene Girls
+  {
+    id: 'seg-player1',
+    name: 'Harper Wilson',
+    grade: 12,
+    teamId: 'south-eugene-girls'
+  },
+  {
+    id: 'seg-player2',
+    name: 'Maya Campbell',
+    grade: 11,
+    teamId: 'south-eugene-girls'
+  },
+  
+  // Summit Boys
+  {
+    id: 'sub-player1',
+    name: 'Benjamin Hill',
+    grade: 12,
+    teamId: 'summit-boys'
+  },
+  {
+    id: 'sub-player2',
+    name: 'Nicholas Adams',
+    grade: 11,
+    teamId: 'summit-boys'
+  },
+  
   // Catlin Gabel Boys
   {
     id: 'cgb-player1',
@@ -357,6 +813,32 @@ export const samplePlayers: Player[] = [
     name: 'Leo Zhang',
     grade: 11,
     teamId: 'catlin-gabel-boys'
+  },
+  {
+    id: 'cgb-player3',
+    name: 'Matthew Green',
+    grade: 10,
+    teamId: 'catlin-gabel-boys'
+  },
+  {
+    id: 'cgb-player4',
+    name: 'Aiden Scott',
+    grade: 12,
+    teamId: 'catlin-gabel-boys'
+  },
+  
+  // Oregon Episcopal Girls
+  {
+    id: 'oeg-player1',
+    name: 'Charlotte Lewis',
+    grade: 12,
+    teamId: 'oregon-episcopal-girls'
+  },
+  {
+    id: 'oeg-player2',
+    name: 'Ella Robinson',
+    grade: 11,
+    teamId: 'oregon-episcopal-girls'
   }
 ];
 
@@ -486,79 +968,180 @@ const generateMatchDate = (index: number) => {
   return matchDate.toISOString().split('T')[0];
 };
 
-// Generate a full season of matches
+// Generate a full season of matches (more realistic match generation)
 export const sampleMatches: Match[] = [
-  // Metro League Matches
+  // Metro League Matches - Jesuit Boys dominance
   createFullMatch('match1', generateMatchDate(0), 'jesuit-boys', 'sunset-boys', true, true, 
-    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4'], 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4']),
+  
+  createFullMatch('match2', generateMatchDate(1), 'jesuit-boys', 'beaverton-boys', true, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['sb-player1', 'sb-player2']), // Using sunset players as placeholders
+  
+  createFullMatch('match3', generateMatchDate(2), 'jesuit-boys', 'westview-boys', true, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['sb-player1', 'sb-player2']),
+    
+  createFullMatch('match4', generateMatchDate(3), 'jesuit-boys', 'mountainside-boys', true, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['sb-player1', 'sb-player2']),
+    
+  createFullMatch('match5', generateMatchDate(4), 'jesuit-boys', 'aloha-boys', true, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
     ['sb-player1', 'sb-player2']),
   
-  createFullMatch('match2', generateMatchDate(1), 'sunset-boys', 'beaverton-boys', true, true, 
-    ['sb-player1', 'sb-player2'], 
-    ['jb-player1', 'jb-player2']), // Using jesuit players as placeholders
+  // Sunset Boys matches
+  createFullMatch('match6', generateMatchDate(5), 'sunset-boys', 'beaverton-boys', true, true, 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4'], 
+    ['jb-player5', 'jb-player6']), // Using jesuit players as placeholders
   
-  createFullMatch('match3', generateMatchDate(2), 'beaverton-boys', 'jesuit-boys', true, false, 
-    ['jb-player3', 'jb-player4'], 
-    ['jb-player1', 'jb-player2']),
+  createFullMatch('match7', generateMatchDate(6), 'sunset-boys', 'westview-boys', true, true, 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match8', generateMatchDate(7), 'sunset-boys', 'mountainside-boys', true, true, 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match9', generateMatchDate(8), 'sunset-boys', 'aloha-boys', true, true, 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4'], 
+    ['jb-player5', 'jb-player6']),
   
   // PIL Matches
-  createFullMatch('match4', generateMatchDate(3), 'lincoln-boys', 'grant-boys', true, true, 
-    ['lb-player1', 'lb-player2'], 
-    ['jb-player1', 'jb-player2']), // Using jesuit players as placeholders
+  createFullMatch('match10', generateMatchDate(9), 'lincoln-boys', 'grant-boys', true, true, 
+    ['lb-player1', 'lb-player2', 'lb-player3', 'lb-player4'], 
+    ['jb-player5', 'jb-player6']), // Using jesuit players as placeholders
+    
+  createFullMatch('match11', generateMatchDate(10), 'lincoln-boys', 'franklin-boys', true, true, 
+    ['lb-player1', 'lb-player2', 'lb-player3', 'lb-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match12', generateMatchDate(11), 'lincoln-boys', 'roosevelt-boys', true, true, 
+    ['lb-player1', 'lb-player2', 'lb-player3', 'lb-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match13', generateMatchDate(12), 'grant-boys', 'franklin-boys', true, true, 
+    ['jb-player5', 'jb-player6'], 
+    ['jb-player3', 'jb-player4']),
+    
+  createFullMatch('match14', generateMatchDate(13), 'grant-boys', 'roosevelt-boys', true, true, 
+    ['jb-player5', 'jb-player6'], 
+    ['jb-player3', 'jb-player4']),
   
   // Three Rivers League Matches
-  createFullMatch('match5', generateMatchDate(4), 'lake-oswego-boys', 'lakeridge-girls', false, true, 
-    ['lob-player1', 'lob-player2'], 
-    ['jg-player1', 'jg-player2']),
+  createFullMatch('match15', generateMatchDate(14), 'lake-oswego-boys', 'lakeridge-boys', true, true, 
+    ['lob-player1', 'lob-player2', 'lob-player3', 'lob-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match16', generateMatchDate(15), 'lake-oswego-boys', 'west-linn-boys', true, true, 
+    ['lob-player1', 'lob-player2', 'lob-player3', 'lob-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match17', generateMatchDate(16), 'lake-oswego-boys', 'tigard-boys', true, true, 
+    ['lob-player1', 'lob-player2', 'lob-player3', 'lob-player4'], 
+    ['jb-player5', 'jb-player6']),
+    
+  createFullMatch('match18', generateMatchDate(17), 'lakeridge-boys', 'west-linn-boys', true, false, 
+    ['jb-player5', 'jb-player6'], 
+    ['jb-player3', 'jb-player4']),
+    
+  createFullMatch('match19', generateMatchDate(18), 'lakeridge-boys', 'tigard-boys', true, true, 
+    ['jb-player5', 'jb-player6'], 
+    ['jb-player3', 'jb-player4']),
   
-  // Cross-League Matches
-  createFullMatch('match6', generateMatchDate(5), 'jesuit-boys', 'lincoln-boys', false, true, 
-    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4'], 
-    ['lb-player1', 'lb-player2']),
+  // Pacific Conference Matches
+  createFullMatch('match20', generateMatchDate(19), 'century-boys', 'liberty-boys', true, true, 
+    ['jb-player5', 'jb-player6'], 
+    ['jb-player3', 'jb-player4']),
   
-  createFullMatch('match7', generateMatchDate(6), 'sunset-boys', 'lake-oswego-boys', false, false, 
-    ['sb-player1', 'sb-player2'], 
-    ['lob-player1', 'lob-player2']),
+  // Cross-League Matches - 6A
+  createFullMatch('match21', generateMatchDate(20), 'jesuit-boys', 'lincoln-boys', false, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['lb-player1', 'lb-player2', 'lb-player3', 'lb-player4']),
+    
+  createFullMatch('match22', generateMatchDate(21), 'sunset-boys', 'lake-oswego-boys', false, false, 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4'], 
+    ['lob-player1', 'lob-player2', 'lob-player3', 'lob-player4']),
+    
+  createFullMatch('match23', generateMatchDate(22), 'jesuit-boys', 'lake-oswego-boys', false, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['lob-player1', 'lob-player2', 'lob-player3', 'lob-player4']),
   
   // 5A Matches
-  createFullMatch('match8', generateMatchDate(7), 'crescent-valley-boys', 'south-eugene-girls', false, true, 
+  createFullMatch('match24', generateMatchDate(23), 'crescent-valley-boys', 'summit-boys', false, true, 
     ['cvb-player1', 'cvb-player2'], 
-    ['jg-player1', 'jg-player2']), // Using jesuit girls as placeholders
+    ['sub-player1', 'sub-player2']),
+    
+  createFullMatch('match25', generateMatchDate(24), 'crescent-valley-boys', 'corvallis-boys', true, true, 
+    ['cvb-player1', 'cvb-player2'], 
+    ['sub-player1', 'sub-player2']),
+    
+  createFullMatch('match26', generateMatchDate(25), 'summit-boys', 'corvallis-boys', false, true, 
+    ['sub-player1', 'sub-player2'], 
+    ['sub-player1', 'sub-player2']),
   
   // 4A/3A/2A/1A Matches
-  createFullMatch('match9', generateMatchDate(8), 'catlin-gabel-boys', 'oregon-episcopal-girls', true, true, 
-    ['cgb-player1', 'cgb-player2'], 
-    ['jg-player1', 'jg-player2']), // Using jesuit girls as placeholders
+  createFullMatch('match27', generateMatchDate(26), 'catlin-gabel-boys', 'valley-catholic-boys', true, true, 
+    ['cgb-player1', 'cgb-player2', 'cgb-player3', 'cgb-player4'], 
+    ['sub-player1', 'sub-player2']),
+    
+  createFullMatch('match28', generateMatchDate(27), 'catlin-gabel-boys', 'north-bend-boys', false, true, 
+    ['cgb-player1', 'cgb-player2', 'cgb-player3', 'cgb-player4'], 
+    ['sub-player1', 'sub-player2']),
+    
+  createFullMatch('match29', generateMatchDate(28), 'valley-catholic-boys', 'north-bend-boys', true, false, 
+    ['sub-player1', 'sub-player2'], 
+    ['cgb-player3', 'cgb-player4']),
   
-  // Additional matches for testing minimum match requirements
-  createFullMatch('match10', generateMatchDate(9), 'jesuit-boys', 'lake-oswego-boys', false, true, 
-    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4'], 
-    ['lob-player1', 'lob-player2']),
-  
-  createFullMatch('match11', generateMatchDate(10), 'sunset-boys', 'lincoln-boys', false, true, 
-    ['sb-player1', 'sb-player2'], 
-    ['lb-player1', 'lb-player2']),
+  // Cross-Classification Matches
+  createFullMatch('match30', generateMatchDate(29), 'jesuit-boys', 'catlin-gabel-boys', false, true, 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6'], 
+    ['cgb-player1', 'cgb-player2', 'cgb-player3', 'cgb-player4']),
+    
+  createFullMatch('match31', generateMatchDate(30), 'crescent-valley-boys', 'lake-oswego-boys', false, false, 
+    ['cvb-player1', 'cvb-player2'], 
+    ['lob-player1', 'lob-player2', 'lob-player3', 'lob-player4']),
   
   // Additional Metro League matches
-  createFullMatch('match12', generateMatchDate(11), 'sunset-boys', 'jesuit-boys', true, false, 
-    ['sb-player1', 'sb-player2'], 
-    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4']),
+  createFullMatch('match32', generateMatchDate(31), 'sunset-boys', 'jesuit-boys', true, false, 
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4'], 
+    ['jb-player1', 'jb-player2', 'jb-player3', 'jb-player4', 'jb-player5', 'jb-player6']),
   
-  createFullMatch('match13', generateMatchDate(12), 'beaverton-boys', 'sunset-boys', true, false, 
+  createFullMatch('match33', generateMatchDate(32), 'beaverton-boys', 'sunset-boys', true, false, 
     ['jb-player3', 'jb-player4'], // Using jesuit players as placeholders 
-    ['sb-player1', 'sb-player2']),
+    ['sb-player1', 'sb-player2', 'sb-player3', 'sb-player4']),
   
-  // More PIL Matches
-  createFullMatch('match14', generateMatchDate(13), 'grant-boys', 'lincoln-boys', true, false, 
-    ['jb-player1', 'jb-player2'], // Using jesuit players as placeholders
-    ['lb-player1', 'lb-player2']),
-  
-  // Additional 5A matches
-  createFullMatch('match15', generateMatchDate(14), 'south-eugene-girls', 'crescent-valley-boys', false, false, 
+  // Girls tennis matches 
+  createFullMatch('match34', generateMatchDate(33), 'jesuit-girls', 'sunset-girls', true, true, 
+    ['jg-player1', 'jg-player2', 'jg-player3', 'jg-player4'], 
+    ['sg-player1', 'sg-player2']),
+    
+  createFullMatch('match35', generateMatchDate(34), 'lincoln-girls', 'jesuit-girls', false, false, 
+    ['lg-player1', 'lg-player2'], 
+    ['jg-player1', 'jg-player2', 'jg-player3', 'jg-player4']),
+    
+  createFullMatch('match36', generateMatchDate(35), 'south-eugene-girls', 'wilsonville-girls', false, true, 
+    ['seg-player1', 'seg-player2'], 
+    ['jg-player3', 'jg-player4']),
+    
+  createFullMatch('match37', generateMatchDate(36), 'oregon-episcopal-girls', 'marist-girls', true, true, 
+    ['oeg-player1', 'oeg-player2'], 
+    ['jg-player3', 'jg-player4']),
+    
+  createFullMatch('match38', generateMatchDate(37), 'lake-oswego-girls', 'lakeridge-girls', true, true, 
     ['jg-player1', 'jg-player2'], // Using jesuit girls as placeholders
-    ['cvb-player1', 'cvb-player2']),
+    ['jg-player3', 'jg-player4']),
   
-  // Generate 30 more matches with varied outcomes to create a full season
+  createFullMatch('match39', generateMatchDate(38), 'tualatin-girls', 'sherwood-girls', true, false, 
+    ['jg-player1', 'jg-player2'], 
+    ['jg-player3', 'jg-player4']),
+  
+  createFullMatch('match40', generateMatchDate(39), 'cleveland-girls', 'grant-girls', true, true, 
+    ['jg-player1', 'jg-player2'], 
+    ['jg-player3', 'jg-player4']),
+  
+  // More matches to ensure minimum match requirements
   ...Array.from({ length: 30 }, (_, i) => {
     // Randomly select teams
     const teamIndices = [
@@ -597,8 +1180,8 @@ export const sampleMatches: Match[] = [
     
     // Generate match
     return createFullMatch(
-      `match${16 + i}`,
-      generateMatchDate(15 + i),
+      `match${41 + i}`,
+      generateMatchDate(40 + i),
       homeTeam.id,
       awayTeam.id,
       isLeague,

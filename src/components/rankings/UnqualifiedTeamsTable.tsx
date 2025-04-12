@@ -40,9 +40,9 @@ export const UnqualifiedTeamsTable: React.FC<UnqualifiedTeamsTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {unqualifiedTeams.map((team) => (
-                <TableRow key={team.teamId}>
-                  <TableCell>{team.teamName}</TableCell>
+              {unqualifiedTeams.map((team, index) => (
+                <TableRow key={team.teamId} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                  <TableCell className="font-medium">{team.teamName}</TableCell>
                   <TableCell className="text-center">{team.districtName}</TableCell>
                   <TableCell className="text-center">{team.wins}-{team.losses}</TableCell>
                   <TableCell className="text-center">{team.matchesPlayed}</TableCell>

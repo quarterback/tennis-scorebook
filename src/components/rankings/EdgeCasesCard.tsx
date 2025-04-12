@@ -33,10 +33,12 @@ export const EdgeCasesCard: React.FC<EdgeCasesCardProps> = ({ edgeCases }) => {
                   <h5 className="font-medium mb-1 text-sm">Examples:</h5>
                   <ul className="pl-5 list-disc">
                     {edgeCase.examples.map((team, i) => (
-                      <li key={i}>
-                        {team.teamName} ({team.wins}-{team.losses}), 
-                        Composite: {team.compositeScore.toFixed(2)}, 
-                        OSI: {team.opponentStrengthIndex.toFixed(2)}
+                      <li key={i} className="mb-1">
+                        <span className="font-medium">{team.teamName}</span> ({team.wins}-{team.losses}), 
+                        <span className="ml-1 text-xs text-gray-500">
+                          Composite: {team.compositeScore.toFixed(2)}, 
+                          OSI: {team.opponentStrengthIndex.toFixed(2)}
+                        </span>
                       </li>
                     ))}
                   </ul>

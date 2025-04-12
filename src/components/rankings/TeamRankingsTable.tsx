@@ -39,7 +39,7 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
               </TableHeader>
               <TableBody>
                 {qualifiedTeams.map((team, index) => (
-                  <TableRow key={team.teamId}>
+                  <TableRow key={team.teamId} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                     <TableCell className="font-medium">
                       <div className="flex items-center">
                         <span className={`min-w-8 h-8 flex items-center justify-center rounded-full 
@@ -55,7 +55,7 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{team.teamName}</TableCell>
+                    <TableCell className="font-medium">{team.teamName}</TableCell>
                     <TableCell className="text-center">{team.districtName}</TableCell>
                     <TableCell className="text-center">{team.wins}-{team.losses}</TableCell>
                     <TableCell className="text-center">
