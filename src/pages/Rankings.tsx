@@ -43,8 +43,19 @@ const Rankings = () => {
   const qualifiedTeams = filteredRankings.filter(r => r.qualifiedForRanking);
   const unqualifiedTeams = filteredRankings.filter(r => !r.qualifiedForRanking);
   
-  // Get analytics insights
-  const insights = generateInsights(filteredRankings);
+  // Calculate league-specific insights
+  const leagueInsights = {
+    avgLeagueMatches: qualifiedTeams.reduce((sum, team) => sum + team.leagueMatchesPlayed, 0) / 
+      (qualifiedTeams.length || 1),
+    avgLeagueWinPct: qualifiedTeams.reduce((sum, team) => sum + (team.leagueWinPercentage || 0), 0) / 
+      (qualifiedTeams.length || 1)
+  };
+  
+  // Get analytics insights with league data
+  const insights = {
+    ...generateInsights(filteredRankings),
+    leagueInsights
+  };
   
   // Find close matchups
   const keyMatchups = findKeyMatchups(qualifiedTeams);
@@ -59,15 +70,24 @@ const Rankings = () => {
     return acc;
   }, {} as Record<string, typeof qualifiedTeams>);
   
-  // For each district, sort teams by wins within that district
+  // For each district, sort teams by league wins within that district
   Object.keys(teamsByDistrict).forEach(district => {
     teamsByDistrict[district].sort((a, b) => {
-      // Primary sort by win percentage
-      if (b.winPercentage !== a.winPercentage) {
-        return (b.winPercentage || 0) - (a.winPercentage || 0);
+      // Primary sort by league win percentage
+      const aLeagueWinPct = a.leagueWinPercentage || 0;
+      const bLeagueWinPct = b.leagueWinPercentage || 0;
+      
+      if (aLeagueWinPct !== bLeagueWinPct) {
+        return bLeagueWinPct - aLeagueWinPct;
       }
-      // Secondary sort by wins
-      return b.wins - a.wins;
+      
+      // Secondary sort by league wins
+      if (a.leagueWins !== b.leagueWins) {
+        return b.leagueWins - a.leagueWins;
+      }
+      
+      // Tertiary sort by overall win percentage
+      return (b.winPercentage || 0) - (a.winPercentage || 0);
     });
   });
   

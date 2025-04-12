@@ -196,13 +196,37 @@ export const useRankingCalculator = () => {
         m => (m.homeTeamId === team.id || m.awayTeamId === team.id) && m.isComplete
       );
       
-      // Calculate team stats
+      // Calculate overall team stats
       const wins = teamMatches.filter(m => 
         (m.homeTeamId === team.id && m.homeTeamWon) || 
         (m.awayTeamId === team.id && !m.homeTeamWon)
       ).length;
       
       const losses = teamMatches.filter(m => 
+        (m.homeTeamId === team.id && !m.homeTeamWon) || 
+        (m.awayTeamId === team.id && m.homeTeamWon)
+      ).length;
+      
+      // Calculate league-specific stats
+      const leagueMatches = teamMatches.filter(m => {
+        // Get opponent team's school
+        const opponentTeamId = m.homeTeamId === team.id ? m.awayTeamId : m.homeTeamId;
+        const opponentTeam = teams.find(t => t.id === opponentTeamId);
+        if (!opponentTeam) return false;
+        
+        const opponentSchool = schools.find(s => s.id === opponentTeam.schoolId);
+        if (!opponentSchool) return false;
+        
+        // Match is a league match if both teams are from the same district AND the isLeagueMatch flag is true
+        return opponentSchool.districtId === school.districtId && m.isLeagueMatch;
+      });
+      
+      const leagueWins = leagueMatches.filter(m => 
+        (m.homeTeamId === team.id && m.homeTeamWon) || 
+        (m.awayTeamId === team.id && !m.homeTeamWon)
+      ).length;
+      
+      const leagueLosses = leagueMatches.filter(m => 
         (m.homeTeamId === team.id && !m.homeTeamWon) || 
         (m.awayTeamId === team.id && m.homeTeamWon)
       ).length;
@@ -215,9 +239,12 @@ export const useRankingCalculator = () => {
       // Calculate composite score
       const compositeScore = fws * lsc * osi;
       
-      // Calculate win percentage
+      // Calculate win percentages
       const totalMatches = wins + losses;
       const winPercentage = totalMatches > 0 ? wins / totalMatches : 0;
+      
+      const totalLeagueMatches = leagueWins + leagueLosses;
+      const leagueWinPercentage = totalLeagueMatches > 0 ? leagueWins / totalLeagueMatches : 0;
       
       return {
         teamId: team.id,
@@ -229,12 +256,16 @@ export const useRankingCalculator = () => {
         matchesPlayed: teamMatches.length,
         wins,
         losses,
+        leagueWins,
+        leagueLosses,
+        leagueMatchesPlayed: leagueMatches.length,
         flightWeightedScore: fws,
         leagueStrengthCoefficient: lsc,
         opponentStrengthIndex: osi,
         compositeScore,
         qualifiedForRanking: teamMatches.length >= config.minimumMatches,
-        winPercentage
+        winPercentage,
+        leagueWinPercentage
       };
     });
     
