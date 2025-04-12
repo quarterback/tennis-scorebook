@@ -13,7 +13,9 @@ import {
   FolderTree, 
   BarChart3,
   Menu,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -28,6 +30,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -43,12 +46,25 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/rankings', icon: <BarChart3 className="h-4 w-4 mr-2" />, label: 'Rankings' },
   ];
   
+  const scrollNav = (direction: 'left' | 'right') => {
+    const navElement = document.getElementById('desktop-nav');
+    if (!navElement) return;
+    
+    const scrollAmount = 150;
+    const newPosition = direction === 'left' 
+      ? Math.max(0, scrollPosition - scrollAmount)
+      : scrollPosition + scrollAmount;
+      
+    navElement.scrollTo({ left: newPosition, behavior: 'smooth' });
+    setScrollPosition(newPosition);
+  };
+  
   const renderNavLinks = () => (
     navLinks.map(link => (
       <li key={link.path}>
         <Link 
           to={link.path} 
-          className={`px-4 py-2 rounded-md inline-flex items-center ${isActive(link.path) ? 'bg-white/20' : 'hover:bg-white/10'}`}
+          className={`px-4 py-2 rounded-md inline-flex items-center whitespace-nowrap ${isActive(link.path) ? 'bg-white/20' : 'hover:bg-white/10'}`}
           onClick={() => isMobile && setIsDrawerOpen(false)}
         >
           {link.icon}
@@ -125,12 +141,32 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </header>
       
       {user && !isMobile && (
-        <div className="bg-tennis-green text-white overflow-x-auto">
-          <nav className="container mx-auto py-2">
-            <ul className="flex flex-nowrap space-x-1 min-w-max">
-              {renderNavLinks()}
-            </ul>
-          </nav>
+        <div className="bg-tennis-green text-white relative">
+          <div className="container mx-auto flex items-center">
+            <button 
+              onClick={() => scrollNav('left')} 
+              className="p-2 bg-tennis-green hover:bg-tennis-green/80 z-10"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            
+            <div className="overflow-x-auto scrollbar-hide" id="desktop-nav" style={{ scrollBehavior: 'smooth' }}>
+              <nav className="py-2">
+                <ul className="flex flex-nowrap space-x-1 min-w-max">
+                  {renderNavLinks()}
+                </ul>
+              </nav>
+            </div>
+            
+            <button 
+              onClick={() => scrollNav('right')} 
+              className="p-2 bg-tennis-green hover:bg-tennis-green/80 z-10"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
       
