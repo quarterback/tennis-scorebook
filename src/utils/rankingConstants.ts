@@ -8,10 +8,10 @@ export const getDefaultConfig = (): RankingConfig => ({
   minimumMatches: 6,
   cutoffDate: '2025-05-12', // Updated cutoff date for current season
   weights: {
-    singles1: 1.0,
-    singles2: 0.75,
-    doubles1: 1.0,
-    doubles2: 0.5
+    singles1: 1.0,  // First singles has highest weight
+    singles2: 0.75, // Second singles
+    doubles1: 1.0,  // First doubles equal to first singles
+    doubles2: 0.5   // Second doubles
   }
 });
 

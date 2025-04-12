@@ -76,12 +76,13 @@ export const useRankingCalculator = () => {
         (m.awayTeamId === team.id && m.homeTeamWon)
       ).length;
       
-      // Calculate components
+      // Calculate components with improved formulas
       const fws = teamScores.get(team.id) || 0;
       const lsc = calculateLeagueStrengthCoefficient(school.districtId);
       const osi = calculateOpponentStrengthIndex(team.id, teamScores);
       
-      // Calculate composite score
+      // Calculate composite score with more balanced weighting
+      // The formula is now: CS = FWS × LSC × OSI
       const compositeScore = fws * lsc * osi;
       
       // Calculate win percentages

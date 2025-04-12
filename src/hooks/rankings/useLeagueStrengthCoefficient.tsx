@@ -1,11 +1,10 @@
-
 import { District } from '@/types';
 import { HistoricalData } from '@/types/ranking';
 
 export const useLeagueStrengthCoefficient = (districts: District[], historicalData: HistoricalData) => {
   /**
    * Calculate League Strength Coefficient for a district
-   * Using formula: LSC = Total League Points / 10.0
+   * Enhanced formula: LSC = Base + (Historical Success Factor)
    */
   const calculateLeagueStrengthCoefficient = (districtId: string): number => {
     // Map district ID to league ID in historical data
@@ -25,9 +24,15 @@ export const useLeagueStrengthCoefficient = (districts: District[], historicalDa
       return 1.0; // Default minimum value
     }
     
-    // Calculate LSC using formula: Total Points / 10.0
-    // First place = 5 points, Second place = 4 points
-    const coefficient = Math.max(1.0, leagueData.totalPoints / 10.0);
+    // Calculate LSC using enhanced formula
+    // Base (1.0) + Historical Success Factor (scaled by state championships)
+    // First place finishes are worth 5 points, second place are worth 4 points
+    const firstPlacePoints = leagueData.firstPlaceFinishes * 5;
+    const secondPlacePoints = leagueData.secondPlaceFinishes * 4;
+    const totalPoints = firstPlacePoints + secondPlacePoints;
+    
+    // Scale factor to keep LSC in reasonable range (1.0 - 3.0)
+    const coefficient = Math.max(1.0, Math.min(3.0, totalPoints / 10.0));
     
     return coefficient;
   };

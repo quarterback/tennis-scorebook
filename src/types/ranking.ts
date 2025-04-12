@@ -13,7 +13,7 @@ export interface LeagueStrengthData {
   firstPlaceFinishes: number;
   secondPlaceFinishes: number;
   yearRange: string; // e.g., "2020-2024"
-  totalPoints: number; // New field for calculating LSC
+  totalPoints: number; // Combined points for calculating LSC
 }
 
 export interface TeamRanking {
@@ -33,9 +33,9 @@ export interface TeamRanking {
   leagueStrengthCoefficient: number;
   opponentStrengthIndex: number;
   compositeScore: number;
-  qualifiedForRanking: boolean; // True if team has played minimum 6 matches
-  winPercentage?: number; // Added for display
-  leagueWinPercentage?: number; // Added for display
+  qualifiedForRanking: boolean; // True if team has played minimum required matches
+  winPercentage?: number; // Overall win percentage
+  leagueWinPercentage?: number; // League-only win percentage
 }
 
 export interface RankingConfig {
@@ -48,4 +48,40 @@ export interface RankingConfig {
 export interface HistoricalData {
   leagues: LeagueStrengthData[];
   topSchools: string[]; // IDs of historically strong schools
+}
+
+// Power ranking info for pre-season predictions
+export interface PowerRanking {
+  teamId: string;
+  preseasonRank: number;
+  expectedFinish: string;
+  strengthRating: number;
+}
+
+// Key matchup information
+export interface KeyMatchup {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  date: string;
+  significance: string;
+}
+
+// Ranking insights type
+export interface RankingInsight {
+  avgMatches: number;
+  avgWinPct: number;
+  classificationCounts: Record<string, number>;
+  districtStrength: Array<{
+    district: string;
+    teams: number;
+    avgComposite: number;
+    lsc: number;
+  }>;
+  totalQualifiedTeams: number;
+  totalTeams: number;
+  leagueInsights?: {
+    avgLeagueMatches: number;
+    avgLeagueWinPct: number;
+  };
 }
