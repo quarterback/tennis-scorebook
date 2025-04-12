@@ -26,13 +26,15 @@ interface RankingInsightsProps {
   }>;
   selectedGender: Gender;
   selectedClassification: Classification;
+  selectedDistrict: string;
 }
 
 export const RankingInsights: React.FC<RankingInsightsProps> = ({ 
   insights, 
   keyMatchups,
   selectedGender,
-  selectedClassification
+  selectedClassification,
+  selectedDistrict
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -41,6 +43,9 @@ export const RankingInsights: React.FC<RankingInsightsProps> = ({
           <CardTitle className="text-lg flex items-center">
             <PieChart className="h-5 w-5 mr-2 text-tennis-blue" />
             Season Statistics
+            {selectedDistrict !== 'all' && (
+              <span className="ml-2 text-sm font-normal">({selectedDistrict} League)</span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -65,6 +70,7 @@ export const RankingInsights: React.FC<RankingInsightsProps> = ({
               <p className="text-2xl font-bold">{(insights.avgWinPct * 100).toFixed(1)}%</p>
               <p className="text-xs text-gray-500">
                 {selectedGender} {selectedClassification} teams
+                {selectedDistrict !== 'all' && ` in ${selectedDistrict}`}
               </p>
             </div>
             
