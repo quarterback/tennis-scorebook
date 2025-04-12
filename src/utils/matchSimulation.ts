@@ -1,5 +1,6 @@
 
-import { Match, Flight, Set, Team, School, Player } from '@/types';
+import { Match, Flight, Team, School, Player } from '@/types';
+import type { Set } from '@/types'; // Changed to type-only import to avoid conflict with global Set
 import { TeamLadder } from '@/types/ranking';
 import { getPlayerWithRank } from './playerSimulation';
 
@@ -182,8 +183,8 @@ export const simulateMatch = (
   ];
 
   // Select players for each flight according to OSAA rules
-  const selectedHomePlayers: Set<string> = new Set();
-  const selectedAwayPlayers: Set<string> = new Set();
+  const selectedHomePlayers = new Set<string>();
+  const selectedAwayPlayers = new Set<string>();
   
   // Get all home and away players with their ranks
   const homePlayers = homeLadder.rankings.map(r => ({
@@ -271,8 +272,8 @@ export const simulateMatch = (
   for (const flight of flightTypes) {
     const flightId = crypto.randomUUID();
     
-    let homePlayers: string[] = [];
-    let awayPlayers: string[] = [];
+    let homeFlightPlayers: string[] = [];
+    let awayFlightPlayers: string[] = [];
     
     // Singles positions
     if (flight.type === 'singles') {
@@ -280,7 +281,7 @@ export const simulateMatch = (
       for (const player of homePlayers) {
         if (!player.selected) {
           player.selected = true;
-          homePlayers = [player.id];
+          homeFlightPlayers = [player.id];
           selectedHomePlayers.add(player.id);
           break;
         }
@@ -290,7 +291,7 @@ export const simulateMatch = (
       for (const player of awayPlayers) {
         if (!player.selected) {
           player.selected = true;
-          awayPlayers = [player.id];
+          awayFlightPlayers = [player.id];
           selectedAwayPlayers.add(player.id);
           break;
         }
@@ -307,7 +308,7 @@ export const simulateMatch = (
           selectedHomePlayers.add(player.id);
         }
       }
-      homePlayers = homeDoublesTeam;
+      homeFlightPlayers = homeDoublesTeam;
       
       // Find next two available away players
       const awayDoublesTeam: string[] = [];
@@ -318,7 +319,7 @@ export const simulateMatch = (
           selectedAwayPlayers.add(player.id);
         }
       }
-      awayPlayers = awayDoublesTeam;
+      awayFlightPlayers = awayDoublesTeam;
     }
     
     // Generate flight result
@@ -326,8 +327,8 @@ export const simulateMatch = (
       flight.type,
       flight.position,
       flight.level,
-      homePlayers,
-      awayPlayers,
+      homeFlightPlayers,
+      awayFlightPlayers,
       homeLadder,
       awayLadder,
       allPlayers
@@ -339,8 +340,8 @@ export const simulateMatch = (
       type: flight.type,
       position: flight.position,
       level: flight.level,
-      homePlayers,
-      awayPlayers,
+      homePlayers: homeFlightPlayers,
+      awayPlayers: awayFlightPlayers,
       sets: result.sets,
       homePlayerWon: result.homePlayerWon
     });

@@ -12,17 +12,19 @@ import { useAuth } from '@/context/AuthContext';
 import { Team, Gender, Player, School } from '@/types';
 
 interface TeamsContainerProps {
-  initialSchoolId: string | null;
+  filter: {
+    classification?: string;
+  };
 }
 
-const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
+const TeamsContainer = ({ filter }: TeamsContainerProps) => {
   const { schools, teams, addTeam, updateTeam, deleteTeam, players, addPlayer, deletePlayer, districts } = useData();
   const { user } = useAuth();
   
   const [isAddTeamDialogOpen, setIsAddTeamDialogOpen] = useState(false);
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(initialSchoolId);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
   
   const [teamFormData, setTeamFormData] = useState<{ schoolId: string; gender: Gender }>({
     schoolId: selectedSchoolId || '',
@@ -40,20 +42,23 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
     ? schools.filter(school => school.id === user.schoolId)
     : schools;
   
-  // Set initial school selection based on URL parameter or first available school
+  // Filter schools based on classification if provided
+  const classificationFilteredSchools = filter.classification 
+    ? filteredSchools.filter(school => school.classification === filter.classification)
+    : filteredSchools;
+  
+  // Set initial school selection based on first available school
   useEffect(() => {
-    if (initialSchoolId && schools.some(s => s.id === initialSchoolId)) {
-      setSelectedSchoolId(initialSchoolId);
-      setTeamFormData(prev => ({ ...prev, schoolId: initialSchoolId }));
-    } else if (filteredSchools.length > 0 && !selectedSchoolId) {
-      setSelectedSchoolId(filteredSchools[0].id);
-      setTeamFormData(prev => ({ ...prev, schoolId: filteredSchools[0].id }));
+    if (classificationFilteredSchools.length > 0 && !selectedSchoolId) {
+      setSelectedSchoolId(classificationFilteredSchools[0].id);
+      setTeamFormData(prev => ({ ...prev, schoolId: classificationFilteredSchools[0].id }));
     }
-  }, [initialSchoolId, schools, filteredSchools, selectedSchoolId]);
+  }, [classificationFilteredSchools, selectedSchoolId]);
   
   // Get teams for the selected school
   const schoolTeams = teams.filter(team => 
-    team.schoolId === selectedSchoolId
+    team.schoolId === selectedSchoolId && (!filter.classification || 
+    schools.find(s => s.id === team.schoolId)?.classification === filter.classification)
   );
   
   // Get the selected school
@@ -115,7 +120,7 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1 space-y-4">
         <SchoolSelector 
-          schools={filteredSchools}
+          schools={classificationFilteredSchools}
           districts={districts}
           selectedSchoolId={selectedSchoolId}
           onSchoolChange={handleSchoolChange}
@@ -137,7 +142,7 @@ const TeamsContainer = ({ initialSchoolId }: TeamsContainerProps) => {
                   teamFormData={teamFormData}
                   setTeamFormData={setTeamFormData}
                   handleAddTeam={handleAddTeam}
-                  schools={filteredSchools}
+                  schools={classificationFilteredSchools}
                   isCoach={user?.role === 'coach'}
                 />
               </Dialog>

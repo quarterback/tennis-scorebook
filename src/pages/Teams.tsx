@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { TeamManager } from '@/components/teams/TeamManager';
+import TeamManager from '@/components/teams/TeamManager';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trophy, Clipboard } from 'lucide-react';
-import { TeamsContainer } from '@/components/teams/TeamsContainer';
+import TeamsContainer from '@/components/teams/TeamsContainer';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import SimulationControls from '@/components/simulation/SimulationControls';
