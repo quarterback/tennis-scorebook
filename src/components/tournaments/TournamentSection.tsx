@@ -28,7 +28,7 @@ const TournamentSection: React.FC<TournamentSectionProps> = ({
     qualifiers = getStandings(gender, classification, districtId).slice(0, 4);
   } else {
     // For state tournaments, get the top N teams overall
-    qualifiers = getStateQualifiers ? getStateQualifiers(gender, classification) : [];
+    qualifiers = getStateQualifiers(gender, classification);
   }
   
   return (

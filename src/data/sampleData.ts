@@ -1,3 +1,4 @@
+
 import { School, Team, Player, Match, Flight, Set, District, PlayerStatus } from '@/types';
 
 export const sampleDistricts: District[] = [
@@ -736,12 +737,112 @@ export const sampleSchools: School[] = [
     teams: []
   },
   
-  // Just adding a few key schools from SD2-5 for brevity, would expand this in a real implementation
+  // 4A/3A/2A/1A Schools - Special District 2
+  {
+    id: 'cascade-sd2',
+    name: 'Cascade',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'estacada',
+    name: 'Estacada',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'junction-city',
+    name: 'Junction City',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
   {
     id: 'marist',
     name: 'Marist Catholic',
     classification: '4A/3A/2A/1A',
     districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'molalla',
+    name: 'Molalla',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'north-marion',
+    name: 'North Marion',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'philomath',
+    name: 'Philomath',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  {
+    id: 'stayton',
+    name: 'Stayton',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd2',
+    teams: []
+  },
+  
+  // 4A/3A/2A/1A Schools - Special District 3
+  {
+    id: 'cascade-christian',
+    name: 'Cascade Christian',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'creswell',
+    name: 'Creswell',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'henley',
+    name: 'Henley',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'hidden-valley',
+    name: 'Hidden Valley',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'klamath-union',
+    name: 'Klamath Union',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'marshfield',
+    name: 'Marshfield',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'mazama',
+    name: 'Mazama',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
     teams: []
   },
   {
@@ -752,6 +853,85 @@ export const sampleSchools: School[] = [
     teams: []
   },
   {
+    id: 'north-valley',
+    name: 'North Valley',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'phoenix',
+    name: 'Phoenix',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  {
+    id: 'st-marys-medford',
+    name: "St. Mary's, Medford",
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd3',
+    teams: []
+  },
+  
+  // 4A/3A/2A/1A Schools - Special District 4
+  {
+    id: 'arlington',
+    name: 'Arlington',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'condon',
+    name: 'Condon',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'crook-county',
+    name: 'Crook County',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'ione-heppner',
+    name: 'Ione / Heppner',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'irrigon',
+    name: 'Irrigon',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'madras',
+    name: 'Madras',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'riverside-sd4',
+    name: 'Riverside',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'sherman',
+    name: 'Sherman',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
     id: 'sisters',
     name: 'Sisters',
     classification: '4A/3A/2A/1A',
@@ -759,8 +939,87 @@ export const sampleSchools: School[] = [
     teams: []
   },
   {
+    id: 'stanfield-echo',
+    name: 'Stanfield / Echo',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'the-dalles',
+    name: 'The Dalles',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'umatilla',
+    name: 'Umatilla',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  {
+    id: 'weston-mcewan',
+    name: 'Weston-McEwen / Griswold',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd4',
+    teams: []
+  },
+  
+  // 4A/3A/2A/1A Schools - Special District 5
+  {
+    id: 'baker',
+    name: 'Baker / Powder Valley',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
+    id: 'four-rivers',
+    name: 'Four Rivers',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
     id: 'la-grande',
     name: 'La Grande',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
+    id: 'mcloughlin',
+    name: 'McLoughlin',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
+    id: 'nyssa',
+    name: 'Nyssa',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
+    id: 'ontario',
+    name: 'Ontario',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
+    id: 'pendleton',
+    name: 'Pendleton',
+    classification: '4A/3A/2A/1A',
+    districtId: 'sd5',
+    teams: []
+  },
+  {
+    id: 'vale',
+    name: 'Vale',
     classification: '4A/3A/2A/1A',
     districtId: 'sd5',
     teams: []

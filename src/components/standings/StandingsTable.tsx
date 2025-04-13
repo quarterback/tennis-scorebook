@@ -24,6 +24,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const isCoach = user?.role === 'coach';
+  const is4A3A2A1A = selectedClassification === '4A/3A/2A/1A';
 
   const navigateToSimulation = () => {
     navigate('/');
@@ -37,10 +38,10 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
             <Award className="h-5 w-5 mr-2 text-tennis-blue" />
             {selectedGender} {selectedClassification} {selectedDistrictName ? `- ${selectedDistrictName}` : ''} Standings
           </div>
-          {selectedClassification === '4A/3A/2A/1A' && !selectedDistrictName && (
+          {is4A3A2A1A && !selectedDistrictName && (
             <div className="flex items-center text-sm font-normal text-gray-500">
               <Info className="h-4 w-4 mr-1" />
-              All teams from Special Districts are shown. Select a specific district for detailed standings.
+              All teams from all Special Districts are shown. Select a specific district for detailed standings.
             </div>
           )}
         </CardTitle>

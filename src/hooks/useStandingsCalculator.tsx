@@ -19,17 +19,9 @@ export const useStandingsCalculator = (
         if (districtId) {
           return team.gender === gender && school.districtId === districtId;
         } 
-        // Otherwise, include ALL teams that are in 4A/3A/2A/1A classification or 
-        // teams from districts marked as 4A/3A/2A/1A
+        // Otherwise, include ALL teams that are in 4A/3A/2A/1A classification
         else {
-          // Get all special district IDs for 4A/3A/2A/1A
-          const specialDistrictIds = districts
-            .filter(d => d.classification === '4A/3A/2A/1A')
-            .map(d => d.id);
-          
-          return team.gender === gender && 
-                 (school.classification === '4A/3A/2A/1A' || 
-                  specialDistrictIds.includes(school.districtId));
+          return team.gender === gender && school.classification === '4A/3A/2A/1A';
         }
       }
       
