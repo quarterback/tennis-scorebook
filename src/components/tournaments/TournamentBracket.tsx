@@ -28,11 +28,10 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const isDistrict = !!districtName;
   
-  // All tournament types now use the manual editor
   return (
     <div className="space-y-4 mt-4">
       <div className="flex justify-between items-center">
-        <h4 className="text-sm font-medium text-gray-500">Tournament Bracket</h4>
+        <h4 className="text-sm font-medium text-gray-500">Tournament Bracket ({type})</h4>
         <Button 
           variant="outline" 
           size="sm" 
