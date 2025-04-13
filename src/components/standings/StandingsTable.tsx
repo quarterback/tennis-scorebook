@@ -40,7 +40,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           {selectedClassification === '4A/3A/2A/1A' && !selectedDistrictName && (
             <div className="flex items-center text-sm font-normal text-gray-500">
               <Info className="h-4 w-4 mr-1" />
-              Select a specific district to see all teams
+              All teams from Special Districts are shown. Select a specific district for detailed standings.
             </div>
           )}
         </CardTitle>
@@ -86,9 +86,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
                     <TableCell>
                       <div>
                         <div className="font-medium">{standing.teamName}</div>
-                        {(!isCoach || selectedClassification === '4A/3A/2A/1A') && (
-                          <div className="text-sm text-gray-500">{standing.districtName}</div>
-                        )}
+                        <div className="text-sm text-gray-500">{standing.districtName}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center font-medium">

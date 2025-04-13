@@ -1,3 +1,4 @@
+
 import { Team, School, Match, District, Gender, Classification, TeamStanding } from '@/types';
 
 export const useStandingsCalculator = (
@@ -22,7 +23,14 @@ export const useStandingsCalculator = (
         // Otherwise, only show teams that are explicitly marked as 4A/3A/2A/1A
         // since we can't compare with individual classifications that aren't in our type
         else {
-          return team.gender === gender && school.classification === '4A/3A/2A/1A';
+          // Get all special district IDs for 4A/3A/2A/1A
+          const specialDistrictIds = districts
+            .filter(d => d.classification === '4A/3A/2A/1A')
+            .map(d => d.id);
+          
+          return team.gender === gender && 
+                 (school.classification === '4A/3A/2A/1A' || 
+                  specialDistrictIds.includes(school.districtId));
         }
       }
       
