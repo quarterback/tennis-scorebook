@@ -72,25 +72,35 @@ export const useSimulatedData = () => {
     
     // Generate matches for each district
     Object.entries(districtTeams).forEach(([districtId, teamsInDistrict]) => {
+      // Skip districts with fewer than 2 teams
+      if (teamsInDistrict.length < 2) {
+        console.log(`Skipping district ${districtId}: Not enough teams (${teamsInDistrict.length})`);
+        return;
+      }
+      
       // Calculate matches per team based on district size
       const matchesPerTeam = config.doubleRoundRobin 
         ? Math.min(2 * (teamsInDistrict.length - 1), config.maxRegularSeasonMatches)
         : Math.min(teamsInDistrict.length - 1, config.maxRegularSeasonMatches);
       
-      const districtMatches = generateDistrictMatches(
-        teamsInDistrict,
-        schools,
-        players,
-        ladders,
-        {
-          startDate: config.startDate,
-          endDate: config.endDate,
-          isLeagueMatch: true,
-          matchesPerTeam
-        }
-      );
-      
-      allMatches.push(...districtMatches);
+      try {
+        const districtMatches = generateDistrictMatches(
+          teamsInDistrict,
+          schools,
+          players,
+          ladders,
+          {
+            startDate: config.startDate,
+            endDate: config.endDate,
+            isLeagueMatch: true,
+            matchesPerTeam
+          }
+        );
+        
+        allMatches.push(...districtMatches);
+      } catch (error) {
+        console.error(`Error generating matches for district ${districtId}:`, error);
+      }
     });
     
     return allMatches;

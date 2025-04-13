@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { useSimulatedData } from '@/hooks/useSimulatedData';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,9 @@ const SimulationControls: React.FC = () => {
   const [maxTotalMatches, setMaxTotalMatches] = useState(20);
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(true);
   
+  // Error states
+  const [simulationError, setSimulationError] = useState<string | null>(null);
+  
   // Calculate season duration in weeks to show info to the user
   const calculateWeeks = () => {
     if (!startDate || !endDate) return 0;
@@ -60,10 +63,50 @@ const SimulationControls: React.FC = () => {
   
   const theoreticalMaxMatches = calculateMaxMatches();
   
+  // Check if we have enough teams for simulation
+  const checkTeamsForSimulation = () => {
+    // Group teams by district to check if any districts have enough teams
+    const districtTeams: Record<string, Team[]> = {};
+    
+    teams.forEach(team => {
+      const school = schools.find(s => s.id === team.schoolId);
+      if (!school) return;
+      
+      if (!districtTeams[school.districtId]) {
+        districtTeams[school.districtId] = [];
+      }
+      
+      districtTeams[school.districtId].push(team);
+    });
+    
+    // Check if any district has at least 2 teams
+    const hasDistrict = Object.values(districtTeams).some(teamsInDistrict => teamsInDistrict.length >= 2);
+    
+    if (!hasDistrict) {
+      return "You need at least 2 teams in the same district to generate matches";
+    }
+    
+    return null;
+  };
+  
+  // Update error message when teams change
+  useEffect(() => {
+    setSimulationError(checkTeamsForSimulation());
+  }, [teams, schools]);
+  
   const handleGenerateData = async () => {
     if (!startDate || !endDate) {
       return;
     }
+    
+    // Check if we have enough teams
+    const error = checkTeamsForSimulation();
+    if (error) {
+      setSimulationError(error);
+      return;
+    }
+    
+    setSimulationError(null);
     
     const config: MatchGenerationConfig = {
       startDate: format(startDate, 'yyyy-MM-dd'),
@@ -73,44 +116,52 @@ const SimulationControls: React.FC = () => {
       doubleRoundRobin
     };
     
-    await generateAllData(
-      teams,
-      schools,
-      districts,
-      currentSeason,
-      config,
-      {
-        onPlayersGenerated: (players) => {
-          // Add players one by one
-          players.forEach(player => {
-            addPlayer({
-              name: player.name,
-              grade: player.grade,
-              teamId: player.teamId
+    try {
+      await generateAllData(
+        teams,
+        schools,
+        districts,
+        currentSeason,
+        config,
+        {
+          onPlayersGenerated: (players) => {
+            // Add players one by one
+            players.forEach(player => {
+              addPlayer({
+                name: player.name,
+                grade: player.grade,
+                teamId: player.teamId
+              });
             });
-          });
-        },
-        onMatchesGenerated: (matches) => {
-          // Add matches one by one
-          matches.forEach(match => {
-            addMatch({
-              date: match.date,
-              homeTeamId: match.homeTeamId,
-              awayTeamId: match.awayTeamId,
-              isLeagueMatch: match.isLeagueMatch,
-              isComplete: match.isComplete,
-              hasJvMatches: match.hasJvMatches,
-              homeTeamWon: match.homeTeamWon,
-              homeCoachApproved: match.homeCoachApproved,
-              awayCoachApproved: match.awayCoachApproved,
-              homeTeamScore: match.homeTeamScore,
-              awayTeamScore: match.awayTeamScore,
-              flights: match.flights
+          },
+          onMatchesGenerated: (matches) => {
+            // Add matches one by one
+            matches.forEach(match => {
+              addMatch({
+                date: match.date,
+                homeTeamId: match.homeTeamId,
+                awayTeamId: match.awayTeamId,
+                isLeagueMatch: match.isLeagueMatch,
+                isComplete: match.isComplete,
+                hasJvMatches: match.hasJvMatches,
+                homeTeamWon: match.homeTeamWon,
+                homeCoachApproved: match.homeCoachApproved,
+                awayCoachApproved: match.awayCoachApproved,
+                homeTeamScore: match.homeTeamScore,
+                awayTeamScore: match.awayTeamScore,
+                flights: match.flights
+              });
             });
-          });
+          }
         }
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        setSimulationError(error.message);
+      } else {
+        setSimulationError("An unknown error occurred");
       }
-    );
+    }
   };
   
   return (
@@ -140,6 +191,13 @@ const SimulationControls: React.FC = () => {
         
         {showSimulationControls && (
           <CardContent className="pb-3 space-y-4">
+            {simulationError && (
+              <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <AlertDescription>{simulationError}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-date">Season Start Date</Label>
@@ -301,7 +359,7 @@ const SimulationControls: React.FC = () => {
           <CardFooter className="flex justify-end">
             <Button
               onClick={handleGenerateData}
-              disabled={generatingData || !startDate || !endDate}
+              disabled={generatingData || !startDate || !endDate || !!simulationError}
               className="bg-purple-600 hover:bg-purple-700"
             >
               <FlaskConical className="h-4 w-4 mr-2" />
