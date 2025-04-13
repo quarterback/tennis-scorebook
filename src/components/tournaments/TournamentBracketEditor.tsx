@@ -5,15 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Users, Plus, MinusCircle, Save } from 'lucide-react';
+import { User, Users, Plus, MinusCircle, Save, Trophy } from 'lucide-react';
 import TournamentRound from './TournamentRound';
 import { Gender, Classification, Team, Player } from '@/types';
 
 interface TournamentBracketEditorProps {
-  type: 'Singles' | 'Doubles';
+  type: 'Singles' | 'Doubles' | 'Team';
   gender: Gender;
   classification: Classification;
   districtName?: string;
+  qualifiers?: Array<{
+    seed: number;
+    name: string;
+    school: string;
+  }>;
 }
 
 interface BracketParticipant {
@@ -28,12 +33,22 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   type,
   gender,
   classification,
-  districtName
+  districtName,
+  qualifiers
 }) => {
   const { teams, players, getPlayersByTeam } = useData();
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [bracketSize, setBracketSize] = useState<number>(8);
-  const [participants, setParticipants] = useState<BracketParticipant[]>([]);
+  const [participants, setParticipants] = useState<BracketParticipant[]>(
+    // Initialize with qualifiers if provided
+    qualifiers 
+      ? qualifiers.map(q => ({
+          seed: q.seed,
+          name: q.name,
+          school: q.school
+        })) 
+      : []
+  );
   const [isEditing, setIsEditing] = useState<boolean>(true);
   
   // Filter teams by gender and classification
@@ -88,6 +103,31 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
         school: teamSchool,
         playerId: player.id,
         teamId: player.teamId
+      }]);
+    }
+  };
+  
+  const addTeamParticipant = (team: Team, seed: number) => {
+    // For team tournaments, add the team as a participant
+    const existingIndex = participants.findIndex(p => p.seed === seed);
+    
+    if (existingIndex >= 0) {
+      // Update existing participant
+      const updatedParticipants = [...participants];
+      updatedParticipants[existingIndex] = {
+        seed,
+        name: team.gender,
+        school: team.schoolId,
+        teamId: team.id
+      };
+      setParticipants(updatedParticipants);
+    } else {
+      // Add new participant
+      setParticipants([...participants, {
+        seed,
+        name: team.gender,
+        school: team.schoolId,
+        teamId: team.id
       }]);
     }
   };
@@ -171,124 +211,254 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   // Generate the bracket for display
   const bracketRounds = generateEmptyBracket();
   
+  // Different UI for team tournaments vs singles/doubles
+  const renderEditorContent = () => {
+    if (type === 'Team') {
+      return (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="w-full md:w-auto">
+              <label className="block text-sm font-medium mb-1">Bracket Size</label>
+              <Select 
+                value={bracketSize.toString()} 
+                onValueChange={handleBracketSizeChange}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="8">8</SelectItem>
+                  <SelectItem value="16">16</SelectItem>
+                  <SelectItem value="32">32</SelectItem>
+                  <SelectItem value="48">48</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="w-full md:w-auto">
+              <label className="block text-sm font-medium mb-1">Select Team</label>
+              <Select 
+                value={selectedTeamId} 
+                onValueChange={setSelectedTeamId}
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select team" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredTeams.map(team => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.schoolId} {team.gender}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedTeamId && (
+              <div className="w-full">
+                <label className="block text-sm font-medium mb-1">Add Team & Seed</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredTeams.map(team => (
+                    <div key={team.id} className="flex items-center gap-2 border p-2 rounded">
+                      <div className="flex-1">
+                        <div className="font-medium">{team.schoolId}</div>
+                        <div className="text-xs text-gray-500">{team.gender}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max={bracketSize} 
+                          placeholder="Seed"
+                          className="w-16"
+                          onChange={(e) => {
+                            const seed = parseInt(e.target.value);
+                            if (seed > 0 && seed <= bracketSize) {
+                              addTeamParticipant(team, seed);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-6">
+            <h4 className="text-sm font-medium mb-3">Current Entries ({participants.length}/{bracketSize})</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {Array.from({ length: bracketSize }, (_, i) => i + 1).map(seed => {
+                const participant = participants.find(p => p.seed === seed);
+                return (
+                  <div key={seed} className="flex items-center gap-2 border p-2 rounded">
+                    <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full font-bold">
+                      {seed}
+                    </div>
+                    <div className="flex-1">
+                      {participant ? (
+                        <>
+                          <div className="font-medium">{participant.school}</div>
+                          <div className="text-xs text-gray-500">{participant.name}</div>
+                        </>
+                      ) : (
+                        <div className="text-gray-400">Not assigned</div>
+                      )}
+                    </div>
+                    {participant && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => removeParticipant(seed)}
+                      >
+                        <MinusCircle className="h-4 w-4 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      // Singles and Doubles editor UI (existing code)
+      return (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="w-full md:w-auto">
+              <label className="block text-sm font-medium mb-1">Bracket Size</label>
+              <Select 
+                value={bracketSize.toString()} 
+                onValueChange={handleBracketSizeChange}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="8">8</SelectItem>
+                  <SelectItem value="16">16</SelectItem>
+                  <SelectItem value="32">32</SelectItem>
+                  <SelectItem value="48">48</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="w-full md:w-auto">
+              <label className="block text-sm font-medium mb-1">Select Team</label>
+              <Select 
+                value={selectedTeamId} 
+                onValueChange={setSelectedTeamId}
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select team" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredTeams.map(team => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.schoolId} {team.gender}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedTeamId && (
+              <div className="w-full">
+                <label className="block text-sm font-medium mb-1">Select Player & Seed</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {availablePlayers.map(player => (
+                    <div key={player.id} className="flex items-center gap-2 border p-2 rounded">
+                      <div className="flex-1">
+                        <div className="font-medium">{player.name}</div>
+                        <div className="text-xs text-gray-500">Grade: {player.grade}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max={bracketSize} 
+                          placeholder="Seed"
+                          className="w-16"
+                          onChange={(e) => {
+                            const seed = parseInt(e.target.value);
+                            if (seed > 0 && seed <= bracketSize) {
+                              addParticipant(player, seed);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-6">
+            <h4 className="text-sm font-medium mb-3">Current Entries ({participants.length}/{bracketSize})</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {Array.from({ length: bracketSize }, (_, i) => i + 1).map(seed => {
+                const participant = participants.find(p => p.seed === seed);
+                return (
+                  <div key={seed} className="flex items-center gap-2 border p-2 rounded">
+                    <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full font-bold">
+                      {seed}
+                    </div>
+                    <div className="flex-1">
+                      {participant ? (
+                        <>
+                          <div className="font-medium">{participant.name}</div>
+                          <div className="text-xs text-gray-500">{participant.school}</div>
+                        </>
+                      ) : (
+                        <div className="text-gray-400">Not assigned</div>
+                      )}
+                    </div>
+                    {participant && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => removeParticipant(seed)}
+                      >
+                        <MinusCircle className="h-4 w-4 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  };
+  
+  // Render the tournament bracket editor
   return (
     <div className="space-y-4 mt-4">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-md flex items-center">
-            {type === 'Singles' ? <User className="h-5 w-5 mr-2" /> : <Users className="h-5 w-5 mr-2" />}
+            {type === 'Singles' ? (
+              <User className="h-5 w-5 mr-2" />
+            ) : type === 'Doubles' ? (
+              <Users className="h-5 w-5 mr-2" />
+            ) : (
+              <Trophy className="h-5 w-5 mr-2" />
+            )}
             {type} Tournament Bracket Editor
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isEditing ? (
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-4">
-                <div className="w-full md:w-auto">
-                  <label className="block text-sm font-medium mb-1">Bracket Size</label>
-                  <Select 
-                    value={bracketSize.toString()} 
-                    onValueChange={handleBracketSizeChange}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Select size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="4">4</SelectItem>
-                      <SelectItem value="8">8</SelectItem>
-                      <SelectItem value="16">16</SelectItem>
-                      <SelectItem value="32">32</SelectItem>
-                      <SelectItem value="48">48</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="w-full md:w-auto">
-                  <label className="block text-sm font-medium mb-1">Select Team</label>
-                  <Select 
-                    value={selectedTeamId} 
-                    onValueChange={setSelectedTeamId}
-                  >
-                    <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredTeams.map(team => (
-                        <SelectItem key={team.id} value={team.id}>
-                          {team.schoolId} {team.gender}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {selectedTeamId && (
-                  <div className="w-full">
-                    <label className="block text-sm font-medium mb-1">Select Player & Seed</label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {availablePlayers.map(player => (
-                        <div key={player.id} className="flex items-center gap-2 border p-2 rounded">
-                          <div className="flex-1">
-                            <div className="font-medium">{player.name}</div>
-                            <div className="text-xs text-gray-500">Grade: {player.grade}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Input 
-                              type="number" 
-                              min="1" 
-                              max={bracketSize} 
-                              placeholder="Seed"
-                              className="w-16"
-                              onChange={(e) => {
-                                const seed = parseInt(e.target.value);
-                                if (seed > 0 && seed <= bracketSize) {
-                                  addParticipant(player, seed);
-                                }
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-6">
-                <h4 className="text-sm font-medium mb-3">Current Entries ({participants.length}/{bracketSize})</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {Array.from({ length: bracketSize }, (_, i) => i + 1).map(seed => {
-                    const participant = participants.find(p => p.seed === seed);
-                    return (
-                      <div key={seed} className="flex items-center gap-2 border p-2 rounded">
-                        <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full font-bold">
-                          {seed}
-                        </div>
-                        <div className="flex-1">
-                          {participant ? (
-                            <>
-                              <div className="font-medium">{participant.name}</div>
-                              <div className="text-xs text-gray-500">{participant.school}</div>
-                            </>
-                          ) : (
-                            <div className="text-gray-400">Not assigned</div>
-                          )}
-                        </div>
-                        {participant && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => removeParticipant(seed)}
-                          >
-                            <MinusCircle className="h-4 w-4 text-red-500" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {renderEditorContent()}
               
               <div className="flex justify-end mt-4">
                 <Button onClick={saveBracket} className="flex items-center gap-2">
