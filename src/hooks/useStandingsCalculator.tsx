@@ -11,28 +11,25 @@ export const useStandingsCalculator = (
     // Filter teams by gender and classification
     const relevantTeams = teams.filter(team => {
       const school = schools.find(s => s.id === team.schoolId);
+      if (!school) return false;
       
       // For 4A/3A/2A/1A, we need special handling
       if (classification === '4A/3A/2A/1A') {
         // If districtId is provided, filter by that specific district
         if (districtId) {
-          return team.gender === gender && school?.districtId === districtId;
+          return team.gender === gender && school.districtId === districtId;
         } 
-        // Otherwise, include all teams with classifications that fall under the 4A/3A/2A/1A umbrella
+        // Otherwise, only show teams that are explicitly marked as 4A/3A/2A/1A
+        // since we can't compare with individual classifications that aren't in our type
         else {
-          return team.gender === gender && 
-                 (school?.classification === '4A/3A/2A/1A' || 
-                  school?.classification === '4A' || 
-                  school?.classification === '3A' || 
-                  school?.classification === '2A' || 
-                  school?.classification === '1A');
+          return team.gender === gender && school.classification === '4A/3A/2A/1A';
         }
       }
       
       // For other classifications, use exact match
       return team.gender === gender && 
-             school?.classification === classification && 
-             (!districtId || school?.districtId === districtId);
+             school.classification === classification && 
+             (!districtId || school.districtId === districtId);
     });
     
     const standings: TeamStanding[] = relevantTeams.map(team => {
