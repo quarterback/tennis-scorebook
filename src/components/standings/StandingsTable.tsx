@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, Medal, FlaskConical, ArrowRightCircle } from 'lucide-react';
+import { Award, Medal, FlaskConical, ArrowRightCircle, Info } from 'lucide-react';
 import { TeamStanding } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -32,9 +32,17 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   return (
     <Card>
       <CardHeader className="bg-tennis-gray pb-2">
-        <CardTitle className="flex items-center">
-          <Award className="h-5 w-5 mr-2 text-tennis-blue" />
-          {selectedGender} {selectedClassification} {selectedDistrictName ? `- ${selectedDistrictName}` : ''} Standings
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Award className="h-5 w-5 mr-2 text-tennis-blue" />
+            {selectedGender} {selectedClassification} {selectedDistrictName ? `- ${selectedDistrictName}` : ''} Standings
+          </div>
+          {selectedClassification === '4A/3A/2A/1A' && !selectedDistrictName && (
+            <div className="flex items-center text-sm font-normal text-gray-500">
+              <Info className="h-4 w-4 mr-1" />
+              Select a specific district to see all teams
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -78,7 +86,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
                     <TableCell>
                       <div>
                         <div className="font-medium">{standing.teamName}</div>
-                        {!isCoach && (
+                        {(!isCoach || selectedClassification === '4A/3A/2A/1A') && (
                           <div className="text-sm text-gray-500">{standing.districtName}</div>
                         )}
                       </div>

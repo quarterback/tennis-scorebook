@@ -1,4 +1,3 @@
-
 import { Team, School, Match, District, Gender, Classification, TeamStanding } from '@/types';
 
 export const useStandingsCalculator = (
@@ -12,9 +11,28 @@ export const useStandingsCalculator = (
     // Filter teams by gender and classification
     const relevantTeams = teams.filter(team => {
       const school = schools.find(s => s.id === team.schoolId);
-      return team.gender === gender 
-        && school?.classification === classification
-        && (!districtId || school?.districtId === districtId);
+      
+      // For 4A/3A/2A/1A, we need special handling
+      if (classification === '4A/3A/2A/1A') {
+        // If districtId is provided, filter by that specific district
+        if (districtId) {
+          return team.gender === gender && school?.districtId === districtId;
+        } 
+        // Otherwise, include all teams with classifications that fall under the 4A/3A/2A/1A umbrella
+        else {
+          return team.gender === gender && 
+                 (school?.classification === '4A/3A/2A/1A' || 
+                  school?.classification === '4A' || 
+                  school?.classification === '3A' || 
+                  school?.classification === '2A' || 
+                  school?.classification === '1A');
+        }
+      }
+      
+      // For other classifications, use exact match
+      return team.gender === gender && 
+             school?.classification === classification && 
+             (!districtId || school?.districtId === districtId);
     });
     
     const standings: TeamStanding[] = relevantTeams.map(team => {
