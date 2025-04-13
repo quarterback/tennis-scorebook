@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect } from 'react';
 import { School, Team, Player, Match, TeamStanding, Gender, Classification, District, Season, PlayerTransfer } from '@/types';
 
@@ -71,6 +70,7 @@ export const useData = () => {
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  
   const { 
     schools, setSchools, addSchool, updateSchool, deleteSchool 
   } = useSchoolOperations(sampleSchools);
@@ -146,23 +146,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     getStandings,
     getStateQualifiers
-  };
-  
-  const handleSchoolDelete = (id: string) => {
-    const school = schools.find(s => s.id === id);
-    if (school) {
-      deleteSchool(id);
-      
-      const schoolTeams = teams.filter(t => t.schoolId === id);
-      
-      schoolTeams.forEach(team => {
-        players.filter(p => p.teamId === team.id).forEach(player => {
-          deletePlayer(player.id);
-        });
-        
-        deleteTeam(team.id);
-      });
-    }
   };
   
   return (

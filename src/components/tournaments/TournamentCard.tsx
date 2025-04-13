@@ -1,10 +1,10 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, Users, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Gender, Classification, TeamStanding } from '@/types';
-import { Medal, Calendar, Info, Users } from 'lucide-react';
 import TournamentBracket from './TournamentBracket';
-import { Badge } from '@/components/ui/badge';
 
 interface TournamentCardProps {
   type: 'Singles' | 'Doubles' | 'Team';
@@ -21,76 +21,70 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   districtName,
   qualifiers
 }) => {
-  const isDistrict = !!districtName;
+  const [expanded, setExpanded] = useState(false);
   
-  // Tournament dates
-  const tournamentDate = isDistrict
-    ? new Date(2025, 4, 15) // May 15, 2025 for districts
-    : new Date(2025, 4, 30); // May 30, 2025 for state
+  const formatQualifiers = () => {
+    if (!qualifiers) return [];
+    
+    return qualifiers.map((team, index) => ({
+      seed: index + 1,
+      name: team.teamName,
+      school: team.schoolName
+    }));
+  };
   
-  const formattedDate = tournamentDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  const getBadgeColor = () => {
+    if (type === 'Singles') return 'bg-blue-100 text-blue-800';
+    if (type === 'Doubles') return 'bg-green-100 text-green-800';
+    return 'bg-amber-100 text-amber-800';
+  };
   
-  // For state tournaments, we show qualifying information
-  const qualificationInfo = !isDistrict ? 
-    (type === 'Team' ? 
-      `Top ${classification === '6A' ? 16 : classification === '5A' ? 12 : 8} teams qualify for state tournament` :
-      "Top 4 qualifiers from each district tournament advance to state") 
-    : "";
+  const getIcon = () => {
+    if (type === 'Singles') return <User className="h-4 w-4 mr-1" />;
+    if (type === 'Doubles') return <Users className="h-4 w-4 mr-1" />;
+    return <Trophy className="h-4 w-4 mr-1" />;
+  };
   
-  // Format qualifiers for the bracket
-  const formattedQualifiers = qualifiers?.map((team, index) => ({
-    seed: index + 1,
-    name: team.teamName,
-    school: team.schoolName
-  }));
+  const formatDistrictOrState = () => {
+    if (districtName) return districtName;
+    return "State";
+  };
   
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-3">
-        <div className="mb-3 flex items-center justify-between">
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3 px-4 pt-4">
+        <CardTitle className="text-md flex justify-between items-center">
           <div className="flex items-center">
-            {type === 'Team' ? (
-              <Users className="h-4 w-4 mr-2 text-tennis-blue" />
-            ) : (
-              <Medal className="h-4 w-4 mr-2 text-tennis-blue" />
-            )}
-            <h3 className="font-medium text-base">{type} Tournament</h3>
+            {getIcon()}
+            {type} Tournament
           </div>
-          <Badge variant="outline" className="flex items-center text-xs">
-            <Calendar className="h-3 w-3 mr-1" />
-            <span>{formattedDate}</span>
-          </Badge>
+          <div
+            className="cursor-pointer p-1 rounded-full hover:bg-gray-100"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className={cn("px-4 pb-4", {
+        "hidden": !expanded
+      })}>
+        <div className="mb-3 flex items-center gap-2">
+          <span className={cn("text-xs px-2 py-1 rounded-full", getBadgeColor())}>
+            {formatDistrictOrState()}
+          </span>
+          <span className="text-xs text-gray-500">
+            {gender} {classification}
+          </span>
         </div>
         
-        {!isDistrict && qualificationInfo && (
-          <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-100 text-xs">
-            <div className="flex items-start">
-              <Info className="h-3 w-3 mr-1.5 text-tennis-blue mt-0.5 flex-shrink-0" />
-              <p>{qualificationInfo}</p>
-            </div>
-          </div>
-        )}
-        
-        <TournamentBracket 
+        <TournamentBracket
           type={type}
           gender={gender}
           classification={classification}
           districtName={districtName}
-          qualifiers={formattedQualifiers}
+          qualifiers={formatQualifiers()}
         />
-        
-        <div className="mt-3 text-center">
-          <p className="text-xs text-gray-500">
-            {isDistrict 
-              ? `${districtName} qualifier for the ${classification} ${gender} State Championship`
-              : `${classification} ${gender} State Championship Tournament`}
-          </p>
-        </div>
       </CardContent>
     </Card>
   );
