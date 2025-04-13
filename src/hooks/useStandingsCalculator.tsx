@@ -1,4 +1,3 @@
-
 import { Team, School, Match, District, Gender, Classification, TeamStanding } from '@/types';
 
 export const useStandingsCalculator = (
@@ -20,8 +19,8 @@ export const useStandingsCalculator = (
         if (districtId) {
           return team.gender === gender && school.districtId === districtId;
         } 
-        // Otherwise, only show teams that are explicitly marked as 4A/3A/2A/1A
-        // since we can't compare with individual classifications that aren't in our type
+        // Otherwise, include ALL teams that are in 4A/3A/2A/1A classification or 
+        // teams from districts marked as 4A/3A/2A/1A
         else {
           // Get all special district IDs for 4A/3A/2A/1A
           const specialDistrictIds = districts
@@ -114,5 +113,25 @@ export const useStandingsCalculator = (
     return standings.slice(0, limit);
   };
 
-  return { getStandings, getQualifyingTeams };
+  // Get top teams for state tournament bracket based on classification
+  const getStateQualifiers = (gender: Gender, classification: Classification): TeamStanding[] => {
+    // Get all teams for the classification regardless of district
+    const allTeams = getStandings(gender, classification);
+    
+    let qualifierLimit = 8; // Default
+    
+    // Set different limits based on classification
+    if (classification === '6A') {
+      qualifierLimit = 16;
+    } else if (classification === '5A') {
+      qualifierLimit = 12;
+    } else if (classification === '4A/3A/2A/1A') {
+      qualifierLimit = 8;
+    }
+    
+    // Return top N teams
+    return allTeams.slice(0, qualifierLimit);
+  };
+
+  return { getStandings, getQualifyingTeams, getStateQualifiers };
 };

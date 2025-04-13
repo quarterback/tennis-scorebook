@@ -9,7 +9,7 @@ import StandingsTable from '@/components/standings/StandingsTable';
 import TournamentDisplay from '@/components/standings/TournamentDisplay';
 
 const Standings = () => {
-  const { getStandings, districts, getDistrictsByClassification } = useData();
+  const { getStandings, districts, getDistrictsByClassification, getStateQualifiers } = useData();
   const [selectedGender, setSelectedGender] = useState<Gender>('Boys');
   const [selectedClassification, setSelectedClassification] = useState<Classification>('6A');
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | undefined>(undefined);

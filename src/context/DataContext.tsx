@@ -56,6 +56,7 @@ interface DataContextType {
   getMatchesByTeam: (teamId: string) => Match[];
   
   getStandings: (gender: Gender, classification: Classification, districtId?: string) => TeamStanding[];
+  getStateQualifiers: (gender: Gender, classification: Classification) => TeamStanding[];
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -99,7 +100,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getTeamsBySchool, getMatchesByTeam 
   } = useFilterOperations(teams, players, matches);
   
-  const { getStandings } = useStandingsCalculator(teams, schools, matches, districts);
+  const { getStandings, getStateQualifiers } = useStandingsCalculator(teams, schools, matches, districts);
   
   const value: DataContextType = {
     schools,
@@ -142,7 +143,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getTeamsBySchool,
     getMatchesByTeam,
     
-    getStandings
+    getStandings,
+    getStateQualifiers
   };
   
   const handleSchoolDelete = (id: string) => {

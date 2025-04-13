@@ -1,23 +1,25 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Gender, Classification } from '@/types';
-import { Medal, Calendar, Info } from 'lucide-react';
+import { Gender, Classification, TeamStanding } from '@/types';
+import { Medal, Calendar, Info, Users } from 'lucide-react';
 import TournamentBracket from './TournamentBracket';
 import { Badge } from '@/components/ui/badge';
 
 interface TournamentCardProps {
-  type: 'Singles' | 'Doubles';
+  type: 'Singles' | 'Doubles' | 'Team';
   gender: Gender;
   classification: Classification;
   districtName?: string;
+  qualifiers?: TeamStanding[];
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({
   type,
   gender,
   classification,
-  districtName
+  districtName,
+  qualifiers
 }) => {
   const isDistrict = !!districtName;
   
@@ -35,14 +37,28 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   
   // For state tournaments, we show qualifying information
   const qualificationInfo = !isDistrict ? 
-    "Top 4 qualifiers from each district tournament advance to state" : "";
+    (type === 'Team' ? 
+      `Top ${classification === '6A' ? 16 : classification === '5A' ? 12 : 8} teams qualify for state tournament` :
+      "Top 4 qualifiers from each district tournament advance to state") 
+    : "";
+  
+  // Format qualifiers for the bracket
+  const formattedQualifiers = qualifiers?.map((team, index) => ({
+    seed: index + 1,
+    name: team.teamName,
+    school: team.schoolName
+  }));
   
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-3">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center">
-            <Medal className="h-4 w-4 mr-2 text-tennis-blue" />
+            {type === 'Team' ? (
+              <Users className="h-4 w-4 mr-2 text-tennis-blue" />
+            ) : (
+              <Medal className="h-4 w-4 mr-2 text-tennis-blue" />
+            )}
             <h3 className="font-medium text-base">{type} Tournament</h3>
           </div>
           <Badge variant="outline" className="flex items-center text-xs">
@@ -65,6 +81,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           gender={gender}
           classification={classification}
           districtName={districtName}
+          qualifiers={formattedQualifiers}
         />
         
         <div className="mt-3 text-center">

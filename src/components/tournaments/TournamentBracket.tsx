@@ -4,22 +4,47 @@ import TournamentRound from './TournamentRound';
 import { Gender, Classification } from '@/types';
 
 interface TournamentBracketProps {
-  type: 'Singles' | 'Doubles';
+  type: 'Singles' | 'Doubles' | 'Team';
   gender: Gender;
   classification: Classification;
   districtName?: string;
+  qualifiers?: Array<{
+    seed: number;
+    name: string;
+    school: string;
+  }>;
 }
 
 const TournamentBracket: React.FC<TournamentBracketProps> = ({ 
   type, 
   gender, 
   classification, 
-  districtName 
+  districtName,
+  qualifiers
 }) => {
   const isDistrict = !!districtName;
   
-  // Calculate bracket size based on tournament type
-  const bracketSize = isDistrict ? 32 : 48; // 32 for district, 48 for state
+  // Calculate bracket size based on tournament type and classification
+  let bracketSize = 32; // Default for district singles/doubles
+  
+  if (type === 'Team') {
+    if (!isDistrict) {
+      // State team tournament sizes
+      if (classification === '6A') {
+        bracketSize = 16;
+      } else if (classification === '5A') {
+        bracketSize = 16; // Using 16 for 5A but will only fill 12 spots
+      } else if (classification === '4A/3A/2A/1A') {
+        bracketSize = 8;
+      }
+    } else {
+      // District team tournaments have 8 teams
+      bracketSize = 8;
+    }
+  } else {
+    // Singles/Doubles tournaments
+    bracketSize = isDistrict ? 32 : 48;
+  }
   
   // Calculate the number of rounds needed for the bracket
   const numRounds = Math.ceil(Math.log2(bracketSize));
@@ -42,22 +67,58 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
       // First round has actual participants, other rounds have TBD
       if (roundIndex === 0) {
         const seedNumber = matchIndex + 1;
-        return {
-          id: `${type.toLowerCase()}-r${roundIndex}-m${matchIndex}`,
-          player1: {
-            seed: seedNumber,
-            name: isDistrict ? `Player ${seedNumber}` : `District ${Math.floor((seedNumber-1)/4) + 1} Qualifier ${((seedNumber-1) % 4) + 1}`,
-            school: `School ${seedNumber}`
-          },
-          player2: {
-            seed: bracketSize - seedNumber + 1 > bracketSize / 2 ? bracketSize - seedNumber + 1 : null, 
-            name: bracketSize - seedNumber + 1 > bracketSize / 2 ? 
-              (isDistrict ? `Player ${bracketSize - seedNumber + 1}` : `District ${Math.floor((bracketSize - seedNumber)/4) + 1} Qualifier ${((bracketSize - seedNumber) % 4) + 1}`) : 
-              "Bye",
-            school: bracketSize - seedNumber + 1 > bracketSize / 2 ? `School ${bracketSize - seedNumber + 1}` : ""
-          },
-          result: null // No result yet
-        };
+        
+        // For team tournaments, use the qualifiers if provided
+        if (type === 'Team' && qualifiers && qualifiers.length > 0) {
+          const qualifierIndex = seedNumber - 1;
+          const opponent = bracketSize - seedNumber + 1;
+          const opponentIndex = opponent - 1;
+          
+          return {
+            id: `${type.toLowerCase()}-r${roundIndex}-m${matchIndex}`,
+            player1: qualifierIndex < qualifiers.length ? {
+              seed: seedNumber,
+              name: qualifiers[qualifierIndex].name,
+              school: qualifiers[qualifierIndex].school
+            } : {
+              seed: seedNumber,
+              name: "Bye",
+              school: ""
+            },
+            player2: opponentIndex < qualifiers.length ? {
+              seed: opponent <= bracketSize / 2 ? opponent : null,
+              name: opponentIndex < qualifiers.length ? qualifiers[opponentIndex].name : "Bye",
+              school: opponentIndex < qualifiers.length ? qualifiers[opponentIndex].school : ""
+            } : {
+              seed: null,
+              name: "Bye",
+              school: ""
+            },
+            result: null // No result yet
+          };
+        } else {
+          // Normal bracket logic for singles/doubles
+          return {
+            id: `${type.toLowerCase()}-r${roundIndex}-m${matchIndex}`,
+            player1: {
+              seed: seedNumber,
+              name: isDistrict ? 
+                `Player ${seedNumber}` : 
+                `District ${Math.floor((seedNumber-1)/4) + 1} Qualifier ${((seedNumber-1) % 4) + 1}`,
+              school: `School ${seedNumber}`
+            },
+            player2: {
+              seed: bracketSize - seedNumber + 1 > bracketSize / 2 ? bracketSize - seedNumber + 1 : null, 
+              name: bracketSize - seedNumber + 1 > bracketSize / 2 ? 
+                (isDistrict ? 
+                  `Player ${bracketSize - seedNumber + 1}` : 
+                  `District ${Math.floor((bracketSize - seedNumber)/4) + 1} Qualifier ${((bracketSize - seedNumber) % 4) + 1}`) : 
+                "Bye",
+              school: bracketSize - seedNumber + 1 > bracketSize / 2 ? `School ${bracketSize - seedNumber + 1}` : ""
+            },
+            result: null // No result yet
+          };
+        }
       } else {
         // Later rounds have TBD participants
         return {
