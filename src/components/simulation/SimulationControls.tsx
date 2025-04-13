@@ -15,6 +15,7 @@ import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Team } from '@/types';
 
 const SimulationControls: React.FC = () => {
   const { 
@@ -22,7 +23,7 @@ const SimulationControls: React.FC = () => {
     addPlayer, addMatch 
   } = useData();
   
-  const { generateAllData, generatingData, progress } = useSimulatedData();
+  const { generateAllData, generatingData, progress, verifyTeamsForSimulation } = useSimulatedData();
   
   const [showSimulationControls, setShowSimulationControls] = useState(false);
   
@@ -80,16 +81,23 @@ const SimulationControls: React.FC = () => {
     });
     
     // Check if any district has at least 2 teams
-    const hasDistrict = Object.values(districtTeams).some(teamsInDistrict => teamsInDistrict.length >= 2);
+    const hasDistrictWithEnoughTeams = Object.entries(districtTeams).some(([districtId, teamsInDistrict]) => {
+      if (teamsInDistrict.length >= 2) {
+        // Get district name for better error message
+        const district = districts.find(d => d.id === districtId);
+        return true;
+      }
+      return false;
+    });
     
-    if (!hasDistrict) {
-      return "You need at least 2 teams in the same district to generate matches";
+    if (!hasDistrictWithEnoughTeams) {
+      return "You need at least 2 teams in the same district/league to generate matches. Please add more teams to the same district.";
     }
     
     return null;
   };
   
-  // Update error message when teams change
+  // Update error message when teams or schools change
   useEffect(() => {
     setSimulationError(checkTeamsForSimulation());
   }, [teams, schools]);
@@ -162,6 +170,23 @@ const SimulationControls: React.FC = () => {
         setSimulationError("An unknown error occurred");
       }
     }
+  };
+  
+  // Check if we have districts with sample data that matches OSAA league structure
+  const hasCorrectDistrictStructure = () => {
+    const districtNames = districts.map(d => d.name);
+    
+    // Check for some key districts that should be in the sample data
+    const expectedDistricts = [
+      'Portland Interscholastic League',
+      'Metro League',
+      'Pacific Conference',
+      'Mt. Hood Conference',
+      'Three Rivers League',
+      'Special District 1'
+    ];
+    
+    return expectedDistricts.some(name => districtNames.includes(name));
   };
   
   return (
