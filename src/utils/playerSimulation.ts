@@ -1,7 +1,16 @@
 
 // This is now a barrel file that re-exports functionality from the split files
 import { generatePlayerName } from './playerNames';
-import { generatePlayerGrade, generateTeamRoster, getPlayerWithRank } from './playerGeneration';
+import { 
+  generatePlayerGrade, 
+  generateTeamRoster, 
+  getPlayerWithRank,
+  determineTeamArchetype,
+  determineTeamStrategy,
+  getSchoolClassification,
+  determineTeamSize,
+  assignPlayerSkillTier
+} from './playerGeneration';
 import { generateTeamLadder, updateTeamLadder } from './ladderManagement';
 
 export {
@@ -10,5 +19,10 @@ export {
   generateTeamRoster,
   generateTeamLadder,
   updateTeamLadder,
-  getPlayerWithRank
+  getPlayerWithRank,
+  determineTeamArchetype,
+  determineTeamStrategy,
+  getSchoolClassification,
+  determineTeamSize,
+  assignPlayerSkillTier
 };

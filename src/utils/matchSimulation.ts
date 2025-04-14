@@ -1,8 +1,111 @@
-
 import { Match, Flight, Team, School, Player } from '@/types';
 import type { Set } from '@/types'; // Type-only import to avoid conflict with global Set
 import { TeamLadder } from '@/types/ranking';
 import { getPlayerWithRank } from './playerSimulation';
+import { getSchoolClassification, determineTeamArchetype } from './playerGeneration';
+
+interface StrengthAssessment {
+  baseStrength: number;
+  archetype: string;
+  classification: string;
+  skillTierBonus: number;
+}
+
+/**
+ * Assess team strength based on archetype, classification and player skill tiers
+ */
+const assessTeamStrength = (
+  team: Team,
+  schools: School[],
+  players: Player[]
+): StrengthAssessment => {
+  const school = schools.find(s => s.id === team.schoolId);
+  const classification = school?.classification || '6A';
+  const archetype = determineTeamArchetype(team.id);
+  
+  // Base strength by archetype
+  let baseStrength = 
+    archetype === 'dominant' ? 8 :
+    archetype === 'strong' ? 6 :
+    archetype === 'mid-tier' ? 4 : 2;
+  
+  // Classification modifier
+  const classModifier = 
+    classification === '6A' ? 1.2 :
+    classification === '5A' ? 1.0 : 0.8;
+  
+  // Count elite and competitive players
+  const teamPlayers = players.filter(p => p.teamId === team.id);
+  const elitePlayers = teamPlayers.filter(p => p.skillTier === 'elite').length;
+  const competitivePlayers = teamPlayers.filter(p => p.skillTier === 'competitive').length;
+  
+  // Calculate skill tier bonus
+  const skillTierBonus = (elitePlayers * 0.5) + (competitivePlayers * 0.2);
+  
+  return {
+    baseStrength: baseStrength * classModifier,
+    archetype,
+    classification,
+    skillTierBonus
+  };
+};
+
+/**
+ * Calculate relative strength for position-specific matchup
+ * Factoring in player skill tiers, position importance and team archetypes
+ */
+const calculatePositionStrength = (
+  playerIds: string[],
+  position: number,
+  type: 'singles' | 'doubles',
+  ladder: TeamLadder,
+  allPlayers: Player[],
+  teamAssessment: StrengthAssessment
+): number => {
+  // Get player strength from ladder position and skill tier
+  let positionStrength = 0;
+  
+  for (const playerId of playerIds) {
+    const playerWithRank = getPlayerWithRank(playerId, allPlayers, ladder);
+    if (!playerWithRank) continue;
+    
+    const { player, rank } = playerWithRank;
+    
+    // Base individual strength from ladder rank (1 is best, lower is better)
+    const rankValue = Math.max(1, 11 - rank); // Convert rank to 1-10 scale
+    
+    // Skill tier multiplier
+    const skillMultiplier = 
+      player.skillTier === 'elite' ? 1.5 :
+      player.skillTier === 'competitive' ? 1.2 : 1.0;
+    
+    // Position importance (1S and 1D are more important)
+    const positionMultiplier = 
+      (type === 'singles' && position === 1) ? 1.3 :
+      (type === 'doubles' && position === 1) ? 1.2 :
+      (position <= 2) ? 1.1 : 1.0;
+    
+    // Calculate individual strength
+    const individualStrength = rankValue * skillMultiplier * positionMultiplier;
+    positionStrength += individualStrength;
+  }
+  
+  // For doubles, average the two players' strength
+  if (type === 'doubles') {
+    positionStrength = positionStrength / 2;
+  }
+  
+  // Team archetype bonuses
+  // Dominant teams perform better at top positions
+  if (teamAssessment.archetype === 'dominant' && position === 1) {
+    positionStrength *= 1.2;
+  }
+  
+  // Add randomness factor (slight performance variation)
+  const randomFactor = 0.9 + (Math.random() * 0.2); // 0.9-1.1
+  
+  return positionStrength * randomFactor;
+};
 
 /**
  * Generate tennis set score based on relative player strengths
@@ -11,79 +114,87 @@ import { getPlayerWithRank } from './playerSimulation';
  * @returns Object with home and away scores
  */
 export const generateSetScore = (homeStrength: number, awayStrength: number): { homeScore: number, awayScore: number, tiebreak?: { homeScore: number, awayScore: number } } => {
-  // Higher strength increases chance of winning
-  const homeWinProbability = homeStrength / (homeStrength + awayStrength);
+  // Calculate win probability based on relative strengths
+  const totalStrength = homeStrength + awayStrength;
+  const homeWinProbability = homeStrength / totalStrength;
+  
+  // Add slight home court advantage
+  const adjustedHomeWinProb = Math.min(0.95, homeWinProbability * 1.05);
   
   // Determine winner
-  const homeWins = Math.random() < homeWinProbability;
+  const homeWins = Math.random() < adjustedHomeWinProb;
   
   let homeScore = 0;
   let awayScore = 0;
   
+  // Calculate strength difference for score determination
+  const strengthDiff = Math.abs(homeStrength - awayStrength);
+  const isDominant = strengthDiff > 4;
+  const isStrong = strengthDiff > 2 && strengthDiff <= 4;
+  const isClose = strengthDiff <= 2;
+  
   if (homeWins) {
     // Home player/team wins
-    homeScore = 6;
-    
-    // Determine opponent score (closer match if strengths are similar)
-    const scoreDifference = homeStrength - awayStrength;
-    if (scoreDifference > 4) {
-      // Dominant win
+    if (isDominant) {
+      // Dominant win (6-0, 6-1)
+      homeScore = 6;
       awayScore = Math.random() < 0.7 ? 0 : 1;
-    } else if (scoreDifference > 2) {
-      // Clear win
-      awayScore = Math.random() < 0.6 ? 2 : 3;
-    } else {
-      // Close win
-      const closeScores = Math.random() < 0.25 ? [6, 4] : [6, 3];
-      homeScore = closeScores[0];
-      awayScore = closeScores[1];
+    } else if (isStrong) {
+      // Clear win (6-2, 6-3)
+      homeScore = 6;
+      awayScore = Math.random() < 0.5 ? 2 : 3;
+    } else if (isClose) {
+      // Close win (6-4, 7-5, 7-6)
+      const closeType = Math.random();
+      if (closeType < 0.6) {
+        homeScore = 6;
+        awayScore = 4;
+      } else if (closeType < 0.8) {
+        homeScore = 7;
+        awayScore = 5;
+      } else {
+        homeScore = 7;
+        awayScore = 6;
+      }
     }
   } else {
     // Away player/team wins
-    awayScore = 6;
-    
-    // Determine opponent score (closer match if strengths are similar)
-    const scoreDifference = awayStrength - homeStrength;
-    if (scoreDifference > 4) {
-      // Dominant win
+    if (isDominant) {
+      // Dominant win (0-6, 1-6)
       homeScore = Math.random() < 0.7 ? 0 : 1;
-    } else if (scoreDifference > 2) {
-      // Clear win
-      homeScore = Math.random() < 0.6 ? 2 : 3;
-    } else {
-      // Close win
-      const closeScores = Math.random() < 0.25 ? [4, 6] : [3, 6];
-      homeScore = closeScores[0];
-      awayScore = closeScores[1];
+      awayScore = 6;
+    } else if (isStrong) {
+      // Clear win (2-6, 3-6)
+      homeScore = Math.random() < 0.5 ? 2 : 3;
+      awayScore = 6;
+    } else if (isClose) {
+      // Close win (4-6, 5-7, 6-7)
+      const closeType = Math.random();
+      if (closeType < 0.6) {
+        homeScore = 4;
+        awayScore = 6;
+      } else if (closeType < 0.8) {
+        homeScore = 5;
+        awayScore = 7;
+      } else {
+        homeScore = 6;
+        awayScore = 7;
+      }
     }
   }
   
-  // Small chance of 7-5 score in close matches
-  if (Math.abs(homeStrength - awayStrength) < 2 && Math.random() < 0.2) {
-    if (homeWins) {
-      homeScore = 7;
-      awayScore = 5;
-    } else {
-      homeScore = 5;
-      awayScore = 7;
-    }
-  }
-  
-  // Small chance of tiebreak in close matches
-  if (Math.abs(homeStrength - awayStrength) < 3 && Math.random() < 0.15) {
-    homeScore = homeWins ? 7 : 6;
-    awayScore = homeWins ? 6 : 7;
-    
-    // Generate tiebreak score
-    const tiebreakWinnerScore = Math.floor(Math.random() * 4) + 7; // 7-10
-    const tiebreakLoserScore = Math.max(0, tiebreakWinnerScore - Math.floor(Math.random() * 5) - 2); // 0-5 points below winner
+  // Add tiebreak for 7-6 or a 6-7 set
+  if ((homeScore === 7 && awayScore === 6) || (homeScore === 6 && awayScore === 7)) {
+    const tiebreakWinner = homeScore > awayScore;
+    const baseScore = 7 + Math.floor(Math.random() * 4); // 7-10
+    const loserScore = Math.max(0, baseScore - 2 - Math.floor(Math.random() * 4)); // 0-5 points below
     
     return {
       homeScore,
       awayScore,
       tiebreak: {
-        homeScore: homeWins ? tiebreakWinnerScore : tiebreakLoserScore,
-        awayScore: homeWins ? tiebreakLoserScore : tiebreakWinnerScore
+        homeScore: tiebreakWinner ? baseScore : loserScore,
+        awayScore: tiebreakWinner ? loserScore : baseScore
       }
     };
   }
@@ -92,7 +203,7 @@ export const generateSetScore = (homeStrength: number, awayStrength: number): { 
 };
 
 /**
- * Generate a flight result based on player strengths determined by ladder position
+ * Generate a flight result based on player skill tiers and team archetypes
  */
 export const generateFlightResult = (
   type: 'singles' | 'doubles',
@@ -102,27 +213,23 @@ export const generateFlightResult = (
   awayPlayers: string[],
   homeLadder: TeamLadder,
   awayLadder: TeamLadder,
-  allPlayers: Player[]
+  homeTeam: Team,
+  awayTeam: Team,
+  allPlayers: Player[],
+  schools: School[]
 ): { sets: Set[], homePlayerWon: boolean } => {
-  // Get player rankings to determine relative strength
-  const homePlayerRanks = homePlayers.map(id => {
-    const player = getPlayerWithRank(id, allPlayers, homeLadder);
-    return player ? player.rank : 999; // Use a high number if player not found
-  });
+  // Assess team strengths
+  const homeTeamAssessment = assessTeamStrength(homeTeam, schools, allPlayers);
+  const awayTeamAssessment = assessTeamStrength(awayTeam, schools, allPlayers);
   
-  const awayPlayerRanks = awayPlayers.map(id => {
-    const player = getPlayerWithRank(id, allPlayers, awayLadder);
-    return player ? player.rank : 999;
-  });
+  // Calculate position-specific strengths
+  const homePositionStrength = calculatePositionStrength(
+    homePlayers, position, type, homeLadder, allPlayers, homeTeamAssessment
+  );
   
-  // Calculate average rank (lower is better)
-  const homeAvgRank = homePlayerRanks.reduce((sum, rank) => sum + rank, 0) / homePlayerRanks.length;
-  const awayAvgRank = awayPlayerRanks.reduce((sum, rank) => sum + rank, 0) / awayPlayerRanks.length;
-  
-  // Convert to strength score (higher is better)
-  const maxRank = 20; // Assuming max 20 players on a team
-  const homeStrength = Math.max(1, 10 - (homeAvgRank / maxRank) * 10) + (Math.random() * 2 - 1);
-  const awayStrength = Math.max(1, 10 - (awayAvgRank / maxRank) * 10) + (Math.random() * 2 - 1);
+  const awayPositionStrength = calculatePositionStrength(
+    awayPlayers, position, type, awayLadder, allPlayers, awayTeamAssessment
+  );
   
   // Generate 2-3 sets
   const sets: Set[] = [];
@@ -130,22 +237,30 @@ export const generateFlightResult = (
   let awaySetWins = 0;
   
   // First set
-  const set1 = generateSetScore(homeStrength, awayStrength);
+  const set1 = generateSetScore(homePositionStrength, awayPositionStrength);
   sets.push(set1);
   if (set1.homeScore > set1.awayScore) homeSetWins++; else awaySetWins++;
   
-  // Second set - slight adjustment to strength based on first set result
-  const homeStrength2 = homeStrength + (homeSetWins > 0 ? 0.5 : -0.5);
-  const awayStrength2 = awayStrength + (awaySetWins > 0 ? 0.5 : -0.5);
+  // Second set - adjust strength based on first set (momentum factor)
+  const momentumFactor = 0.5; // How much first set affects second set
+  const homeStrength2 = homePositionStrength * (1 + (homeSetWins > 0 ? momentumFactor : -momentumFactor) * 0.1);
+  const awayStrength2 = awayPositionStrength * (1 + (awaySetWins > 0 ? momentumFactor : -momentumFactor) * 0.1);
+  
   const set2 = generateSetScore(homeStrength2, awayStrength2);
   sets.push(set2);
   if (set2.homeScore > set2.awayScore) homeSetWins++; else awaySetWins++;
   
   // If tied, play a third set
   if (homeSetWins === awaySetWins) {
-    // Third set - momentum factors more heavily
-    const homeStrength3 = homeStrength + (set2.homeScore > set2.awayScore ? 1 : -1);
-    const awayStrength3 = awayStrength + (set2.awayScore > set2.homeScore ? 1 : -1);
+    // Third set - stronger momentum factor
+    const finalMomentumFactor = 0.7;
+    const set2Winner = set2.homeScore > set2.awayScore;
+    
+    const homeStrength3 = homePositionStrength * 
+      (1 + (set2Winner ? finalMomentumFactor : -finalMomentumFactor) * 0.1);
+    const awayStrength3 = awayPositionStrength * 
+      (1 + (!set2Winner ? finalMomentumFactor : -finalMomentumFactor) * 0.1);
+    
     const set3 = generateSetScore(homeStrength3, awayStrength3);
     sets.push(set3);
     if (set3.homeScore > set3.awayScore) homeSetWins++; else awaySetWins++;
@@ -158,7 +273,7 @@ export const generateFlightResult = (
 };
 
 /**
- * Simulate a complete tennis dual match between two teams
+ * Simulate a complete tennis dual match between two teams with enhanced realism
  */
 export const simulateMatch = (
   date: string,
@@ -169,7 +284,10 @@ export const simulateMatch = (
   isLeagueMatch: boolean,
   homeSchool: School,
   awaySchool: School,
-  allPlayers: Player[]
+  homeTeam: Team,
+  awayTeam: Team,
+  allPlayers: Player[],
+  schools: School[]
 ): Match => {
   const flightTypes: Array<{ type: 'singles' | 'doubles', position: number, level: 'varsity' | 'jv' }> = [
     { type: 'singles', position: 1, level: 'varsity' },
@@ -198,16 +316,34 @@ export const simulateMatch = (
     rank: r.rank,
     selected: false
   })).sort((a, b) => a.rank - b.rank);
+
+  // Assess team archetypes and strategies
+  const homeArchetype = determineTeamArchetype(homeTeamId);
+  const awayArchetype = determineTeamArchetype(awayTeamId);
   
   // Create flights from line-up
   const flights: Flight[] = [];
   
-  // Decide lineup strategy - random but obeying rules
-  // Top 4 players must be in top 3 flights (1s, 2s, 1d)
-  // First, decide if #1 and #2 play singles or doubles
-  const topPlaySingles = Math.random() < 0.75; // 75% chance that top players play singles (most common strategy)
+  // Decide lineup strategy based on team archetypes
+  // Dominant teams are more likely to use best players in singles
+  // Rebuilding teams may try different approaches
   
-  if (topPlaySingles) {
+  // Probability for top players to play singles based on team archetype
+  const homeTopPlaySinglesProb = 
+    homeArchetype === 'dominant' ? 0.85 :
+    homeArchetype === 'strong' ? 0.75 :
+    homeArchetype === 'mid-tier' ? 0.65 : 0.55;
+    
+  const awayTopPlaySinglesProb = 
+    awayArchetype === 'dominant' ? 0.85 :
+    awayArchetype === 'strong' ? 0.75 :
+    awayArchetype === 'mid-tier' ? 0.65 : 0.55;
+  
+  const homeTopPlaySingles = Math.random() < homeTopPlaySinglesProb;
+  const awayTopPlaySingles = Math.random() < awayTopPlaySinglesProb;
+  
+  // Assign players to positions based on strategy
+  if (homeTopPlaySingles) {
     // Home team assigns top players to singles
     let homeFirstSingles = homePlayers[0].id;
     let homeSecondSingles = homePlayers[1].id;
@@ -215,7 +351,16 @@ export const simulateMatch = (
     homePlayers[1].selected = true;
     selectedHomePlayers.add(homeFirstSingles);
     selectedHomePlayers.add(homeSecondSingles);
-    
+  } else {
+    // Alternative strategy: top players play doubles together
+    let homeFirstDoubles = [homePlayers[0].id, homePlayers[1].id];
+    homePlayers[0].selected = true;
+    homePlayers[1].selected = true;
+    selectedHomePlayers.add(homeFirstDoubles[0]);
+    selectedHomePlayers.add(homeFirstDoubles[1]);
+  }
+  
+  if (awayTopPlaySingles) {
     // Away team assigns top players to singles
     let awayFirstSingles = awayPlayers[0].id;
     let awaySecondSingles = awayPlayers[1].id;
@@ -223,49 +368,13 @@ export const simulateMatch = (
     awayPlayers[1].selected = true;
     selectedAwayPlayers.add(awayFirstSingles);
     selectedAwayPlayers.add(awaySecondSingles);
-    
-    // Assign top doubles teams (players 3 & 4 typically)
-    let homeFirstDoubles = [homePlayers[2].id, homePlayers[3].id];
-    let awayFirstDoubles = [awayPlayers[2].id, awayPlayers[3].id];
-    
-    homePlayers[2].selected = true;
-    homePlayers[3].selected = true;
-    awayPlayers[2].selected = true;
-    awayPlayers[3].selected = true;
-    
-    selectedHomePlayers.add(homeFirstDoubles[0]);
-    selectedHomePlayers.add(homeFirstDoubles[1]);
-    selectedAwayPlayers.add(awayFirstDoubles[0]);
-    selectedAwayPlayers.add(awayFirstDoubles[1]);
   } else {
     // Alternative strategy: top players play doubles together
-    let homeFirstDoubles = [homePlayers[0].id, homePlayers[1].id];
     let awayFirstDoubles = [awayPlayers[0].id, awayPlayers[1].id];
-    
-    homePlayers[0].selected = true;
-    homePlayers[1].selected = true;
     awayPlayers[0].selected = true;
     awayPlayers[1].selected = true;
-    
-    selectedHomePlayers.add(homeFirstDoubles[0]);
-    selectedHomePlayers.add(homeFirstDoubles[1]);
     selectedAwayPlayers.add(awayFirstDoubles[0]);
     selectedAwayPlayers.add(awayFirstDoubles[1]);
-    
-    // 3rd and 4th ranked players play singles
-    let homeFirstSingles = homePlayers[2].id;
-    let homeSecondSingles = homePlayers[3].id;
-    homePlayers[2].selected = true;
-    homePlayers[3].selected = true;
-    selectedHomePlayers.add(homeFirstSingles);
-    selectedHomePlayers.add(homeSecondSingles);
-    
-    let awayFirstSingles = awayPlayers[2].id;
-    let awaySecondSingles = awayPlayers[3].id;
-    awayPlayers[2].selected = true;
-    awayPlayers[3].selected = true;
-    selectedAwayPlayers.add(awayFirstSingles);
-    selectedAwayPlayers.add(awaySecondSingles);
   }
   
   // Fill in remaining positions
@@ -322,7 +431,7 @@ export const simulateMatch = (
       awayFlightPlayers = awayDoublesTeam;
     }
     
-    // Generate flight result
+    // Generate flight result with enhanced realism
     const result = generateFlightResult(
       flight.type,
       flight.position,
@@ -331,7 +440,10 @@ export const simulateMatch = (
       awayFlightPlayers,
       homeLadder,
       awayLadder,
-      allPlayers
+      homeTeam,
+      awayTeam,
+      allPlayers,
+      schools
     );
     
     flights.push({
@@ -383,7 +495,101 @@ export const simulateMatch = (
 };
 
 /**
- * Generate match dates within a season
+ * Generate all matches for a season/district with enhanced realism
+ */
+export const generateDistrictMatches = (
+  teams: Team[],
+  schools: School[],
+  players: Player[],
+  teamLadders: TeamLadder[],
+  config: {
+    startDate: string,
+    endDate: string,
+    isLeagueMatch: boolean,
+    matchesPerTeam: number
+  }
+): Match[] => {
+  if (teams.length < 2) {
+    throw new Error('Need at least 2 teams to generate matches');
+  }
+  
+  const matches: Match[] = [];
+  const doubleRoundRobin = teams.length < 8;
+  
+  // Create pairings for all teams
+  const pairings: [string, string][] = []; // [homeTeamId, awayTeamId]
+  
+  // First round - each team plays every other team
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      // Add home and away games
+      pairings.push([teams[i].id, teams[j].id]);
+      pairings.push([teams[j].id, teams[i].id]);
+    }
+  }
+  
+  // Limit to requested number of matches per team
+  const matchesNeeded = teams.length * config.matchesPerTeam;
+  const totalMatchCount = Math.min(pairings.length, matchesNeeded);
+  
+  // Generate dates
+  const dates = generateMatchDates(
+    config.startDate,
+    config.endDate,
+    totalMatchCount,
+    doubleRoundRobin
+  );
+  
+  // Shuffle pairings to randomize schedule
+  for (let i = pairings.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pairings[i], pairings[j]] = [pairings[j], pairings[i]];
+  }
+  
+  // Create matches
+  for (let i = 0; i < totalMatchCount && i < dates.length && i < pairings.length; i++) {
+    const [homeTeamId, awayTeamId] = pairings[i];
+    const date = dates[i];
+    
+    const homeTeam = teams.find(t => t.id === homeTeamId);
+    const awayTeam = teams.find(t => t.id === awayTeamId);
+    
+    if (!homeTeam || !awayTeam) continue;
+    
+    const homeSchool = schools.find(s => s.id === homeTeam.schoolId);
+    const awaySchool = schools.find(s => s.id === awayTeam.schoolId);
+    
+    if (!homeSchool || !awaySchool) continue;
+    
+    const homeLadder = teamLadders.find(l => l.teamId === homeTeamId);
+    const awayLadder = teamLadders.find(l => l.teamId === awayTeamId);
+    
+    if (!homeLadder || !awayLadder) continue;
+    
+    // Simulate the match with enhanced team dynamics
+    const match = simulateMatch(
+      date,
+      homeTeamId,
+      awayTeamId,
+      homeLadder,
+      awayLadder,
+      config.isLeagueMatch,
+      homeSchool,
+      awaySchool,
+      homeTeam,
+      awayTeam,
+      players,
+      schools
+    );
+    
+    matches.push(match);
+  }
+  
+  return matches;
+};
+
+/**
+ * Generate all matches for a season/district
  */
 export const generateMatchDates = (
   startDate: string,
@@ -529,96 +735,6 @@ export const generateMatchDates = (
   
   // Sort dates chronologically
   return dates.sort((a, b) => a.localeCompare(b));
-};
-
-/**
- * Generate all matches for a season/district
- */
-export const generateDistrictMatches = (
-  teams: Team[],
-  schools: School[],
-  players: Player[],
-  teamLadders: TeamLadder[],
-  config: {
-    startDate: string,
-    endDate: string,
-    isLeagueMatch: boolean,
-    matchesPerTeam: number
-  }
-): Match[] => {
-  if (teams.length < 2) {
-    throw new Error('Need at least 2 teams to generate matches');
-  }
-  
-  const matches: Match[] = [];
-  const doubleRoundRobin = teams.length < 8;
-  
-  // Create pairings for all teams
-  const pairings: [string, string][] = []; // [homeTeamId, awayTeamId]
-  
-  // First round - each team plays every other team
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      // Add home and away games
-      pairings.push([teams[i].id, teams[j].id]);
-      pairings.push([teams[j].id, teams[i].id]);
-    }
-  }
-  
-  // Limit to requested number of matches per team
-  const matchesNeeded = teams.length * config.matchesPerTeam;
-  const totalMatchCount = Math.min(pairings.length, matchesNeeded);
-  
-  // Generate dates
-  const dates = generateMatchDates(
-    config.startDate,
-    config.endDate,
-    totalMatchCount,
-    doubleRoundRobin
-  );
-  
-  // Shuffle pairings to randomize schedule
-  for (let i = pairings.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pairings[i], pairings[j]] = [pairings[j], pairings[i]];
-  }
-  
-  // Create matches
-  for (let i = 0; i < totalMatchCount && i < dates.length && i < pairings.length; i++) {
-    const [homeTeamId, awayTeamId] = pairings[i];
-    const date = dates[i];
-    
-    const homeTeam = teams.find(t => t.id === homeTeamId);
-    const awayTeam = teams.find(t => t.id === awayTeamId);
-    
-    if (!homeTeam || !awayTeam) continue;
-    
-    const homeSchool = schools.find(s => s.id === homeTeam.schoolId);
-    const awaySchool = schools.find(s => s.id === awayTeam.schoolId);
-    
-    if (!homeSchool || !awaySchool) continue;
-    
-    const homeLadder = teamLadders.find(l => l.teamId === homeTeamId);
-    const awayLadder = teamLadders.find(l => l.teamId === awayTeamId);
-    
-    if (!homeLadder || !awayLadder) continue;
-    
-    const match = simulateMatch(
-      date,
-      homeTeamId,
-      awayTeamId,
-      homeLadder,
-      awayLadder,
-      config.isLeagueMatch,
-      homeSchool,
-      awaySchool,
-      players
-    );
-    
-    matches.push(match);
-  }
-  
-  return matches;
 };
 
 /**

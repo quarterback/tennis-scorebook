@@ -1,11 +1,12 @@
 
 import { Player, Team, School } from '@/types';
 import { TeamLadder } from '@/types/ranking';
-import { generateTeamRoster, generateTeamLadder } from '@/utils/playerSimulation';
+import { generateTeamRoster, getSchoolClassification } from '@/utils/playerGeneration';
+import { generateTeamLadder } from '@/utils/ladderManagement';
 
 export const usePlayerGeneration = () => {
   /**
-   * Generate team rosters and ladders for all teams
+   * Generate team rosters and ladders for all teams based on classification
    */
   const generatePlayerData = (
     teams: Team[],
@@ -16,8 +17,8 @@ export const usePlayerGeneration = () => {
     const ladders: TeamLadder[] = [];
     
     teams.forEach(team => {
-      // Generate roster - ensure at least 12 players for a complete dual match
-      const teamPlayers = generateTeamRoster(team.id, team.schoolId, seasonId);
+      // Generate roster - size based on school classification
+      const teamPlayers = generateTeamRoster(team.id, team.schoolId, seasonId, schools);
       allPlayers.push(...teamPlayers);
       
       // Generate ladder

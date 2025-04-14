@@ -1,4 +1,5 @@
 export type Gender = 'Boys' | 'Girls';
+export type PlayerSkillTier = 'elite' | 'competitive' | 'developmental';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
 
 export interface District {
@@ -39,8 +40,9 @@ export interface Player {
   teamId: string;
   seasonId: string; // The current season ID
   status: PlayerStatus;
+  seasons: string[];
+  skillTier?: PlayerSkillTier; // Optional to maintain compatibility with existing data
   previousTeams?: string[]; // Array of previous team IDs
-  seasons?: string[]; // Array of seasons the player participated in
 }
 
 export interface User {

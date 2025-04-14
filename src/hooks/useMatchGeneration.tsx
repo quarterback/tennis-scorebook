@@ -6,6 +6,7 @@ import { generateDistrictMatches } from '@/utils/matchSimulation';
 export const useMatchGeneration = () => {
   /**
    * Generate matches for teams based on district assignments
+   * with enhanced realism based on team archetypes and classifications
    */
   const generateMatchData = (
     teams: Team[],
