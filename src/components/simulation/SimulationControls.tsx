@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { MatchGenerationConfig } from '@/types/ranking';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Settings2, FlaskConical, AlertCircle, Info } from 'lucide-react';
+import { Calendar, Settings2, FlaskConical, AlertCircle, Info, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Team } from '@/types';
 
 const SimulationControls: React.FC = () => {
@@ -25,7 +26,7 @@ const SimulationControls: React.FC = () => {
   
   const { generateAllData, generatingData, progress, verifyTeamsForSimulation } = useSimulatedData();
   
-  const [showSimulationControls, setShowSimulationControls] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   
   // Date states - default to a longer season (early March to mid-May)
   const defaultStartDate = new Date('2025-03-01');
@@ -172,23 +173,6 @@ const SimulationControls: React.FC = () => {
     }
   };
   
-  // Check if we have districts with sample data that matches OSAA league structure
-  const hasCorrectDistrictStructure = () => {
-    const districtNames = districts.map(d => d.name);
-    
-    // Check for some key districts that should be in the sample data
-    const expectedDistricts = [
-      'Portland Interscholastic League',
-      'Metro League',
-      'Pacific Conference',
-      'Mt. Hood Conference',
-      'Three Rivers League',
-      'Special District 1'
-    ];
-    
-    return expectedDistricts.some(name => districtNames.includes(name));
-  };
-  
   return (
     <div className="mb-6">
       <Card className="bg-white shadow-sm border-slate-200">
@@ -206,192 +190,193 @@ const SimulationControls: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowSimulationControls(!showSimulationControls)}
+              onClick={() => setIsOpen(!isOpen)}
+              className="gap-1.5"
             >
-              <Settings2 className="h-4 w-4 mr-1" />
-              {showSimulationControls ? 'Hide Controls' : 'Show Controls'}
+              <Settings2 className="h-4 w-4" />
+              {isOpen ? 'Hide Controls' : 'Show Controls'}
             </Button>
           </div>
         </CardHeader>
-        
-        {showSimulationControls && (
-          <CardContent className="pb-3 space-y-4">
-            {simulationError && (
-              <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <AlertDescription>{simulationError}</AlertDescription>
+
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleContent>
+            <CardContent className="pb-3 space-y-4">
+              {simulationError && (
+                <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <AlertDescription>{simulationError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start-date">Season Start Date</Label>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                        disabled={generatingData}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, 'PPP') : 'Select date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarUI
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(date) => {
+                          setStartDate(date);
+                          setStartDateOpen(false);
+                        }}
+                        disabled={(date) => 
+                          date > (endDate || new Date('2026-12-31')) || 
+                          date < new Date('2024-01-01')
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="end-date">Season End Date</Label>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                        disabled={generatingData}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, 'PPP') : 'Select date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarUI
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(date) => {
+                          setEndDate(date);
+                          setEndDateOpen(false);
+                        }}
+                        disabled={(date) => 
+                          date < (startDate || new Date('2024-01-01')) || 
+                          date > new Date('2026-12-31')
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2 md:col-span-2 grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="max-regular">Max Regular Season Matches</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-slate-400" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">The maximum number of regular season dual matches each team will play.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Input
+                      id="max-regular"
+                      type="number"
+                      min={8}
+                      max={20}
+                      value={maxRegularMatches}
+                      onChange={(e) => setMaxRegularMatches(parseInt(e.target.value))}
+                      disabled={generatingData}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="max-total">Max Total Matches</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-slate-400" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">The maximum total matches including tournaments.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Input
+                      id="max-total"
+                      type="number"
+                      min={10}
+                      max={30}
+                      value={maxTotalMatches}
+                      onChange={(e) => setMaxTotalMatches(parseInt(e.target.value))}
+                      disabled={generatingData}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="double-round"
+                    checked={doubleRoundRobin}
+                    onCheckedChange={setDoubleRoundRobin}
+                    disabled={generatingData}
+                  />
+                  <Label htmlFor="double-round" className="cursor-pointer">
+                    Double Round-Robin for Small Districts
+                  </Label>
+                </div>
+              </div>
+              
+              <Alert className="bg-blue-50 border-blue-200">
+                <Info className="h-5 w-5 text-blue-500" />
+                <AlertDescription className="text-blue-800 text-sm">
+                  Season length: <span className="font-medium">{seasonWeeks} weeks</span> ({startDate && endDate ? `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}` : 'Not set'})
+                  <br />
+                  <span>This season can theoretically support up to ~{theoreticalMaxMatches} matches per team</span>
+                </AlertDescription>
               </Alert>
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start-date">Season Start Date</Label>
-                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                      disabled={generatingData}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, 'PPP') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarUI
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date);
-                        setStartDateOpen(false);
-                      }}
-                      disabled={(date) => 
-                        date > (endDate || new Date('2026-12-31')) || 
-                        date < new Date('2024-01-01')
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="end-date">Season End Date</Label>
-                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                      disabled={generatingData}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, 'PPP') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarUI
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        setEndDate(date);
-                        setEndDateOpen(false);
-                      }}
-                      disabled={(date) => 
-                        date < (startDate || new Date('2024-01-01')) || 
-                        date > new Date('2026-12-31')
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="max-regular">Max Regular Season Matches</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-slate-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">The maximum number of regular season dual matches each team will play.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+              <div className="bg-amber-50 border border-amber-200 rounded p-3 text-amber-800 text-sm flex items-start space-x-2.5">
+                <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Warning: Simulation will replace existing data</p>
+                  <p className="mt-1">This will generate new players and matches for testing.</p>
                 </div>
-                <Input
-                  id="max-regular"
-                  type="number"
-                  min={8}
-                  max={20}
-                  value={maxRegularMatches}
-                  onChange={(e) => setMaxRegularMatches(parseInt(e.target.value))}
-                  disabled={generatingData}
-                />
               </div>
               
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="max-total">Max Total Matches (with tournaments)</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-slate-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">The maximum total matches including tournaments. Must be greater than regular season matches.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+              {generatingData && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>Generating data...</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <Progress value={progress} />
                 </div>
-                <Input
-                  id="max-total"
-                  type="number"
-                  min={10}
-                  max={30}
-                  value={maxTotalMatches}
-                  onChange={(e) => setMaxTotalMatches(parseInt(e.target.value))}
-                  disabled={generatingData}
-                />
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="double-round"
-                  checked={doubleRoundRobin}
-                  onCheckedChange={setDoubleRoundRobin}
-                  disabled={generatingData}
-                />
-                <Label htmlFor="double-round" className="cursor-pointer">
-                  Double Round-Robin for Small Districts
-                </Label>
-              </div>
-            </div>
-            
-            <Alert className="bg-blue-50 border-blue-200">
-              <Info className="h-5 w-5 text-blue-500" />
-              <AlertDescription className="text-blue-800">
-                Season length: <span className="font-medium">{seasonWeeks} weeks</span> ({startDate && endDate ? `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}` : 'Not set'})
-                <br />
-                <span className="text-sm">This season can theoretically support up to ~{theoreticalMaxMatches} matches per team</span>
-                <br />
-                <span className="text-xs">(Accounts for 3 matches/week, with spring break in late March)</span>
-              </AlertDescription>
-            </Alert>
-            
-            <div className="bg-amber-50 border border-amber-200 rounded p-3 text-amber-800 text-sm flex items-start space-x-2.5">
-              <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Warning: Simulation will replace existing data</p>
-                <p className="mt-1">This will generate new players and matches for testing. It may take a moment to complete.</p>
-              </div>
-            </div>
-            
-            {generatingData && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Generating data...</span>
-                  <span>{progress}%</span>
-                </div>
-                <Progress value={progress} />
-              </div>
-            )}
-          </CardContent>
-        )}
-        
-        {showSimulationControls && (
-          <CardFooter className="flex justify-end">
-            <Button
-              onClick={handleGenerateData}
-              disabled={generatingData || !startDate || !endDate || !!simulationError}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <FlaskConical className="h-4 w-4 mr-2" />
-              {generatingData ? 'Generating...' : 'Generate Tennis Data'}
-            </Button>
-          </CardFooter>
-        )}
+              )}
+            </CardContent>
+          
+            <CardFooter className="flex justify-end py-3">
+              <Button
+                onClick={handleGenerateData}
+                disabled={generatingData || !startDate || !endDate || !!simulationError}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <FlaskConical className="h-4 w-4 mr-2" />
+                {generatingData ? 'Generating...' : 'Generate Tennis Data'}
+              </Button>
+            </CardFooter>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
     </div>
   );
