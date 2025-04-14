@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { TeamRanking, QualifiedTeam, ClassificationQualifications } from '@/types/ranking';
@@ -85,7 +86,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       schoolName: team.schoolName,
       gender: team.gender as Gender,
       districtName: team.districtName,
-      qualificationType: team.qualificationStatus === 'automatic' ? 'automatic' : 'at-large',
+      qualificationType: team.qualificationStatus as "automatic" | "at-large", // Explicitly cast to the union type
       seed: team.qualificationSeed || 999,
       compositeScore: team.compositeScore
     }));
