@@ -14,21 +14,54 @@ interface Match {
   player1: Player;
   player2: Player;
   result: 'player1' | 'player2' | null;
-  significance?: string; // Added significance field
+  significance?: string;
 }
 
 interface TournamentRoundProps {
   name: string;
   matches: Match[];
-  isFinalRound?: boolean; // Indicates if this is the championship round
+  isFinalRound?: boolean;
 }
+
+const defaultMatches: Match[] = [
+  {
+    id: 'match-1',
+    player1: { 
+      seed: 1, 
+      name: "Sarah Johnson",
+      school: "Jesuit"
+    },
+    player2: { 
+      seed: 4, 
+      name: "Emily Chen",
+      school: "Lincoln"
+    },
+    result: 'player1',
+    significance: "Winner advances to quarterfinals"
+  },
+  {
+    id: 'match-2',
+    player1: { 
+      seed: 3, 
+      name: "Maria Garcia",
+      school: "Central Catholic"
+    },
+    player2: { 
+      seed: 2, 
+      name: "Ashley Williams",
+      school: "Lake Oswego"
+    },
+    result: 'player2',
+    significance: "Potential state qualifier matchup"
+  }
+];
 
 const TournamentRound: React.FC<TournamentRoundProps> = ({ 
   name, 
-  matches,
+  matches = defaultMatches,  // Use default matches if none provided
   isFinalRound = false
 }) => {
-  const [expanded, setExpanded] = useState(true); // Default to expanded for better visibility
+  const [expanded, setExpanded] = useState(true);
   
   const toggleExpanded = () => {
     setExpanded(!expanded);
