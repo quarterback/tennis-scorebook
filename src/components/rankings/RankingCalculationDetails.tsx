@@ -22,7 +22,8 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
       <CardContent>
         <div className="text-sm text-gray-600 mb-4 p-4 bg-gray-50 rounded-lg">
           Power Rankings combine three factors to evaluate team strength beyond win-loss records.
-          Higher numbers indicate stronger teams, with exceptional teams potentially exceeding 100.
+          The final ranking is calculated on a 0-100 scale, where higher numbers indicate stronger teams.
+          Exceptionally strong teams may score above 90.
         </div>
         {qualifiedTeams.length > 0 ? (
           <div className="overflow-x-auto">
@@ -81,12 +82,12 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center justify-center">
-                            Power Ranking
+                            Power Ranking (0-100)
                             <Info className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Overall team strength on a 0-100+ scale combining all factors. Exceptional teams may exceed 100.</p>
+                          <p className="max-w-xs">Overall team strength on a 0-100 scale combining all factors. Top teams typically score in the 80-95 range.</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -115,7 +116,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                       {team.opponentStrengthIndex.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-center font-medium" title="Power Ranking">
-                      <span className={team.apr > 100 ? "text-blue-600 font-bold" : ""}>
+                      <span className={team.apr > 90 ? "text-blue-600 font-bold" : ""}>
                         {team.apr.toFixed(1)}
                       </span>
                     </TableCell>

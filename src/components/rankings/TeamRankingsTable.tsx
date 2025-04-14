@@ -23,7 +23,7 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <Award className="h-5 w-5 mr-2 text-tennis-blue" />
-            Overall Rankings
+            State Rankings
             <span className="ml-2 text-sm font-normal text-gray-500">
               (Minimum {defaultConfig.minimumMatches} matches required)
             </span>
