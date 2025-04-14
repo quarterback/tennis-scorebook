@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import TournamentRound from './TournamentRound';
 import TournamentBracketEditor from './TournamentBracketEditor';
 import { Button } from '@/components/ui/button';
 import { Edit } from 'lucide-react';
