@@ -23,7 +23,7 @@ const Matches = () => {
             className="gap-1.5"
           >
             <FlaskConical className="h-4 w-4 text-purple-500" />
-            {showSimulation ? 'Hide Simulation' : 'Show Simulation'}
+            {showSimulation ? 'Hide Simulation' : 'Generate Data'}
           </Button>
         </div>
         

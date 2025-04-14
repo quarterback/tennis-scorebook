@@ -33,9 +33,9 @@ const SimulationControls: React.FC = () => {
   const allSeasons = [currentSeason, ...getArchivedSeasons()];
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>(currentSeason.id);
   
-  // Date states - default to a longer season (early March to mid-May)
-  const defaultStartDate = new Date('2025-03-01');
-  const defaultEndDate = new Date('2025-05-15');
+  // Date states - default to Oregon's typical spring tennis season: early March to mid-May
+  const defaultStartDate = new Date(new Date().getFullYear(), 2, 1); // March 1st of current year
+  const defaultEndDate = new Date(new Date().getFullYear(), 4, 15); // May 15th of current year
   
   const [startDate, setStartDate] = useState<Date | undefined>(defaultStartDate);
   const [endDate, setEndDate] = useState<Date | undefined>(defaultEndDate);
@@ -261,7 +261,7 @@ const SimulationControls: React.FC = () => {
                         disabled={generatingData}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, 'PPP') : 'Select date'}
+                        {startDate ? format(startDate, 'MMM d, yyyy') : 'Select date'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -272,11 +272,13 @@ const SimulationControls: React.FC = () => {
                           setStartDate(date);
                           setStartDateOpen(false);
                         }}
+                        defaultMonth={new Date(new Date().getFullYear(), 2, 1)} // Default to March
                         disabled={(date) => 
                           date > (endDate || new Date('2026-12-31')) || 
                           date < new Date('2024-01-01')
                         }
                         initialFocus
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -292,7 +294,7 @@ const SimulationControls: React.FC = () => {
                         disabled={generatingData}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, 'PPP') : 'Select date'}
+                        {endDate ? format(endDate, 'MMM d, yyyy') : 'Select date'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -303,11 +305,13 @@ const SimulationControls: React.FC = () => {
                           setEndDate(date);
                           setEndDateOpen(false);
                         }}
+                        defaultMonth={new Date(new Date().getFullYear(), 4, 1)} // Default to May
                         disabled={(date) => 
                           date < (startDate || new Date('2024-01-01')) || 
                           date > new Date('2026-12-31')
                         }
                         initialFocus
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -334,7 +338,7 @@ const SimulationControls: React.FC = () => {
                       min={8}
                       max={20}
                       value={maxRegularMatches}
-                      onChange={(e) => setMaxRegularMatches(parseInt(e.target.value))}
+                      onChange={(e) => setMaxRegularMatches(parseInt(e.target.value) || 0)}
                       disabled={generatingData}
                     />
                   </div>
@@ -359,7 +363,7 @@ const SimulationControls: React.FC = () => {
                       min={10}
                       max={30}
                       value={maxTotalMatches}
-                      onChange={(e) => setMaxTotalMatches(parseInt(e.target.value))}
+                      onChange={(e) => setMaxTotalMatches(parseInt(e.target.value) || 0)}
                       disabled={generatingData}
                     />
                   </div>
