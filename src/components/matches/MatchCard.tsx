@@ -4,11 +4,12 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Calendar, Edit, ChevronDown, ChevronUp, ShieldCheck, ShieldX,
-  Flag, AlertTriangle
+  Flag, AlertTriangle, FileDown, Printer 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMatches } from '@/context/MatchesContext';
 import { useAuth } from '@/context/AuthContext';
+import { exportMatchToCSV } from '@/utils/exportData';
 
 interface MatchCardProps {
   match: Match;
@@ -41,11 +42,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const homeTeamName = getTeamName(match.homeTeamId);
   const awayTeamName = getTeamName(match.awayTeamId);
 
-  // Check if current user is coach of home or away team
   const isHomeCoach = user?.role === 'coach' && isCoachOfTeam(match.homeTeamId);
   const isAwayCoach = user?.role === 'coach' && isCoachOfTeam(match.awayTeamId);
   
-  // Format match score for display
   const getMatchScoreDisplay = () => {
     if (match.homeTeamScore !== undefined && match.awayTeamScore !== undefined) {
       if (match.homeTeamWon) {
@@ -56,7 +55,56 @@ const MatchCard: React.FC<MatchCardProps> = ({
     }
     return match.homeTeamWon ? `${homeTeamName} won` : `${awayTeamName} won`;
   };
-  
+
+  const handleExportMatch = () => {
+    exportMatchToCSV(match);
+  };
+
+  const handlePrintMatch = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Match Details: ${homeTeamName} vs ${awayTeamName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; }
+              h1 { text-align: center; }
+              .match-details { margin: 20px 0; }
+              .flight { margin-bottom: 10px; }
+            </style>
+          </head>
+          <body>
+            <h1>Match Results</h1>
+            <div class="match-details">
+              <p><strong>Date:</strong> ${format(new Date(match.date), 'MMMM d, yyyy')}</p>
+              <p><strong>Teams:</strong> ${homeTeamName} vs ${awayTeamName}</p>
+              <p><strong>Final Score:</strong> ${getMatchScoreDisplay()}</p>
+            </div>
+            ${match.flights.map(flight => `
+              <div class="flight">
+                <h2>${flight.level.toUpperCase()} ${flight.type.toUpperCase()} #${flight.position}</h2>
+                ${flight.sets.map(set => `
+                  <p>Set: ${flight.homePlayerWon ? 
+                    `${set.homeScore}-${set.awayScore}` : 
+                    `${set.awayScore}-${set.homeScore}`}
+                    ${set.tiebreak ? 
+                      `(Tiebreak: ${flight.homePlayerWon ? 
+                        `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
+                        `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})` : 
+                      ''}
+                  </p>
+                `).join('')}
+              </div>
+            `).join('')}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   return (
     <Card className="w-full mb-4">
       <CardContent className="pt-6">
@@ -111,7 +159,6 @@ const MatchCard: React.FC<MatchCardProps> = ({
         
         {isExpanded && (
           <div className="mt-4 space-y-6">
-            {/* Match Result Visualization */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="font-medium text-sm">Varsity Singles</h4>
@@ -208,7 +255,6 @@ const MatchCard: React.FC<MatchCardProps> = ({
               </div>
             </div>
 
-            {/* JV Matches Section */}
             {match.hasJvMatches && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -307,7 +353,6 @@ const MatchCard: React.FC<MatchCardProps> = ({
               </div>
             )}
             
-            {/* Match Notes Section */}
             {match.isComplete && (
               <div className="mt-4 bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Match Summary</h4>
@@ -372,6 +417,26 @@ const MatchCard: React.FC<MatchCardProps> = ({
             )}
           </>
         )}
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportMatch}
+          className="flex items-center gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Export Match
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePrintMatch}
+          className="flex items-center gap-2"
+        >
+          <Printer className="h-4 w-4" />
+          Print Match
+        </Button>
       </CardFooter>
     </Card>
   );

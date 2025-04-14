@@ -1,4 +1,3 @@
-
 import { Player, Team, School, Match, District, Season } from '@/types';
 
 type ExportableData = {
@@ -124,4 +123,45 @@ export const exportAllDataAsJSON = (data: ExportableData): void => {
 export const createDataExport = (data: ExportableData): void => {
   // For now, we'll just export as JSON until we add ZIP functionality
   exportAllDataAsJSON(data);
+};
+
+export const exportMatchToCSV = (match: Match): void => {
+  // Prepare headers for match export
+  const headers = [
+    'matchId', 
+    'date', 
+    'homeTeam', 
+    'awayTeam', 
+    'finalScore', 
+    'isLeagueMatch', 
+    'homeCoachApproved', 
+    'awayCoachApproved'
+  ];
+
+  // Prepare flight details
+  const flightDetails = match.flights.map(flight => ({
+    [`${flight.level}${flight.type}Position`]: flight.position,
+    [`${flight.level}${flight.type}Sets`]: flight.sets.map(set => 
+      `${set.homeScore}-${set.awayScore}${set.tiebreak ? 
+        ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})` : ''}`
+    ).join('; ')
+  }));
+
+  // Combine match and flight data
+  const matchData = [{
+    matchId: match.id,
+    date: match.date,
+    homeTeam: match.homeTeamId,
+    awayTeam: match.awayTeamId,
+    finalScore: match.homeTeamWon ? 
+      `${match.homeTeamScore}-${match.awayTeamScore}` : 
+      `${match.awayTeamScore}-${match.homeTeamScore}`,
+    isLeagueMatch: match.isLeagueMatch,
+    homeCoachApproved: match.homeCoachApproved,
+    awayCoachApproved: match.awayCoachApproved,
+    ...Object.assign({}, ...flightDetails)
+  }];
+
+  const csvContent = convertToCSV(matchData, headers);
+  downloadCSV(csvContent, `match_${match.id}_export.csv`);
 };
