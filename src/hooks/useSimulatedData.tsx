@@ -30,7 +30,7 @@ export const useSimulatedData = () => {
     teams: Team[],
     schools: School[],
     districts: District[],
-    currentSeason: Season,
+    selectedSeason: Season,
     config: MatchGenerationConfig,
     callbacks: {
       onPlayersGenerated: (players: Player[]) => void;
@@ -48,7 +48,7 @@ export const useSimulatedData = () => {
       }
       
       // Step 1: Generate players and ladders
-      const { players, ladders } = generatePlayerData(teams, schools, currentSeason.id);
+      const { players, ladders } = generatePlayerData(teams, schools, selectedSeason.id);
       updateProgress(25);
       
       // Call callback with generated players

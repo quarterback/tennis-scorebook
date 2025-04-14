@@ -9,24 +9,29 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { MatchGenerationConfig } from '@/types/ranking';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Settings2, FlaskConical, AlertCircle, Info, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar, Settings2, FlaskConical, AlertCircle, Info, Calendar as CalendarIcon, History } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Team } from '@/types';
+import { Team, Season } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const SimulationControls: React.FC = () => {
   const { 
-    schools, teams, districts, currentSeason, 
-    addPlayer, addMatch 
+    schools, teams, districts, currentSeason, seasons,
+    addPlayer, addMatch, getArchivedSeasons
   } = useData();
   
   const { generateAllData, generatingData, progress, verifyTeamsForSimulation } = useSimulatedData();
   
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Season selection
+  const allSeasons = [currentSeason, ...getArchivedSeasons()];
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>(currentSeason.id);
   
   // Date states - default to a longer season (early March to mid-May)
   const defaultStartDate = new Date('2025-03-01');
@@ -125,12 +130,15 @@ const SimulationControls: React.FC = () => {
       doubleRoundRobin
     };
     
+    // Find the selected season
+    const selectedSeason = allSeasons.find(season => season.id === selectedSeasonId) || currentSeason;
+    
     try {
       await generateAllData(
         teams,
         schools,
         districts,
-        currentSeason,
+        selectedSeason,
         config,
         {
           onPlayersGenerated: (players) => {
@@ -210,6 +218,39 @@ const SimulationControls: React.FC = () => {
               )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Season selector */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="season-select">Select Season</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <History className="h-4 w-4 text-slate-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">Generate data for past or current seasons</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Select 
+                    value={selectedSeasonId} 
+                    onValueChange={setSelectedSeasonId}
+                    disabled={generatingData}
+                  >
+                    <SelectTrigger id="season-select" className="w-full">
+                      <SelectValue placeholder="Select a season" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allSeasons.map(season => (
+                        <SelectItem key={season.id} value={season.id}>
+                          {season.name} {season.isCurrent ? "(Current)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="start-date">Season Start Date</Label>
                   <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
@@ -272,10 +313,10 @@ const SimulationControls: React.FC = () => {
                   </Popover>
                 </div>
 
-                <div className="space-y-2 md:col-span-2 grid grid-cols-2 gap-4">
+                <div className="space-y-2 grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="max-regular">Max Regular Season Matches</Label>
+                      <Label htmlFor="max-regular">Max Regular Matches</Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -349,8 +390,8 @@ const SimulationControls: React.FC = () => {
               <div className="bg-amber-50 border border-amber-200 rounded p-3 text-amber-800 text-sm flex items-start space-x-2.5">
                 <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Warning: Simulation will replace existing data</p>
-                  <p className="mt-1">This will generate new players and matches for testing.</p>
+                  <p className="font-medium">Warning: Simulation will generate historical data</p>
+                  <p className="mt-1">This will create players and matches for the selected season.</p>
                 </div>
               </div>
               
