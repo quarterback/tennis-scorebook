@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Player, Team, School, Match, District, Season } from '@/types';
 import { TeamLadder, MatchGenerationConfig } from '@/types/ranking';
@@ -31,7 +30,7 @@ export const useSimulatedData = () => {
     const ladders: TeamLadder[] = [];
     
     teams.forEach(team => {
-      // Generate roster
+      // Generate roster - ensure at least 12 players for a complete dual match
       const teamPlayers = generateTeamRoster(team.id, team.schoolId, seasonId);
       allPlayers.push(...teamPlayers);
       

@@ -84,22 +84,25 @@ export const generatePlayerGrade = (): number => {
 
 /**
  * Generate a roster of players for a team
+ * Minimum 12 players for a full dual match (no player duplication)
  */
 export const generateTeamRoster = (
   teamId: string, 
   schoolId: string,
   seasonId: string,
-  size: number = Math.floor(Math.random() * 8) + 12 // 12-20 players
+  size: number = Math.floor(Math.random() * 8) + 12 // 12-20 players (minimum 12)
 ): Player[] => {
+  // Ensure minimum size of 12 players for a full team roster
+  const rosterSize = Math.max(12, size);
   const players: Player[] = [];
   
-  for (let i = 0; i < size; i++) {
+  for (let i = 0; i < rosterSize; i++) {
     const team = {
       id: teamId,
       schoolId
     } as Team;
     
-    const gender = 'Girls'; // For now hardcoding to girls, can be dynamic later
+    const gender = teamId.endsWith('-girls') ? 'Girls' : 'Boys';
     
     const player: Player = {
       id: crypto.randomUUID(),
