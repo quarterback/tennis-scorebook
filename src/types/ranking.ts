@@ -139,4 +139,26 @@ export interface TournamentMatchup {
   teamTwo: string; // Team ID
   winner?: string; // Team ID of winner
   score?: [number, number]; // Team scores [teamOne, teamTwo]
+  roundIndex?: number; // Round index for tracking progression
+  matchIndex?: number; // Match index within the round
+}
+
+// Qualification rules for state tournaments
+export interface ClassificationQualifications {
+  classification: string;
+  totalSpots: number;
+  automaticBids: number; // Number of automatic bids (1 per district usually)
+  atLargeBids: number; // Number of at-large bids based on rankings
+}
+
+// Team qualification status
+export interface QualifiedTeam {
+  teamId: string;
+  teamName: string;
+  schoolName: string;
+  gender: string;
+  districtName: string;
+  qualificationType: 'automatic' | 'at-large';
+  seed: number;
+  compositeScore: number;
 }

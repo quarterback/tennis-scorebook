@@ -3,12 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Users, Save, Trophy } from 'lucide-react';
+import { User, Users, Save, Trophy, ArrowRight, RotateCw } from 'lucide-react';
 import { Gender, Classification } from '@/types';
 import BracketParticipantSelector, { BracketParticipant } from './BracketParticipantSelector';
 import BracketPositionGrid, { BracketPosition } from './BracketPositionGrid';
 import BracketSizeSelector from './BracketSizeSelector';
 import BracketDisplay from './BracketDisplay';
+import TournamentMatchWithWinner from './TournamentMatchWithWinner';
+import { useTournamentBracket } from '@/hooks/useTournamentBracket';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface TournamentBracketEditorProps {
   type: 'Singles' | 'Doubles' | 'Team';
@@ -43,7 +48,18 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(true);
   const [draggedParticipant, setDraggedParticipant] = useState<BracketParticipant | null>(null);
   const [bracketPositions, setBracketPositions] = useState<BracketPosition[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("manual");
   
+  // Get tournament bracket functionality
+  const {
+    bracket,
+    qualifiedTeams,
+    generateQualifiedTeams,
+    handleWinnerSelect,
+    autoGenerateBracket,
+    qualificationRules
+  } = useTournamentBracket(gender, classification);
+
   // Initialize bracket positions
   useEffect(() => {
     // Create empty bracket positions based on bracketSize
@@ -58,6 +74,13 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
     }
     setBracketPositions(positions);
   }, [bracketSize, participants]);
+
+  // Effect to generate qualifiers
+  useEffect(() => {
+    if (activeTab === "auto") {
+      generateQualifiedTeams();
+    }
+  }, [activeTab, gender, classification]);
   
   const handleBracketSizeChange = (size: string) => {
     const newSize = parseInt(size);
@@ -166,54 +189,178 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
       bracketPositions
     });
   };
+
+  const handleMatchWinnerSelect = (matchId: string, winner: 'team1' | 'team2') => {
+    handleWinnerSelect(matchId, winner);
+  };
+
+  // Handle auto-generate button click
+  const handleAutoGenerate = () => {
+    autoGenerateBracket();
+  };
   
   return (
     <div className="space-y-4 mt-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-md flex items-center">
-            {type === 'Singles' ? (
-              <User className="h-5 w-5 mr-2" />
-            ) : type === 'Doubles' ? (
-              <Users className="h-5 w-5 mr-2" />
-            ) : (
-              <Trophy className="h-5 w-5 mr-2" />
-            )}
-            {type} Tournament Bracket Editor
+          <CardTitle className="text-md flex items-center justify-between">
+            <div className="flex items-center">
+              {type === 'Singles' ? (
+                <User className="h-5 w-5 mr-2" />
+              ) : type === 'Doubles' ? (
+                <Users className="h-5 w-5 mr-2" />
+              ) : (
+                <Trophy className="h-5 w-5 mr-2" />
+              )}
+              {type} Tournament Bracket
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-normal text-gray-500">
+                {isEditing ? 'Edit Mode' : 'View Mode'}
+              </span>
+              <Switch 
+                checked={!isEditing}
+                onCheckedChange={() => setIsEditing(!isEditing)}
+              />
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isEditing ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-4">
-                <BracketSizeSelector 
-                  bracketSize={bracketSize}
-                  onBracketSizeChange={handleBracketSizeChange}
-                />
-              </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="manual">Manual Setup</TabsTrigger>
+                <TabsTrigger value="auto">Auto Generate</TabsTrigger>
+              </TabsList>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Available Players/Teams Panel */}
-                <BracketParticipantSelector 
-                  type={type}
-                  gender={gender}
-                  classification={classification}
-                  teams={teams}
-                  getPlayersByTeam={getPlayersByTeam}
-                  participants={participants}
-                  onAddParticipant={addParticipant}
-                  onRemoveParticipant={removeParticipant}
-                  onDragStart={handleDragStart}
-                />
+              <TabsContent value="manual" className="space-y-4">
+                <div className="flex flex-wrap gap-4">
+                  <BracketSizeSelector 
+                    bracketSize={bracketSize}
+                    onBracketSizeChange={handleBracketSizeChange}
+                  />
+                </div>
                 
-                {/* Bracket Positions Panel */}
-                <BracketPositionGrid 
-                  bracketPositions={bracketPositions}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onRemoveParticipant={removeParticipant}
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Available Players/Teams Panel */}
+                  <BracketParticipantSelector 
+                    type={type}
+                    gender={gender}
+                    classification={classification}
+                    teams={teams}
+                    getPlayersByTeam={getPlayersByTeam}
+                    participants={participants}
+                    onAddParticipant={addParticipant}
+                    onRemoveParticipant={removeParticipant}
+                    onDragStart={handleDragStart}
+                  />
+                  
+                  {/* Bracket Positions Panel */}
+                  <BracketPositionGrid 
+                    bracketPositions={bracketPositions}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onRemoveParticipant={removeParticipant}
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="auto" className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                  <h3 className="text-sm font-medium text-blue-800 mb-2">Qualification Rules</h3>
+                  <p className="text-sm text-blue-700 mb-2">
+                    For {classification} {gender}: {qualificationRules.totalSpots} total spots
+                  </p>
+                  <ul className="list-disc pl-5 text-sm text-blue-700">
+                    <li>{qualificationRules.automaticBids} automatic bids (top team from each district/league)</li>
+                    <li>{qualificationRules.atLargeBids} at-large bids (based on highest APR/ranking)</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-gray-50 border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-medium">Qualified Teams</h3>
+                    <Button 
+                      size="sm" 
+                      onClick={handleAutoGenerate}
+                      className="flex items-center gap-1"
+                    >
+                      <RotateCw className="h-4 w-4" /> Generate Bracket
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Automatic Qualifiers */}
+                    <div>
+                      <h4 className="text-xs uppercase font-semibold text-gray-500 mb-2">Automatic Qualifiers</h4>
+                      {qualifiedTeams
+                        .filter(team => team.qualificationType === 'automatic')
+                        .map((team, idx) => (
+                          <div key={team.teamId} className="flex items-center gap-2 p-2 border-b">
+                            <span className="text-xs bg-blue-100 text-blue-800 rounded px-1.5 py-0.5 font-medium">
+                              {team.seed}
+                            </span>
+                            <div>
+                              <div className="font-medium">{team.teamName}</div>
+                              <div className="text-xs text-gray-500">{team.districtName}</div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {/* At-Large Qualifiers */}
+                    <div>
+                      <h4 className="text-xs uppercase font-semibold text-gray-500 mb-2">At-Large Qualifiers</h4>
+                      {qualifiedTeams
+                        .filter(team => team.qualificationType === 'at-large')
+                        .map((team, idx) => (
+                          <div key={team.teamId} className="flex items-center gap-2 p-2 border-b">
+                            <span className="text-xs bg-green-100 text-green-800 rounded px-1.5 py-0.5 font-medium">
+                              {team.seed}
+                            </span>
+                            <div>
+                              <div className="font-medium">{team.teamName}</div>
+                              <div className="text-xs text-gray-500">{team.districtName}</div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Preview of auto-generated bracket */}
+                {bracket.rounds.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Tournament Bracket Preview</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {bracket.rounds.map((round, roundIdx) => (
+                        <div key={roundIdx} className="border rounded-lg p-3">
+                          <h4 className="text-sm font-medium mb-2">{round.name}</h4>
+                          {round.matches.map((match, matchIdx) => (
+                            <TournamentMatchWithWinner 
+                              key={match.id}
+                              id={match.id}
+                              team1={{
+                                name: match.team1.name,
+                                school: match.team1.school,
+                                seed: match.team1.seed
+                              }}
+                              team2={{
+                                name: match.team2.name,
+                                school: match.team2.school,
+                                seed: match.team2.seed
+                              }}
+                              winner={match.winner}
+                              onSelectWinner={handleMatchWinnerSelect}
+                              isActive={match.team1.name !== "TBD" && match.team2.name !== "TBD"}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
               
               <div className="flex justify-end mt-4">
                 <Button onClick={saveBracket} className="flex items-center gap-2">
@@ -221,14 +368,54 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
                   Save Bracket
                 </Button>
               </div>
-            </div>
+            </Tabs>
           ) : (
-            <BracketDisplay 
-              bracketSize={bracketSize}
-              bracketPositions={bracketPositions}
-              type={type}
-              onEditClick={() => setIsEditing(true)}
-            />
+            <div className="space-y-6">
+              {activeTab === "manual" ? (
+                <BracketDisplay 
+                  bracketSize={bracketSize}
+                  bracketPositions={bracketPositions}
+                  type={type}
+                  onEditClick={() => setIsEditing(true)}
+                />
+              ) : (
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-medium">{classification} {gender} Tournament Bracket</h3>
+                    <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                      Edit Bracket
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {bracket.rounds.map((round, roundIdx) => (
+                      <div key={roundIdx} className="border rounded-lg p-3">
+                        <h4 className="text-sm font-medium mb-2">{round.name}</h4>
+                        {round.matches.map((match, matchIdx) => (
+                          <TournamentMatchWithWinner 
+                            key={match.id}
+                            id={match.id}
+                            team1={{
+                              name: match.team1.name,
+                              school: match.team1.school,
+                              seed: match.team1.seed
+                            }}
+                            team2={{
+                              name: match.team2.name,
+                              school: match.team2.school,
+                              seed: match.team2.seed
+                            }}
+                            winner={match.winner}
+                            onSelectWinner={handleMatchWinnerSelect}
+                            isActive={match.team1.name !== "TBD" && match.team2.name !== "TBD"}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
