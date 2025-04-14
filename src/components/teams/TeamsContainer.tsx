@@ -18,7 +18,7 @@ interface TeamsContainerProps {
 }
 
 const TeamsContainer = ({ filter }: TeamsContainerProps) => {
-  const { schools, teams, addTeam, updateTeam, deleteTeam, players, addPlayer, deletePlayer, districts } = useData();
+  const { schools, teams, addTeam, updateTeam, deleteTeam, players, addPlayer, deletePlayer, districts, currentSeason } = useData();
   const { user } = useAuth();
   
   const [isAddTeamDialogOpen, setIsAddTeamDialogOpen] = useState(false);
@@ -34,7 +34,8 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
   const [playerFormData, setPlayerFormData] = useState<Omit<Player, 'id' | 'status' | 'seasonId'>>({
     name: '',
     grade: 9,
-    teamId: ''
+    teamId: '',
+    seasons: []
   });
   
   // Filter schools if coach
@@ -81,12 +82,14 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
       addPlayer({
         name: playerFormData.name,
         grade: playerFormData.grade,
-        teamId: selectedTeamId
+        teamId: selectedTeamId,
+        seasons: [currentSeason.id] // Add the current season ID
       });
       setPlayerFormData({
         name: '',
         grade: 9,
-        teamId: selectedTeamId
+        teamId: selectedTeamId,
+        seasons: []
       });
       setIsAddPlayerDialogOpen(false);
     }

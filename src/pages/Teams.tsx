@@ -13,7 +13,7 @@ import ExportDataDialog from '@/components/data/ExportDataDialog';
 
 export default function Teams() {
   const { user } = useAuth();
-  const { schools, teams, players } = useData();
+  const { schools, teams, players, currentSeason } = useData();
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
@@ -119,7 +119,8 @@ export default function Teams() {
           playerFormData={{
             name: '',
             grade: 9,
-            teamId: ''
+            teamId: '',
+            seasons: [currentSeason.id] // Add the current season ID
           }}
           setPlayerFormData={() => {}}
           handleAddPlayer={() => {}}

@@ -152,7 +152,8 @@ const SimulationControls: React.FC = () => {
               addPlayer({
                 name: player.name,
                 grade: player.grade,
-                teamId: player.teamId
+                teamId: player.teamId,
+                seasons: [selectedSeason.id] // Add the seasons array with current season
               });
             });
           },
