@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Match, Team, School, Player, MatchFormData } from '@/types';
 import { useData } from './DataContext';
@@ -102,24 +103,7 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const resetMatchForm = () => resetForm(today);
 
-  const enhancedMatches: EnhancedMatch[] = matches.map(match => ({
-    ...match,
-    homeTeamName: getTeamName(match.homeTeamId),
-    awayTeamName: getTeamName(match.awayTeamId)
-  }));
-
-  const filteredMatches = user?.role === 'coach' && user.schoolId
-    ? enhancedMatches.filter(match => {
-        const homeTeam = teams.find(t => t.id === match.homeTeamId);
-        const awayTeam = teams.find(t => t.id === match.awayTeamId);
-        return homeTeam?.schoolId === user.schoolId || awayTeam?.schoolId === user.schoolId;
-      })
-    : enhancedMatches;
-  
-  const filteredTeams = user?.role === 'coach' && user.schoolId
-    ? teams.filter(team => team.schoolId === user.schoolId)
-    : teams;
-  
+  // Define getTeamName function before using it in enhancedMatches
   const getTeamName = (teamId: string) => {
     const team = teams.find(t => t.id === teamId);
     if (!team) return 'Unknown Team';
@@ -140,6 +124,25 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (user?.role !== 'coach' || !user.schoolId) return false;
     return teams.some(t => t.id === teamId && t.schoolId === user.schoolId);
   };
+
+  // Now use getTeamName in enhancedMatches
+  const enhancedMatches: EnhancedMatch[] = matches.map(match => ({
+    ...match,
+    homeTeamName: getTeamName(match.homeTeamId),
+    awayTeamName: getTeamName(match.awayTeamId)
+  }));
+
+  const filteredMatches = user?.role === 'coach' && user.schoolId
+    ? enhancedMatches.filter(match => {
+        const homeTeam = teams.find(t => t.id === match.homeTeamId);
+        const awayTeam = teams.find(t => t.id === match.awayTeamId);
+        return homeTeam?.schoolId === user.schoolId || awayTeam?.schoolId === user.schoolId;
+      })
+    : enhancedMatches;
+  
+  const filteredTeams = user?.role === 'coach' && user.schoolId
+    ? teams.filter(team => team.schoolId === user.schoolId)
+    : teams;
   
   const canApproveMatch = (match: EnhancedMatch, team: 'home' | 'away') => {
     if (!match.isComplete) return false;
