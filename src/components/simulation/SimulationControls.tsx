@@ -5,7 +5,7 @@ import { useSimulatedData } from '@/hooks/useSimulatedData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FlaskConical, Settings2 } from 'lucide-react';
+import { FlaskConical, Settings2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { MatchGenerationConfig } from '@/types/ranking';
 import { Season } from '@/types';
@@ -23,16 +23,21 @@ import SimulationError from './components/SimulationError';
 // Import constants and hooks
 import { extendedSeasonsList } from './constants/seasons';
 import { useSeasonCalculations } from './hooks/useSeasonCalculations';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 const SimulationControls: React.FC = () => {
   const { 
     schools, teams, districts, currentSeason, seasons,
-    addPlayer, addMatch, getArchivedSeasons
+    addPlayer, addMatch, getArchivedSeasons,
+    deleteAllPlayers, deleteAllMatches
   } = useData();
   
+  const { toast } = useToast();
   const { generateAllData, generatingData, progress, verifyTeamsForSimulation } = useSimulatedData();
   
   const [isOpen, setIsOpen] = useState(false);
+  const [clearExistingData, setClearExistingData] = useState(true);
   
   // Season selection - use the extended list instead of just what's in the database
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('spring-2025');
@@ -122,6 +127,16 @@ const SimulationControls: React.FC = () => {
     
     setSimulationError(null);
     
+    // Clear existing data if the user has opted to do so
+    if (clearExistingData) {
+      deleteAllPlayers();
+      deleteAllMatches();
+      toast({
+        title: "Cleared Existing Data",
+        description: "All players and matches have been removed before generating new data."
+      });
+    }
+    
     const config: MatchGenerationConfig = {
       startDate: format(startDate, 'yyyy-MM-dd'),
       endDate: format(endDate, 'yyyy-MM-dd'),
@@ -153,7 +168,8 @@ const SimulationControls: React.FC = () => {
                 name: player.name,
                 grade: player.grade,
                 teamId: player.teamId,
-                seasons: [selectedSeason.id] // Add the seasons array with current season
+                seasons: [selectedSeason.id],
+                skillTier: player.skillTier
               });
             });
           },
@@ -217,6 +233,21 @@ const SimulationControls: React.FC = () => {
           <CollapsibleContent>
             <CardContent className="pb-3 space-y-4">
               <SimulationError error={simulationError} />
+              
+              <Alert className="bg-yellow-50 border-yellow-200">
+                <AlertDescription className="text-yellow-800 flex items-center gap-2">
+                  <Trash2 className="h-4 w-4" />
+                  <div className="flex items-center justify-between w-full">
+                    <span>Clear existing players and matches before generating new data</span>
+                    <input 
+                      type="checkbox" 
+                      checked={clearExistingData} 
+                      onChange={() => setClearExistingData(!clearExistingData)}
+                      className="h-4 w-4 rounded border-gray-300 text-tennis-blue focus:ring-tennis-blue"
+                    />
+                  </div>
+                </AlertDescription>
+              </Alert>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <SeasonSelector 

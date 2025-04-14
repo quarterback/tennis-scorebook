@@ -9,6 +9,7 @@ import MediaToolbar from '@/components/matches/MediaToolbar';
 import { Button } from '@/components/ui/button';
 import { FlaskConical } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Separator } from '@/components/ui/separator';
 
 const Matches = () => {
   const [showSimulation, setShowSimulation] = useState(false);
@@ -22,7 +23,7 @@ const Matches = () => {
           <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto justify-between xs:justify-end">
             <MediaToolbar />
             <Button 
-              variant="outline" 
+              variant={showSimulation ? "default" : "outline"} 
               size="sm"
               onClick={() => setShowSimulation(!showSimulation)}
               className="gap-1.5 text-xs sm:text-sm w-full xs:w-auto"
@@ -33,7 +34,12 @@ const Matches = () => {
           </div>
         </div>
         
-        {showSimulation && <SimulationControls />}
+        {showSimulation && (
+          <>
+            <Separator className="my-4" />
+            <SimulationControls />
+          </>
+        )}
         <MatchesTabs />
         <MatchDialogs />
       </div>

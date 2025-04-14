@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect } from 'react';
 import { School, Team, Player, Match, TeamStanding, Gender, Classification, District, Season, PlayerTransfer } from '@/types';
 
@@ -35,6 +36,7 @@ interface DataContextType {
   addPlayer: (player: Omit<Player, 'id' | 'status' | 'seasonId'>) => void;
   updatePlayer: (player: Player) => void;
   deletePlayer: (id: string) => void;
+  deleteAllPlayers: () => void;
   getPlayerById: (id: string) => Player | undefined;
   getPlayersByTeam: (teamId: string) => Player[];
   transferPlayer: (playerId: string, toTeamId: string) => void;
@@ -46,6 +48,7 @@ interface DataContextType {
   addMatch: (match: Omit<Match, 'id'>) => void;
   updateMatch: (match: Match) => void;
   deleteMatch: (id: string) => void;
+  deleteAllMatches: () => void;
 
   addDistrict: (district: Omit<District, 'id'>) => void;
   updateDistrict: (district: District) => void;
@@ -82,7 +85,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { 
     players, addPlayer, updatePlayer, deletePlayer, getPlayerById, getPlayersByTeam, loadPlayersData,
     transfers, seasons, transferPlayer, retirePlayer, progressSeasons, getCurrentSeason, getArchivedSeasons,
-    getPlayersByseason
+    getPlayersByseason, setPlayers
   } = usePlayersData();
   
   const { 
@@ -102,6 +105,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useFilterOperations(teams, players, matches);
   
   const { getStandings, getStateQualifiers } = useStandingsCalculator(teams, schools, matches, districts);
+  
+  // Add methods to clear all players and matches
+  const deleteAllPlayers = () => {
+    setPlayers([]);
+  };
+  
+  const deleteAllMatches = () => {
+    setMatches([]);
+  };
   
   const value: DataContextType = {
     schools,
@@ -124,6 +136,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addPlayer,
     updatePlayer,
     deletePlayer,
+    deleteAllPlayers,
     getPlayerById,
     getPlayersByTeam,
     transferPlayer,
@@ -135,6 +148,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addMatch,
     updateMatch,
     deleteMatch,
+    deleteAllMatches,
     
     addDistrict,
     updateDistrict,

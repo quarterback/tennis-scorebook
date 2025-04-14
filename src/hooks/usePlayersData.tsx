@@ -1,241 +1,148 @@
 
 import { useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { Player, PlayerStatus, Season, PlayerTransfer } from '@/types';
-
-// Initial sample data can be empty as it would be populated from the database
-const initialPlayersData: Player[] = [];
-const initialTransfersData: PlayerTransfer[] = [];
-const initialSeasonsData: Season[] = [
-  {
-    id: 'current-season',
-    year: 2025,
-    name: 'Spring 2025',
-    isCurrent: true
-  },
-  {
-    id: 'previous-season',
-    year: 2024,
-    name: 'Fall 2024',
-    isCurrent: false
-  }
-];
+import { Player, PlayerTransfer, Season } from '@/types';
 
 export const usePlayersData = () => {
-  const [players, setPlayers] = useState<Player[]>(initialPlayersData);
-  const [transfers, setTransfers] = useState<PlayerTransfer[]>(initialTransfersData);
-  const [seasons, setSeasons] = useState<Season[]>(initialSeasonsData);
-  const { toast } = useToast();
-
-  const getCurrentSeason = (): Season => {
-    const currentSeason = seasons.find(season => season.isCurrent);
-    if (!currentSeason) {
-      throw new Error('No current season found');
-    }
-    return currentSeason;
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [transfers, setTransfers] = useState<PlayerTransfer[]>([]);
+  
+  // Hardcoded seasons for demonstration
+  const [seasons, setSeasons] = useState<Season[]>([
+    { id: 'spring-2023', name: 'Spring 2023', year: 2023 },
+    { id: 'spring-2024', name: 'Spring 2024', year: 2024 },
+    { id: 'spring-2025', name: 'Spring 2025', year: 2025, isCurrent: true }
+  ]);
+  
+  const loadPlayersData = (initialPlayers: Player[]) => {
+    setPlayers(initialPlayers);
   };
-
+  
+  const getCurrentSeason = (): Season => {
+    const current = seasons.find(s => s.isCurrent);
+    if (!current) {
+      return seasons[seasons.length - 1]; // Default to last season if no current specified
+    }
+    return current;
+  };
+  
+  const getArchivedSeasons = (): Season[] => {
+    return seasons.filter(s => !s.isCurrent);
+  };
+  
   const addPlayer = (player: Omit<Player, 'id' | 'status' | 'seasonId'>) => {
     const currentSeason = getCurrentSeason();
     
     const newPlayer: Player = {
-      ...player,
       id: crypto.randomUUID(),
-      status: 'active' as PlayerStatus,
+      ...player,
+      status: 'active',
       seasonId: currentSeason.id,
-      seasons: [currentSeason.id]
+      seasons: player.seasons || [currentSeason.id]
     };
     
     setPlayers([...players, newPlayer]);
-    
-    toast({
-      title: 'Player Added',
-      description: `${newPlayer.name} has been added to the roster.`
-    });
-    
-    return newPlayer;
   };
-
+  
   const updatePlayer = (player: Player) => {
     setPlayers(players.map(p => p.id === player.id ? player : p));
-    
-    toast({
-      title: 'Player Updated',
-      description: `${player.name}'s information has been updated.`
-    });
-    
-    return player;
   };
-
+  
   const deletePlayer = (id: string) => {
-    const player = players.find(p => p.id === id);
     setPlayers(players.filter(p => p.id !== id));
-    
-    toast({
-      title: 'Player Removed',
-      description: `${player?.name || 'Player'} has been removed from the roster.`
-    });
   };
-
-  const getPlayersByTeam = (teamId: string): Player[] => {
-    return players
-      .filter(player => player.teamId === teamId && player.status === 'active')
-      .sort((a, b) => b.grade - a.grade || a.name.localeCompare(b.name));
-  };
-
+  
   const getPlayerById = (id: string): Player | undefined => {
-    return players.find(player => player.id === id);
+    return players.find(p => p.id === id);
   };
-
-  const loadPlayersData = (newPlayers: Player[]) => {
-    setPlayers(newPlayers);
+  
+  const getPlayersByTeam = (teamId: string): Player[] => {
+    return players.filter(p => p.teamId === teamId && p.status === 'active');
   };
-
+  
+  const getPlayersByseason = (seasonId: string): Player[] => {
+    return players.filter(p => p.seasons.includes(seasonId));
+  };
+  
   const transferPlayer = (playerId: string, toTeamId: string) => {
+    // Find the player
     const player = players.find(p => p.id === playerId);
+    if (!player) return;
     
-    if (!player) {
-      toast({
-        title: 'Transfer Failed',
-        description: 'Player not found',
-        variant: 'destructive'
-      });
-      return;
-    }
+    // Update player's team
+    const updatedPlayer = {
+      ...player,
+      teamId: toTeamId
+    };
     
-    const fromTeamId = player.teamId;
-    const currentSeason = getCurrentSeason();
-    
-    // Create transfer record
+    // Add transfer record
     const transfer: PlayerTransfer = {
       id: crypto.randomUUID(),
       playerId,
-      fromTeamId,
+      fromTeamId: player.teamId,
       toTeamId,
-      date: new Date().toISOString(),
-      seasonId: currentSeason.id
+      date: new Date().toISOString()
     };
     
     setTransfers([...transfers, transfer]);
-    
-    // Update player record
-    const updatedPlayer: Player = {
-      ...player,
-      teamId: toTeamId,
-      previousTeams: [...(player.previousTeams || []), fromTeamId],
-      status: 'active' as PlayerStatus
-    };
-    
     updatePlayer(updatedPlayer);
-    
-    toast({
-      title: 'Player Transferred',
-      description: `${player.name} has been transferred to a new team.`
-    });
   };
-
+  
   const retirePlayer = (playerId: string) => {
+    // Find the player
     const player = players.find(p => p.id === playerId);
+    if (!player) return;
     
-    if (!player) {
-      toast({
-        title: 'Retirement Failed',
-        description: 'Player not found',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    const updatedPlayer: Player = {
+    // Update player's status
+    const updatedPlayer = {
       ...player,
-      status: 'retired' as PlayerStatus
+      status: 'retired' as const
     };
     
     updatePlayer(updatedPlayer);
-    
-    toast({
-      title: 'Player Retired',
-      description: `${player.name} has been retired from active play.`
-    });
   };
-
-  const progressSeasons = () => {
+  
+  const progressSeasons = (): Season => {
+    // Find current season
     const currentSeason = getCurrentSeason();
     
-    // Create a new season
-    const newYear = currentSeason.year + (currentSeason.name.includes('Fall') ? 0 : 1);
-    const newSeasonName = currentSeason.name.includes('Fall') ? `Spring ${newYear}` : `Fall ${newYear}`;
-    
+    // Create new season based on current
+    const nextYear = currentSeason.year + 1;
     const newSeason: Season = {
-      id: crypto.randomUUID(),
-      year: newYear,
-      name: newSeasonName,
+      id: `spring-${nextYear}`,
+      name: `Spring ${nextYear}`,
+      year: nextYear,
       isCurrent: true
     };
     
-    // Set all current seasons to not current
-    const updatedSeasons = seasons.map(season => ({
-      ...season,
-      isCurrent: false
-    }));
-    
-    // Add the new season
-    setSeasons([...updatedSeasons, newSeason]);
-    
-    // Auto-retire seniors (grade 12)
-    const updatedPlayers = players.map(player => {
-      if (player.status === 'active') {
-        // If grade 12, retire the player
-        if (player.grade === 12) {
-          return {
-            ...player,
-            status: 'retired' as PlayerStatus,
-            seasons: [...(player.seasons || []), newSeason.id]
-          };
-        }
-        
-        // Otherwise, increment the grade
-        return {
-          ...player,
-          grade: player.grade + 1,
-          seasons: [...(player.seasons || []), newSeason.id]
-        };
+    // Update current season to not be current
+    const updatedSeasons = seasons.map(s => {
+      if (s.id === currentSeason.id) {
+        return { ...s, isCurrent: false };
       }
-      return player;
+      return s;
     });
     
-    setPlayers(updatedPlayers);
-    
-    toast({
-      title: 'Season Advanced',
-      description: `Advanced to ${newSeason.name}. Seniors have been automatically retired.`
-    });
+    // Add new season
+    setSeasons([...updatedSeasons, newSeason]);
     
     return newSeason;
   };
-
-  const getArchivedSeasons = () => {
-    return seasons.filter(season => !season.isCurrent);
-  };
-
-  const getPlayersByseason = (seasonId: string): Player[] => {
-    return players.filter(player => player.seasons?.includes(seasonId));
-  };
-
+  
   return {
     players,
-    transfers,
-    seasons,
+    setPlayers,
     addPlayer,
     updatePlayer,
     deletePlayer,
-    getPlayersByTeam,
     getPlayerById,
-    loadPlayersData,
+    getPlayersByTeam,
+    transfers,
+    seasons,
     transferPlayer,
     retirePlayer,
     progressSeasons,
     getCurrentSeason,
+    loadPlayersData,
     getArchivedSeasons,
     getPlayersByseason
   };

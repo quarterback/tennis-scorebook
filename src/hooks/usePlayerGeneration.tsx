@@ -16,6 +16,7 @@ export const usePlayerGeneration = () => {
     const allPlayers: Player[] = [];
     const ladders: TeamLadder[] = [];
     
+    // Process each team to generate players and ladders
     teams.forEach(team => {
       // Generate roster - size based on school classification
       const teamPlayers = generateTeamRoster(team.id, team.schoolId, seasonId, schools);
@@ -24,6 +25,8 @@ export const usePlayerGeneration = () => {
       // Generate ladder
       const ladder = generateTeamLadder(team.id, seasonId, teamPlayers);
       ladders.push(ladder);
+      
+      console.log(`Generated ${teamPlayers.length} players for team: ${team.id} (${team.gender})`);
     });
     
     return { players: allPlayers, ladders };
