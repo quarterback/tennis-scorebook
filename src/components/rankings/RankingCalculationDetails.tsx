@@ -16,10 +16,14 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
       <CardHeader className="bg-tennis-gray pb-2">
         <CardTitle className="flex items-center">
           <BarChart3 className="h-5 w-5 mr-2 text-tennis-blue" />
-          Calculation Details
+          Power Rankings Calculation
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent>
+        <div className="text-sm text-gray-600 mb-4 p-4 bg-gray-50 rounded-lg">
+          Power Rankings combine three factors to evaluate team strength beyond win-loss records.
+          Higher numbers indicate stronger teams, with exceptional teams potentially exceeding 100.
+        </div>
         {qualifiedTeams.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>
@@ -37,7 +41,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Flight-Weighted Score: Points earned from match wins, weighted by position importance</p>
+                          <p className="max-w-xs">Flight-Weighted Score: Points earned based on position wins (1S=1.0, 1D=1.0, 2S=0.75, 2D=0.5)</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -52,7 +56,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">League Strength Coefficient: Calculated from historical league performance at state tournaments</p>
+                          <p className="max-w-xs">League Strength Coefficient: Based on 4-year state tournament performance</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -67,7 +71,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Opponent Strength Index: Based on the strength of opponents faced</p>
+                          <p className="max-w-xs">Opponent Strength Index: Measures quality of schedule</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -77,12 +81,12 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center justify-center">
-                            APR
+                            Power Ranking
                             <Info className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Athletic Power Rating: Scaled representation of the composite score (can exceed 100 for exceptional teams)</p>
+                          <p className="max-w-xs">Overall team strength on a 0-100+ scale combining all factors. Exceptional teams may exceed 100.</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -110,7 +114,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                     <TableCell className="text-center" title="Opponent Strength Index">
                       {team.opponentStrengthIndex.toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-center font-medium" title="Athletic Power Rating">
+                    <TableCell className="text-center font-medium" title="Power Ranking">
                       <span className={team.apr > 100 ? "text-blue-600 font-bold" : ""}>
                         {team.apr.toFixed(1)}
                       </span>
