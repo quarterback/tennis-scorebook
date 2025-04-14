@@ -3,9 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useMatches } from '@/context/MatchesContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MatchesHeader: React.FC = () => {
   const { setIsAddDialogOpen, resetMatchForm } = useMatches();
+  const isMobile = useIsMobile();
   
   return (
     <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 w-full">
@@ -19,7 +21,7 @@ const MatchesHeader: React.FC = () => {
         }}
       >
         <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-        Add Match
+        {isMobile ? 'Add' : 'Add Match'}
       </Button>
     </div>
   );

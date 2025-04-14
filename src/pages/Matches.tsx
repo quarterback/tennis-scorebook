@@ -8,9 +8,11 @@ import SimulationControls from '@/components/simulation/SimulationControls';
 import MediaToolbar from '@/components/matches/MediaToolbar';
 import { Button } from '@/components/ui/button';
 import { FlaskConical } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Matches = () => {
   const [showSimulation, setShowSimulation] = useState(false);
+  const isMobile = useIsMobile();
   
   return (
     <MatchesProvider>
@@ -26,7 +28,7 @@ const Matches = () => {
               className="gap-1.5 text-xs sm:text-sm w-full sm:w-auto"
             >
               <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
-              {showSimulation ? 'Hide Simulation' : 'Generate Data'}
+              {isMobile ? 'Data' : showSimulation ? 'Hide Simulation' : 'Generate Data'}
             </Button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import { Player, Team, School, Match, District, Season } from '@/types';
 
 type ExportableData = {
@@ -104,8 +105,18 @@ export const exportPlayersToCSV = (players: Player[]): void => {
  * Export matches data to CSV
  */
 export const exportMatchesToCSV = (matches: Match[]): void => {
-  const headers = ['id', 'date', 'homeTeamId', 'awayTeamId', 'isLeagueMatch', 'isComplete', 'homeTeamScore', 'awayTeamScore'];
-  const csvContent = convertToCSV(matches, headers);
+  const headers = ['id', 'date', 'homeTeamId', 'awayTeamId', 'isLeagueMatch', 'isComplete', 'homeTeamScore', 'awayTeamScore', 'winner'];
+  
+  // Format matches with winner information
+  const formattedMatches = matches.map(match => {
+    const winnerTeamId = match.homeTeamWon ? match.homeTeamId : match.awayTeamId;
+    return {
+      ...match,
+      winner: winnerTeamId
+    };
+  });
+  
+  const csvContent = convertToCSV(formattedMatches, headers);
   downloadCSV(csvContent, 'matches.csv');
 };
 

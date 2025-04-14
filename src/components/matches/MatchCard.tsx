@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Match, Player } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 import { useMatches } from '@/context/MatchesContext';
 import { useAuth } from '@/context/AuthContext';
 import { exportMatchToCSV } from '@/utils/exportData';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MatchCardProps {
   match: Match;
@@ -32,6 +34,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
 }) => {
   const { approveMatch, canApproveMatch, isCoachOfTeam } = useMatches();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   const isExpanded = expandedMatchId === match.id;
   
@@ -68,60 +71,193 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <head>
             <title>Match Details: ${homeTeamName} vs ${awayTeamName}</title>
             <style>
-              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; }
-              h1 { text-align: center; }
+              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+              h1 { text-align: center; margin-bottom: 20px; }
               .match-details { margin: 20px 0; }
-              .flight { margin-bottom: 10px; }
+              .flight { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+              .flight-header { font-weight: bold; margin-bottom: 10px; }
+              .set { margin: 5px 0; }
+              .winner { color: green; }
+              .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+              .match-date { color: #666; }
+              .match-score { font-weight: bold; font-size: 1.2em; }
+              .match-teams { font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }
+              @media print {
+                body { font-size: 12pt; }
+                .flight { page-break-inside: avoid; }
+              }
             </style>
           </head>
           <body>
             <h1>Match Results</h1>
-            <div class="match-details">
-              <p><strong>Date:</strong> ${format(new Date(match.date), 'MMMM d, yyyy')}</p>
-              <p><strong>Teams:</strong> ${homeTeamName} vs ${awayTeamName}</p>
-              <p><strong>Final Score:</strong> ${getMatchScoreDisplay()}</p>
+            <div class="match-header">
+              <div class="match-teams">${homeTeamName} vs ${awayTeamName}</div>
+              <div class="match-date">${format(new Date(match.date), 'MMMM d, yyyy')}</div>
             </div>
-            ${match.flights.map(flight => `
-              <div class="flight">
-                <h2>${flight.level.toUpperCase()} ${flight.type.toUpperCase()} #${flight.position}</h2>
-                ${flight.sets.map(set => `
-                  <p>Set: ${flight.homePlayerWon ? 
-                    `${set.homeScore}-${set.awayScore}` : 
-                    `${set.awayScore}-${set.homeScore}`}
-                    ${set.tiebreak ? 
-                      `(Tiebreak: ${flight.homePlayerWon ? 
-                        `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
-                        `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})` : 
-                      ''}
-                  </p>
+            <div class="match-details">
+              <p class="match-score">Final Score: ${getMatchScoreDisplay()}</p>
+              <p>Match Type: ${match.isLeagueMatch ? 'League Match' : 'Non-League Match'}</p>
+              <p>Status: ${match.homeCoachApproved && match.awayCoachApproved 
+                ? 'Approved by both coaches' 
+                : 'Pending approval'}</p>
+            </div>
+            
+            <h2>Varsity Singles</h2>
+            ${match.flights
+              .filter(f => f.level === 'varsity' && f.type === 'singles')
+              .sort((a, b) => a.position - b.position)
+              .map(flight => `
+                <div class="flight">
+                  <div class="flight-header">Singles #${flight.position} ${
+                    flight.retired ? '(Retired)' : flight.defaulted ? '(Defaulted)' : ''
+                  }</div>
+                  ${flight.sets.map(set => {
+                    // Display winner's score first
+                    const homePlayerWon = set.homeScore > set.awayScore;
+                    const setScore = homePlayerWon 
+                      ? `${set.homeScore}-${set.awayScore}` 
+                      : `${set.awayScore}-${set.homeScore}`;
+                    
+                    let tiebreakText = '';
+                    if (set.tiebreak) {
+                      const homeTiebreakWon = set.tiebreak.homeScore > set.tiebreak.awayScore;
+                      tiebreakText = homeTiebreakWon
+                        ? ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`
+                        : ` (Tiebreak: ${set.tiebreak.awayScore}-${set.tiebreak.homeScore})`;
+                    }
+                    
+                    return `<div class="set">Set: ${setScore}${tiebreakText}</div>`;
+                  }).join('')}
+                </div>
+              `).join('')}
+              
+            <h2>Varsity Doubles</h2>
+            ${match.flights
+              .filter(f => f.level === 'varsity' && f.type === 'doubles')
+              .sort((a, b) => a.position - b.position)
+              .map(flight => `
+                <div class="flight">
+                  <div class="flight-header">Doubles #${flight.position} ${
+                    flight.retired ? '(Retired)' : flight.defaulted ? '(Defaulted)' : ''
+                  }</div>
+                  ${flight.sets.map(set => {
+                    // Display winner's score first
+                    const homePlayerWon = set.homeScore > set.awayScore;
+                    const setScore = homePlayerWon 
+                      ? `${set.homeScore}-${set.awayScore}` 
+                      : `${set.awayScore}-${set.homeScore}`;
+                    
+                    let tiebreakText = '';
+                    if (set.tiebreak) {
+                      const homeTiebreakWon = set.tiebreak.homeScore > set.tiebreak.awayScore;
+                      tiebreakText = homeTiebreakWon
+                        ? ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`
+                        : ` (Tiebreak: ${set.tiebreak.awayScore}-${set.tiebreak.homeScore})`;
+                    }
+                    
+                    return `<div class="set">Set: ${setScore}${tiebreakText}</div>`;
+                  }).join('')}
+                </div>
+              `).join('')}
+              
+            ${match.hasJvMatches ? `
+              <h2>JV Singles</h2>
+              ${match.flights
+                .filter(f => f.level === 'jv' && f.type === 'singles')
+                .sort((a, b) => a.position - b.position)
+                .map(flight => `
+                  <div class="flight">
+                    <div class="flight-header">Singles #${flight.position} ${
+                      flight.retired ? '(Retired)' : flight.defaulted ? '(Defaulted)' : ''
+                    }</div>
+                    ${flight.sets.map(set => {
+                      // Display winner's score first
+                      const homePlayerWon = set.homeScore > set.awayScore;
+                      const setScore = homePlayerWon 
+                        ? `${set.homeScore}-${set.awayScore}` 
+                        : `${set.awayScore}-${set.homeScore}`;
+                      
+                      let tiebreakText = '';
+                      if (set.tiebreak) {
+                        const homeTiebreakWon = set.tiebreak.homeScore > set.tiebreak.awayScore;
+                        tiebreakText = homeTiebreakWon
+                          ? ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`
+                          : ` (Tiebreak: ${set.tiebreak.awayScore}-${set.tiebreak.homeScore})`;
+                      }
+                      
+                      return `<div class="set">Set: ${setScore}${tiebreakText}</div>`;
+                    }).join('')}
+                  </div>
                 `).join('')}
-              </div>
-            `).join('')}
+                
+              <h2>JV Doubles</h2>
+              ${match.flights
+                .filter(f => f.level === 'jv' && f.type === 'doubles')
+                .sort((a, b) => a.position - b.position)
+                .map(flight => `
+                  <div class="flight">
+                    <div class="flight-header">Doubles #${flight.position} ${
+                      flight.retired ? '(Retired)' : flight.defaulted ? '(Defaulted)' : ''
+                    }</div>
+                    ${flight.sets.map(set => {
+                      // Display winner's score first
+                      const homePlayerWon = set.homeScore > set.awayScore;
+                      const setScore = homePlayerWon 
+                        ? `${set.homeScore}-${set.awayScore}` 
+                        : `${set.awayScore}-${set.homeScore}`;
+                      
+                      let tiebreakText = '';
+                      if (set.tiebreak) {
+                        const homeTiebreakWon = set.tiebreak.homeScore > set.tiebreak.awayScore;
+                        tiebreakText = homeTiebreakWon
+                          ? ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`
+                          : ` (Tiebreak: ${set.tiebreak.awayScore}-${set.tiebreak.homeScore})`;
+                      }
+                      
+                      return `<div class="set">Set: ${setScore}${tiebreakText}</div>`;
+                    }).join('')}
+                  </div>
+                `).join('')}
+            ` : ''}
+            
+            <script>
+              window.onload = function() {
+                window.print();
+              }
+            </script>
           </body>
         </html>
       `);
       printWindow.document.close();
-      printWindow.print();
+    }
+  };
+
+  // For displaying flight scores with winning team's score first
+  const getFormattedSetScore = (set, isHomeWinner) => {
+    if (isHomeWinner) {
+      return `${set.homeScore}-${set.awayScore}`;
+    } else {
+      return `${set.awayScore}-${set.homeScore}`;
     }
   };
 
   return (
-    <Card className="w-full mb-4">
+    <Card className="match-card">
       <CardContent className="pt-6">
-        <div className="flex justify-between items-start">
+        <div className="match-header">
           <div className="space-y-2 flex-1">
-            <div className="flex items-center text-muted-foreground text-sm">
+            <div className="match-date">
               <Calendar className="h-4 w-4 mr-1" />
               {format(new Date(match.date), 'MMMM d, yyyy')}
               {match.isLeagueMatch && (
-                <span className="ml-2 bg-tennis-blue text-white text-xs px-2 py-0.5 rounded-full">
+                <span className="match-tag">
                   League
                 </span>
               )}
             </div>
             
             <div className="flex justify-between items-center">
-              <div className="text-lg font-medium">{homeTeamName} vs {awayTeamName}</div>
+              <div className="match-title">{homeTeamName} vs {awayTeamName}</div>
               <div className="flex items-center space-x-2">
                 {match.isComplete && (
                   <div className="flex items-center space-x-2">
@@ -139,7 +275,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                         }
                       </div>
                     </div>
-                    <span className="text-sm font-semibold">
+                    <span className="match-score">
                       {getMatchScoreDisplay()}
                     </span>
                   </div>
@@ -159,9 +295,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
         
         {isExpanded && (
           <div className="mt-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm">Varsity Singles</h4>
+            <div className="match-content">
+              <div className="match-section">
+                <h4 className="match-section-title">Varsity Singles</h4>
                 <div className="space-y-2">
                   {match.flights
                     .filter(f => f.level === 'varsity' && f.type === 'singles')
@@ -184,31 +320,38 @@ const MatchCard: React.FC<MatchCardProps> = ({
                           </div>
                         </div>
                         <div className="flex-1">
-                          {flight.sets.map((set, setIndex) => (
-                            <div 
-                              key={setIndex} 
-                              className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
-                                set.homeScore > set.awayScore 
-                                  ? 'bg-green-100' 
-                                  : 'bg-red-100'
-                              }`}
-                            >
-                              {set.homeScore}-{set.awayScore}
-                              {set.tiebreak && (
-                                <span className="text-xs ml-1">
-                                  ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                          {flight.sets.map((set, setIndex) => {
+                            const homeWonSet = set.homeScore > set.awayScore;
+                            return (
+                              <div 
+                                key={setIndex} 
+                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                  homeWonSet 
+                                    ? 'bg-green-100' 
+                                    : 'bg-red-100'
+                                }`}
+                              >
+                                {homeWonSet ? 
+                                  `${set.homeScore}-${set.awayScore}` : 
+                                  `${set.awayScore}-${set.homeScore}`}
+                                {set.tiebreak && (
+                                  <span className="text-xs ml-1">
+                                    ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
+                                      `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
+                                      `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm">Varsity Doubles</h4>
+              <div className="match-section">
+                <h4 className="match-section-title">Varsity Doubles</h4>
                 <div className="space-y-2">
                   {match.flights
                     .filter(f => f.level === 'varsity' && f.type === 'doubles')
@@ -231,23 +374,30 @@ const MatchCard: React.FC<MatchCardProps> = ({
                           </div>
                         </div>
                         <div className="flex-1">
-                          {flight.sets.map((set, setIndex) => (
-                            <div 
-                              key={setIndex} 
-                              className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
-                                set.homeScore > set.awayScore 
-                                  ? 'bg-green-100' 
-                                  : 'bg-red-100'
-                              }`}
-                            >
-                              {set.homeScore}-{set.awayScore}
-                              {set.tiebreak && (
-                                <span className="text-xs ml-1">
-                                  ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                          {flight.sets.map((set, setIndex) => {
+                            const homeWonSet = set.homeScore > set.awayScore;
+                            return (
+                              <div 
+                                key={setIndex} 
+                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                  homeWonSet 
+                                    ? 'bg-green-100' 
+                                    : 'bg-red-100'
+                                }`}
+                              >
+                                {homeWonSet ? 
+                                  `${set.homeScore}-${set.awayScore}` : 
+                                  `${set.awayScore}-${set.homeScore}`}
+                                {set.tiebreak && (
+                                  <span className="text-xs ml-1">
+                                    ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
+                                      `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
+                                      `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -256,9 +406,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
             </div>
 
             {match.hasJvMatches && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm">JV Singles</h4>
+              <div className="match-content">
+                <div className="match-section">
+                  <h4 className="match-section-title">JV Singles</h4>
                   <div className="space-y-2">
                     {match.flights
                       .filter(f => f.level === 'jv' && f.type === 'singles')
@@ -281,31 +431,38 @@ const MatchCard: React.FC<MatchCardProps> = ({
                             </div>
                           </div>
                           <div className="flex-1">
-                            {flight.sets.map((set, setIndex) => (
-                              <div 
-                                key={setIndex} 
-                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
-                                  set.homeScore > set.awayScore 
-                                    ? 'bg-green-100' 
-                                    : 'bg-red-100'
-                                }`}
-                              >
-                                {set.homeScore}-{set.awayScore}
-                                {set.tiebreak && (
-                                  <span className="text-xs ml-1">
-                                    ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                            {flight.sets.map((set, setIndex) => {
+                              const homeWonSet = set.homeScore > set.awayScore;
+                              return (
+                                <div 
+                                  key={setIndex} 
+                                  className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                    homeWonSet 
+                                      ? 'bg-green-100' 
+                                      : 'bg-red-100'
+                                  }`}
+                                >
+                                  {homeWonSet ? 
+                                    `${set.homeScore}-${set.awayScore}` : 
+                                    `${set.awayScore}-${set.homeScore}`}
+                                  {set.tiebreak && (
+                                    <span className="text-xs ml-1">
+                                      ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
+                                        `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
+                                        `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm">JV Doubles</h4>
+                <div className="match-section">
+                  <h4 className="match-section-title">JV Doubles</h4>
                   <div className="space-y-2">
                     {match.flights
                       .filter(f => f.level === 'jv' && f.type === 'doubles')
@@ -328,23 +485,30 @@ const MatchCard: React.FC<MatchCardProps> = ({
                             </div>
                           </div>
                           <div className="flex-1">
-                            {flight.sets.map((set, setIndex) => (
-                              <div 
-                                key={setIndex} 
-                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
-                                  set.homeScore > set.awayScore 
-                                    ? 'bg-green-100' 
-                                    : 'bg-red-100'
-                                }`}
-                              >
-                                {set.homeScore}-{set.awayScore}
-                                {set.tiebreak && (
-                                  <span className="text-xs ml-1">
-                                    ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                            {flight.sets.map((set, setIndex) => {
+                              const homeWonSet = set.homeScore > set.awayScore;
+                              return (
+                                <div 
+                                  key={setIndex} 
+                                  className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                    homeWonSet 
+                                      ? 'bg-green-100' 
+                                      : 'bg-red-100'
+                                  }`}
+                                >
+                                  {homeWonSet ? 
+                                    `${set.homeScore}-${set.awayScore}` : 
+                                    `${set.awayScore}-${set.homeScore}`}
+                                  {set.tiebreak && (
+                                    <span className="text-xs ml-1">
+                                      ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
+                                        `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
+                                        `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -379,7 +543,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="flex justify-end space-x-2 pt-0">
+      <CardFooter className="match-actions pt-0">
         {canEditMatch(match) && (
           <Button
             variant="outline"
@@ -388,7 +552,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
             className="flex items-center"
           >
             <Edit className="h-4 w-4 mr-2" />
-            Edit
+            {!isMobile && "Edit"}
           </Button>
         )}
         
@@ -401,7 +565,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 className="bg-green-600 hover:bg-green-700"
                 onClick={() => approveMatch(match.id, 'home')}
               >
-                Approve as Home Coach
+                {isMobile ? "Approve (Home)" : "Approve as Home Coach"}
               </Button>
             )}
             
@@ -412,7 +576,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 className="bg-green-600 hover:bg-green-700"
                 onClick={() => approveMatch(match.id, 'away')}
               >
-                Approve as Away Coach
+                {isMobile ? "Approve (Away)" : "Approve as Away Coach"}
               </Button>
             )}
           </>
@@ -425,7 +589,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           className="flex items-center gap-2"
         >
           <FileDown className="h-4 w-4" />
-          Export Match
+          {!isMobile && "Export Match"}
         </Button>
         
         <Button
@@ -435,7 +599,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           className="flex items-center gap-2"
         >
           <Printer className="h-4 w-4" />
-          Print Match
+          {!isMobile && "Print Match"}
         </Button>
       </CardFooter>
     </Card>

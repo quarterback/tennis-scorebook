@@ -60,14 +60,47 @@
     @apply border-l-4 border-tennis-green;
   }
 
-  /* New responsive utility classes */
+  /* Responsive Match Cards */
+  .match-card {
+    @apply w-full mb-4 overflow-visible;
+  }
+
+  .match-header {
+    @apply flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2;
+  }
+
+  .match-title {
+    @apply text-lg font-medium line-clamp-1;
+  }
+
+  .match-date {
+    @apply flex items-center text-muted-foreground text-sm;
+  }
+
+  .match-tag {
+    @apply ml-2 bg-tennis-blue text-white text-xs px-2 py-0.5 rounded-full;
+  }
+
+  .match-score {
+    @apply text-sm font-semibold whitespace-nowrap;
+  }
+
+  /* Match Content */
   .match-content {
     @apply grid gap-4;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 
+  .match-section {
+    @apply space-y-4;
+  }
+
+  .match-section-title {
+    @apply font-medium text-sm;
+  }
+
   .match-actions {
-    @apply flex flex-wrap gap-2;
+    @apply flex flex-wrap gap-2 justify-end;
   }
 
   .flight-container {
@@ -76,6 +109,19 @@
 
   .flight-card {
     @apply p-3 bg-white rounded-md shadow-sm border border-gray-200;
+  }
+
+  /* Media Toolbar */
+  .media-toolbar {
+    @apply flex flex-wrap gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0;
+  }
+
+  .toolbar-button {
+    @apply flex gap-1.5 items-center text-xs sm:text-sm h-9 px-3 rounded-md;
+  }
+
+  .toolbar-icon {
+    @apply h-3 w-3 sm:h-4 sm:w-4;
   }
 }
 
@@ -137,8 +183,27 @@
     grid-template-columns: 1fr !important;
   }
   
+  .match-actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+  
   .match-actions button {
+    flex: 1;
     padding: 0.375rem 0.5rem !important;
     font-size: 0.75rem !important;
+    justify-content: center;
+  }
+
+  .media-toolbar {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .media-toolbar button {
+    flex: 1;
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    justify-content: center;
   }
 }

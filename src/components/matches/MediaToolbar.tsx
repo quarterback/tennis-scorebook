@@ -10,10 +10,12 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useMatches } from '@/context/MatchesContext';
 import { exportMatchesToCSV } from '@/utils/exportData';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MediaToolbar = () => {
   const { toast } = useToast();
   const { filteredMatches, getTeamName } = useMatches();
+  const isMobile = useIsMobile();
 
   const handlePrint = () => {
     window.print();
@@ -24,7 +26,9 @@ const MediaToolbar = () => {
       const homeTeam = getTeamName(match.homeTeamId);
       const awayTeam = getTeamName(match.awayTeamId);
       const score = match.isComplete ? 
-        `${homeTeam} ${match.homeTeamScore}, ${awayTeam} ${match.awayTeamScore}` :
+        match.homeTeamWon ? 
+          `${homeTeam} ${match.homeTeamScore}-${match.awayTeamScore}` :
+          `${awayTeam} ${match.awayTeamScore}-${match.homeTeamScore}` :
         'Match scheduled';
       return `${homeTeam} vs ${awayTeam} - ${score}`;
     }).join('\n');
@@ -61,45 +65,45 @@ const MediaToolbar = () => {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+    <div className="media-toolbar">
       <Button 
         variant="outline" 
         size="sm"
         onClick={() => exportMatchesToCSV(filteredMatches)}
-        className="gap-1.5 text-xs sm:text-sm"
+        className="toolbar-button"
       >
-        <FileDown className="h-3 w-3 sm:h-4 sm:w-4" />
-        <span className="hidden sm:inline">Export CSV</span>
+        <FileDown className="toolbar-icon" />
+        {!isMobile && "Export CSV"}
       </Button>
       
       <Button 
         variant="outline" 
         size="sm" 
         onClick={handlePrint}
-        className="gap-1.5 text-xs sm:text-sm"
+        className="toolbar-button"
       >
-        <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
-        <span className="hidden sm:inline">Print</span>
+        <Printer className="toolbar-icon" />
+        {!isMobile && "Print"}
       </Button>
       
       <Button 
         variant="outline" 
         size="sm"
         onClick={handleCopyForMedia}
-        className="gap-1.5 text-xs sm:text-sm"
+        className="toolbar-button"
       >
-        <ClipboardCopy className="h-3 w-3 sm:h-4 sm:w-4" />
-        <span className="hidden sm:inline">Copy for Media</span>
+        <ClipboardCopy className="toolbar-icon" />
+        {!isMobile && "Copy for Media"}
       </Button>
       
       <Button 
         variant="outline" 
         size="sm"
         onClick={handleShare}
-        className="gap-1.5 text-xs sm:text-sm"
+        className="toolbar-button"
       >
-        <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
-        <span className="hidden sm:inline">Share</span>
+        <Share2 className="toolbar-icon" />
+        {!isMobile && "Share"}
       </Button>
     </div>
   );
