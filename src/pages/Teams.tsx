@@ -9,6 +9,7 @@ import TeamsContainer from '@/components/teams/TeamsContainer';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import SimulationControls from '@/components/simulation/SimulationControls';
+import ExportDataDialog from '@/components/data/ExportDataDialog';
 
 export default function Teams() {
   const { user } = useAuth();
@@ -33,10 +34,7 @@ export default function Teams() {
             <Trophy className="h-4 w-4 mr-2" />
             Roster Report
           </Button>
-          <Button variant="outline">
-            <Clipboard className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
+          <ExportDataDialog />
         </div>
       </div>
 

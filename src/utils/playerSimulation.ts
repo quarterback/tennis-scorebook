@@ -1,9 +1,8 @@
-
 import { Player, Team, School, Gender } from '@/types';
 import { PlayerStatus } from '@/types';
 import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
 
-// First names dataset
+// First names dataset with more diverse options
 const girlsFirstNames = [
   "Emma", "Olivia", "Ava", "Isabella", "Sophia", "Mia", "Charlotte", "Amelia", 
   "Harper", "Evelyn", "Abigail", "Emily", "Elizabeth", "Sofia", "Ella", "Madison", 
@@ -16,7 +15,11 @@ const girlsFirstNames = [
   "Gabriella", "Naomi", "Alice", "Sadie", "Hailey", "Eva", "Emilia", "Autumn",
   "Quinn", "Nevaeh", "Piper", "Ruby", "Serenity", "Willow", "Everly", "Cora",
   "Kaylee", "Lydia", "Aubree", "Arianna", "Eliana", "Peyton", "Melanie", "Gianna",
-  "Isabelle", "Julia", "Valentina", "Nova", "Clara", "Vivian", "Reagan", "Mackenzie"
+  "Isabelle", "Julia", "Valentina", "Nova", "Clara", "Vivian", "Reagan", "Mackenzie",
+  "Mei", "Yuna", "Hana", "Sakura", "Jin", "Soo-jin", "Eun", "Jia", "Ling", "Yuki",
+  "Astrid", "Freya", "Ingrid", "Mathilde", "Greta", "Katarina", "Isolde", "Annika",
+  "Nia", "Amara", "Adanna", "Kesi",
+  "Aisha", "Lakshmi", "Fatima", "Zara"
 ];
 
 const boysFirstNames = [
@@ -31,10 +34,21 @@ const boysFirstNames = [
   "Easton", "Elias", "Colton", "Cameron", "Carson", "Robert", "Angel", "Maverick",
   "Nicholas", "Dominic", "Jace", "Ian", "Austin", "Adam", "Santiago", "Jordan",
   "Cooper", "Brayden", "Roman", "Evan", "Ezekiel", "Xavier", "Jose", "Jaxson",
-  "Axel", "Everett", "Kayden", "Miles", "Sawyer", "Jason", "Maxwell", "Juan"
+  "Axel", "Everett", "Kayden", "Miles", "Sawyer", "Jason", "Maxwell", "Juan",
+  "Kai", "Hiroshi", "Jin", "Ming", "Tao", "Ryu", "Kenji", "Jian", "Sung", "Wei",
+  "Magnus", "Henrik", "Lars", "Sven", "Bjorn", "Klaus", "Nikolai", "Matthias",
+  "Kofi", "Kwame", "Sekou", "Abeo",
+  "Hassan", "Raj", "Omar", "Zahir"
 ];
 
-// Last names dataset
+// Gender-neutral names (can be added to either list based on the team's gender)
+const genderNeutralNames = [
+  "Alex", "Jordan", "Taylor", "Casey", "Riley", "Avery", "Quinn", "Skyler", 
+  "Dakota", "Rowan", "Charlie", "Finley", "Sage", "Jamie", "Drew", "Reese", 
+  "Robin", "Kendall", "Morgan", "Blake", "Cameron", "Hayden", "Emerson", "Parker"
+];
+
+// Last names dataset with diverse diaspora representation
 const lastNames = [
   "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
   "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
@@ -48,16 +62,30 @@ const lastNames = [
   "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson",
   "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes",
   "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross",
-  "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell",
-  "Coleman", "Butler", "Henderson", "Barnes", "Gonzales", "Fisher", "Vasquez", "Simmons"
+  "Wang", "Li", "Zhang", "Chen", "Liu", "Huang", "Wu", "Xu", "Sun", "Zhu", 
+  "Yang", "Zhao", "Zhou", "Lu", "Kim", "Park", "Lee", "Choi", "Kang", "Nguyen",
+  "Tran", "Pham", "Hoang", "Vu", "Dang",
+  "Schmidt", "Müller", "Fischer", "Weber", "Schneider", "Meyer", "Wagner", "Becker",
+  "Hoffmann", "Schulz", "Kowalski", "Nowak", "Wójcik", "Kowalczyk", "Kamiński",
+  "Adebayo", "Okafor", "Mensah", "Osei", "Abara", "Diallo", "Afolayan",
+  "Khan", "Singh", "Gupta", "Patel", "Ali", "Kumar", "Sharma", "Hassan", "Malhotra"
 ];
 
 /**
  * Generate a random player name based on gender
  */
 export const generatePlayerName = (gender: Gender): string => {
-  const firstNames = gender === 'Girls' ? girlsFirstNames : boysFirstNames;
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  // Decide whether to use a gender-neutral name (20% chance)
+  const useGenderNeutral = Math.random() < 0.2;
+  
+  let firstName;
+  if (useGenderNeutral) {
+    firstName = genderNeutralNames[Math.floor(Math.random() * genderNeutralNames.length)];
+  } else {
+    const firstNames = gender === 'Girls' ? girlsFirstNames : boysFirstNames;
+    firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  }
+  
   const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
   
   return `${firstName} ${lastName}`;
