@@ -90,17 +90,20 @@ export interface Set {
   };
 }
 
+// Extend TeamStanding to include qualification information
 export interface TeamStanding {
   teamId: string;
   teamName: string;
   schoolName: string;
-  gender: Gender;
-  classification: Classification;
-  districtName: string; // Changed from district to districtName
+  gender: string;
+  classification: string;
+  districtName: string;
   overallWins: number;
   overallLosses: number;
   leagueWins: number;
   leagueLosses: number;
+  qualificationStatus?: 'automatic' | 'at-large' | 'none';
+  qualificationSeed?: number;
 }
 
 export interface MatchFormData {

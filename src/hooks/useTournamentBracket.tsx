@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { TeamRanking, QualifiedTeam, ClassificationQualifications } from '@/types/ranking';
-import { Gender, Classification } from '@/types';
+import { Gender, Classification, TeamStanding } from '@/types';
+import { useRankingCalculator } from '@/hooks/rankings/useRankingCalculator';
 
 // Configuration for state tournament qualifications by classification
 const qualificationRules: ClassificationQualifications[] = [
@@ -28,6 +28,8 @@ const qualificationRules: ClassificationQualifications[] = [
 
 export const useTournamentBracket = (gender: Gender, classification: Classification) => {
   const { teams, schools, districts, getStandings } = useData();
+  const { calculateRankings } = useRankingCalculator();
+  
   const [bracket, setBracket] = useState<{
     rounds: Array<{
       name: string;
@@ -41,6 +43,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       }>;
     }>;
   }>({ rounds: [] });
+  
   const [qualifiedTeams, setQualifiedTeams] = useState<QualifiedTeam[]>([]);
 
   // Get qualification rules for the selected classification
@@ -53,66 +56,42 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     };
   };
 
-  // Generate qualified teams based on standings and qualification rules
+  // Generate qualified teams based on rankings
   const generateQualifiedTeams = () => {
     const rules = getQualificationRules();
-    const allTeamsByDistrict: Record<string, TeamRanking[]> = {};
     
-    // Get all district standings
-    districts.forEach(district => {
-      // For each district, get standings
-      const districtStandings = getStandings(gender, classification, district.id);
-      
-      if (districtStandings.length > 0) {
-        allTeamsByDistrict[district.id] = districtStandings;
-      }
-    });
+    // Use the ranking calculator to get properly ranked and qualified teams
+    const rankings = calculateRankings();
     
-    // Get automatic qualifiers (top team from each district)
-    const automaticQualifiers: QualifiedTeam[] = [];
-    Object.entries(allTeamsByDistrict).slice(0, rules.automaticBids).forEach(([districtId, teams], index) => {
-      if (teams.length > 0) {
-        const topTeam = teams[0]; // First team in standings is the top team
-        automaticQualifiers.push({
-          teamId: topTeam.teamId,
-          teamName: topTeam.teamName,
-          schoolName: topTeam.schoolName,
-          gender: topTeam.gender,
-          districtName: topTeam.districtName,
-          qualificationType: 'automatic',
-          seed: index + 1, // Seed based on district strength or other criteria
-          compositeScore: topTeam.compositeScore
-        });
-      }
-    });
-    
-    // Get at-large qualifiers (highest ranked teams that aren't automatic qualifiers)
-    const allStandings = getStandings(gender, classification);
-    
-    // Filter out teams that are already automatic qualifiers
-    const eligibleForAtLarge = allStandings.filter(team => 
-      !automaticQualifiers.some(aq => aq.teamId === team.teamId)
+    // Filter rankings by gender and classification
+    const relevantRankings = rankings.filter(
+      team => team.gender === gender && team.classification === classification
     );
     
-    // Take the top N teams based on composite score for at-large bids
-    const atLargeQualifiers: QualifiedTeam[] = eligibleForAtLarge
-      .slice(0, rules.atLargeBids)
-      .map((team, index) => ({
-        teamId: team.teamId,
-        teamName: team.teamName,
-        schoolName: team.schoolName,
-        gender: team.gender,
-        districtName: team.districtName,
-        qualificationType: 'at-large',
-        seed: rules.automaticBids + index + 1, // At-large seeds start after automatic seeds
-        compositeScore: team.compositeScore
-      }));
+    // Get qualified teams (those marked as automatic or at-large)
+    const qualified = relevantRankings.filter(
+      team => team.qualificationStatus === 'automatic' || team.qualificationStatus === 'at-large'
+    );
     
-    // Combine and sort by seed
-    const combined = [...automaticQualifiers, ...atLargeQualifiers].sort((a, b) => a.seed - b.seed);
-    setQualifiedTeams(combined);
+    // Sort by seed
+    const sortedQualified = qualified.sort((a, b) => 
+      (a.qualificationSeed || 999) - (b.qualificationSeed || 999)
+    );
     
-    return combined;
+    // Convert to QualifiedTeam format
+    const qualifiedTeamsResult = sortedQualified.map(team => ({
+      teamId: team.teamId,
+      teamName: team.teamName,
+      schoolName: team.schoolName,
+      gender: team.gender as Gender,
+      districtName: team.districtName,
+      qualificationType: team.qualificationStatus === 'automatic' ? 'automatic' : 'at-large',
+      seed: team.qualificationSeed || 999,
+      compositeScore: team.compositeScore
+    }));
+    
+    setQualifiedTeams(qualifiedTeamsResult);
+    return qualifiedTeamsResult;
   };
 
   // Generate bracket based on qualified teams

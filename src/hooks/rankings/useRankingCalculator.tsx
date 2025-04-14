@@ -1,12 +1,32 @@
-
 import { useData } from '@/context/DataContext';
 import { Team, School, Match, Flight, District } from '@/types';
-import { TeamRanking, RankingConfig } from '@/types/ranking';
+import { TeamRanking, RankingConfig, ClassificationQualifications } from '@/types/ranking';
 import { useFlightWeightedScore } from './useFlightWeightedScore';
 import { useLeagueStrengthCoefficient } from './useLeagueStrengthCoefficient';
 import { useOpponentStrengthIndex } from './useOpponentStrengthIndex';
 import { useRankingInsights } from './useRankingInsights';
 import { getDefaultConfig, getHistoricalData } from '@/utils/rankingConstants';
+
+const qualificationRules: ClassificationQualifications[] = [
+  {
+    classification: '6A',
+    totalSpots: 16,
+    automaticBids: 7,
+    atLargeBids: 9
+  },
+  {
+    classification: '5A',
+    totalSpots: 12,
+    automaticBids: 4,
+    atLargeBids: 8
+  },
+  {
+    classification: '4A/3A/2A/1A',
+    totalSpots: 8,
+    automaticBids: 4,
+    atLargeBids: 4
+  }
+];
 
 export const useRankingCalculator = () => {
   const { teams, schools, matches, districts } = useData();
@@ -116,7 +136,119 @@ export const useRankingCalculator = () => {
     });
     
     // Sort by composite score, highest first
-    return rankings.sort((a, b) => b.compositeScore - a.compositeScore);
+    const sortedRankings = rankings.sort((a, b) => b.compositeScore - a.compositeScore);
+    
+    // Now determine qualification status for each team
+    return calculateQualificationStatus(sortedRankings);
+  };
+  
+  /**
+   * Calculate qualification status for teams based on their classification and ranking
+   */
+  const calculateQualificationStatus = (rankings: TeamRanking[]): TeamRanking[] => {
+    // Group teams by classification and gender
+    const teamsByClassAndGender: Record<string, TeamRanking[]> = {};
+    
+    rankings.forEach(team => {
+      const key = `${team.classification}-${team.gender}`;
+      if (!teamsByClassAndGender[key]) {
+        teamsByClassAndGender[key] = [];
+      }
+      teamsByClassAndGender[key].push(team);
+    });
+    
+    // Process each classification
+    Object.entries(teamsByClassAndGender).forEach(([key, teamsInClass]) => {
+      const [classification, gender] = key.split('-');
+      
+      // Find qualification rules for this classification
+      const rules = qualificationRules.find(r => r.classification === classification) || {
+        classification,
+        totalSpots: 8,
+        automaticBids: 4,
+        atLargeBids: 4
+      };
+      
+      // Create a map of district to top team for automatic qualifiers
+      const topTeamByDistrict: Map<string, TeamRanking> = new Map();
+      
+      // Group teams by district
+      const teamsByDistrict: Record<string, TeamRanking[]> = {};
+      teamsInClass.forEach(team => {
+        if (!teamsByDistrict[team.districtName]) {
+          teamsByDistrict[team.districtName] = [];
+        }
+        teamsByDistrict[team.districtName].push(team);
+      });
+      
+      // Find top team in each district (automatic qualifiers)
+      Object.entries(teamsByDistrict).forEach(([district, districtTeams]) => {
+        // Sort district teams by league win percentage
+        const sortedTeams = [...districtTeams].sort((a, b) => {
+          const aWinPct = a.leagueWinPercentage || 0;
+          const bWinPct = b.leagueWinPercentage || 0;
+          
+          if (aWinPct !== bWinPct) return bWinPct - aWinPct;
+          
+          // If league win percentages are equal, sort by league wins
+          if (a.leagueWins !== b.leagueWins) return b.leagueWins - a.leagueWins;
+          
+          // If league wins are equal, sort by overall win percentage
+          return (b.winPercentage || 0) - (a.winPercentage || 0);
+        });
+        
+        // Top team in district is automatic qualifier
+        if (sortedTeams.length > 0) {
+          topTeamByDistrict.set(district, sortedTeams[0]);
+        }
+      });
+      
+      // Mark automatic qualifiers (up to the automaticBids limit)
+      let automaticQualifiers: TeamRanking[] = [];
+      topTeamByDistrict.forEach(team => {
+        automaticQualifiers.push(team);
+      });
+      
+      // Sort automatic qualifiers by composite score to determine seeding
+      automaticQualifiers.sort((a, b) => b.compositeScore - a.compositeScore);
+      
+      // Keep only the top N automatic qualifiers based on rules
+      automaticQualifiers = automaticQualifiers.slice(0, rules.automaticBids);
+      
+      // Mark these teams as automatic qualifiers
+      automaticQualifiers.forEach((team, index) => {
+        const teamInRankings = teamsInClass.find(t => t.teamId === team.teamId);
+        if (teamInRankings) {
+          teamInRankings.qualificationStatus = 'automatic';
+          teamInRankings.qualificationSeed = index + 1;
+        }
+      });
+      
+      // Now find at-large qualifiers
+      // Filter out teams that are already automatic qualifiers
+      const eligibleForAtLarge = teamsInClass.filter(team => 
+        !automaticQualifiers.some(aq => aq.teamId === team.teamId)
+      );
+      
+      // Sort by composite score
+      const sortedForAtLarge = [...eligibleForAtLarge].sort((a, b) => 
+        b.compositeScore - a.compositeScore
+      );
+      
+      // Take top N for at-large bids
+      const atLargeQualifiers = sortedForAtLarge.slice(0, rules.atLargeBids);
+      
+      // Mark these teams as at-large qualifiers
+      atLargeQualifiers.forEach((team, index) => {
+        const teamInRankings = teamsInClass.find(t => t.teamId === team.teamId);
+        if (teamInRankings) {
+          teamInRankings.qualificationStatus = 'at-large';
+          teamInRankings.qualificationSeed = automaticQualifiers.length + index + 1;
+        }
+      });
+    });
+    
+    return rankings;
   };
   
   return {
@@ -124,6 +256,7 @@ export const useRankingCalculator = () => {
     defaultConfig,
     historicalData,
     generateInsights,
-    findKeyMatchups
+    findKeyMatchups,
+    qualificationRules
   };
 };

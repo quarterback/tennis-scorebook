@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, Medal, FlaskConical, ArrowRightCircle, Info } from 'lucide-react';
+import { Award, Medal, FlaskConical, ArrowRightCircle, Info, Trophy, Shield } from 'lucide-react';
 import { TeamStanding } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StandingsTableProps {
   standings: TeamStanding[];
@@ -25,6 +26,28 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   const navigate = useNavigate();
   const isCoach = user?.role === 'coach';
   const is4A3A2A1A = selectedClassification === '4A/3A/2A/1A';
+
+  // Determine qualification statuses based on classification and standings
+  const determineQualificationStatus = () => {
+    // Create a copy of standings to avoid mutating the original
+    const standingsWithQualification = [...standings];
+    
+    // If no district is selected, can't determine automatic qualifiers
+    if (!selectedDistrictName) return standingsWithQualification;
+    
+    // Determine automatic qualifier (top team from district)
+    if (standings.length > 0) {
+      // The first team in district standings is the automatic qualifier
+      if (standingsWithQualification[0]) {
+        standingsWithQualification[0].qualificationStatus = 'automatic';
+        standingsWithQualification[0].qualificationSeed = 1; // Placeholder seed
+      }
+    }
+    
+    return standingsWithQualification;
+  };
+  
+  const standingsWithQualification = determineQualificationStatus();
 
   const navigateToSimulation = () => {
     navigate('/');
@@ -47,7 +70,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        {standings.length > 0 ? (
+        {standingsWithQualification.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -57,10 +80,13 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
                 <TableHead className="text-center">League %</TableHead>
                 <TableHead className="text-center">Overall W-L</TableHead>
                 <TableHead className="text-center">Overall %</TableHead>
+                {selectedDistrictName && (
+                  <TableHead className="text-center">Qualification</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {standings.map((standing, index) => {
+              {standingsWithQualification.map((standing, index) => {
                 const leagueTotal = standing.leagueWins + standing.leagueLosses;
                 const leagueWinPct = leagueTotal > 0 ? standing.leagueWins / leagueTotal : 0;
                 
@@ -102,6 +128,24 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
                     <TableCell className="text-center">
                       {overallTotal > 0 ? overallWinPct.toFixed(3) : '-'}
                     </TableCell>
+                    {selectedDistrictName && (
+                      <TableCell className="text-center">
+                        {standing.qualificationStatus === 'automatic' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center">
+                                  <Trophy className="h-4 w-4 text-blue-500" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Automatic Qualifier
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}

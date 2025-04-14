@@ -3,7 +3,8 @@ import React from 'react';
 import { TeamRanking, RankingConfig } from '@/types/ranking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Award, Medal, Calendar } from 'lucide-react';
+import { Award, Medal, Calendar, Trophy, Shield } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TeamRankingsTableProps {
   qualifiedTeams: TeamRanking[];
@@ -46,6 +47,7 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
                   <TableHead className="text-center">Win %</TableHead>
                   <TableHead className="text-center">Matches</TableHead>
                   <TableHead className="text-center">Composite Score</TableHead>
+                  <TableHead className="text-center">Qualification</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -74,6 +76,38 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
                     </TableCell>
                     <TableCell className="text-center">{team.matchesPlayed}</TableCell>
                     <TableCell className="text-center font-medium">{team.compositeScore.toFixed(2)}</TableCell>
+                    <TableCell className="text-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center justify-center">
+                              {team.qualificationStatus === 'automatic' ? (
+                                <div className="flex items-center">
+                                  <Trophy className="h-4 w-4 text-blue-500" />
+                                  <span className="ml-1 text-xs bg-blue-100 text-blue-800 rounded px-1">
+                                    {team.qualificationSeed}
+                                  </span>
+                                </div>
+                              ) : team.qualificationStatus === 'at-large' ? (
+                                <div className="flex items-center">
+                                  <Shield className="h-4 w-4 text-green-500" />
+                                  <span className="ml-1 text-xs bg-green-100 text-green-800 rounded px-1">
+                                    {team.qualificationSeed}
+                                  </span>
+                                </div>
+                              ) : null}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {team.qualificationStatus === 'automatic' 
+                              ? `Automatic Qualifier (Seed ${team.qualificationSeed})` 
+                              : team.qualificationStatus === 'at-large'
+                              ? `At-Large Bid (Seed ${team.qualificationSeed})`
+                              : 'Not Qualified'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

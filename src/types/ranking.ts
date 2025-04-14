@@ -1,4 +1,3 @@
-
 // Types for the ranking system
 
 export interface FlightWeight {
@@ -36,6 +35,8 @@ export interface TeamRanking {
   qualifiedForRanking: boolean; // True if team has played minimum required matches
   winPercentage?: number; // Overall win percentage
   leagueWinPercentage?: number; // League-only win percentage
+  qualificationStatus?: 'automatic' | 'at-large' | 'none'; // Tournament qualification status
+  qualificationSeed?: number; // Seed in the tournament if qualified
 }
 
 export interface RankingConfig {
