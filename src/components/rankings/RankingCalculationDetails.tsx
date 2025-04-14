@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TeamRanking } from '@/types/ranking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,12 +76,12 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center justify-center">
-                            Final Score
+                            APR
                             <Info className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Composite Score: FWS × LSC × OSI</p>
+                          <p className="max-w-xs">Athletic Power Ranking: Overall rating on a 0-100 scale based on team performance</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -111,7 +110,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                       {team.opponentStrengthIndex.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-center font-medium">
-                      {team.compositeScore.toFixed(2)}
+                      {team.apr.toFixed(1)}
                     </TableCell>
                   </TableRow>
                 ))}

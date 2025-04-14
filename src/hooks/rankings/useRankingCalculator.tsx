@@ -6,6 +6,7 @@ import { useLeagueStrengthCoefficient } from './useLeagueStrengthCoefficient';
 import { useOpponentStrengthIndex } from './useOpponentStrengthIndex';
 import { useRankingInsights } from './useRankingInsights';
 import { getDefaultConfig, getHistoricalData } from '@/utils/rankingConstants';
+import { useAprCalculator } from './useAprCalculator';
 
 const qualificationRules: ClassificationQualifications[] = [
   {
@@ -37,6 +38,7 @@ export const useRankingCalculator = () => {
   const { calculateLeagueStrengthCoefficient } = useLeagueStrengthCoefficient(districts, historicalData);
   const { calculateOpponentStrengthIndex } = useOpponentStrengthIndex(teams, schools, matches, historicalData);
   const { generateInsights, findKeyMatchups } = useRankingInsights();
+  const { calculateTeamAprs } = useAprCalculator();
   
   /**
    * Calculate team rankings with enhanced algorithm and realistic data
@@ -138,8 +140,11 @@ export const useRankingCalculator = () => {
     // Sort by composite score, highest first
     const sortedRankings = rankings.sort((a, b) => b.compositeScore - a.compositeScore);
     
+    // Calculate APR for all teams
+    const rankingsWithApr = calculateTeamAprs(sortedRankings);
+    
     // Now determine qualification status for each team
-    return calculateQualificationStatus(sortedRankings);
+    return calculateQualificationStatus(rankingsWithApr);
   };
   
   /**

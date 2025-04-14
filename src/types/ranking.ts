@@ -37,6 +37,7 @@ export interface TeamRanking {
   leagueWinPercentage?: number; // League-only win percentage
   qualificationStatus?: 'automatic' | 'at-large' | 'none'; // Tournament qualification status
   qualificationSeed?: number; // Seed in the tournament if qualified
+  apr: number; // APR on 0-100 scale
 }
 
 export interface RankingConfig {
