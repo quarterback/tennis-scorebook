@@ -24,8 +24,8 @@ const qualificationRules: ClassificationQualifications[] = [
   {
     classification: '4A/3A/2A/1A',
     totalSpots: 8,
-    automaticBids: 4,
-    atLargeBids: 4
+    automaticBids: 5,
+    atLargeBids: 3
   }
 ];
 
@@ -162,26 +162,14 @@ export const useRankingCalculator = () => {
       });
       
       Object.entries(teamsByDistrict).forEach(([district, districtTeams]) => {
-        const sortedTeams = [...districtTeams].sort((a, b) => {
-          const aWinPct = a.leagueWinPercentage || 0;
-          const bWinPct = b.leagueWinPercentage || 0;
-          
-          if (aWinPct !== bWinPct) return bWinPct - aWinPct;
-          
-          if (a.leagueWins !== b.leagueWins) return b.leagueWins - a.leagueWins;
-          
-          return (b.winPercentage || 0) - (a.winPercentage || 0);
-        });
+        const sortedTeams = [...districtTeams].sort((a, b) => b.compositeScore - a.compositeScore);
         
         if (sortedTeams.length > 0) {
           topTeamByDistrict.set(district, sortedTeams[0]);
         }
       });
       
-      let automaticQualifiers: TeamRanking[] = [];
-      topTeamByDistrict.forEach(team => {
-        automaticQualifiers.push(team);
-      });
+      let automaticQualifiers = Array.from(topTeamByDistrict.values());
       
       automaticQualifiers.sort((a, b) => b.compositeScore - a.compositeScore);
       
