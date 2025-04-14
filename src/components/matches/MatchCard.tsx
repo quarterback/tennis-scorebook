@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Match, Player } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -112,97 +111,124 @@ const MatchCard: React.FC<MatchCardProps> = ({
         
         {isExpanded && (
           <div className="mt-4 space-y-6">
-            {/* Match details section */}
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm">Varsity Singles</h4>
-              <div className="space-y-2">
-                {match.flights
-                  .filter(f => f.level === 'varsity' && f.type === 'singles')
-                  .sort((a, b) => a.position - b.position)
-                  .map((flight, index) => (
-                    <div key={index} className="flex justify-between border-b pb-2">
-                      <div className="flex-1">
-                        <div className="text-sm">
-                          Singles {flight.position} 
-                          {flight.retired && (
-                            <span className="ml-2 text-orange-500 text-xs flex items-center">
-                              <Flag className="h-3 w-3 mr-1" /> Retired
-                            </span>
-                          )}
-                          {flight.defaulted && (
-                            <span className="ml-2 text-red-500 text-xs flex items-center">
-                              <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
-                            </span>
-                          )}
+            {/* Match Result Visualization */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm">Varsity Singles</h4>
+                <div className="space-y-2">
+                  {match.flights
+                    .filter(f => f.level === 'varsity' && f.type === 'singles')
+                    .sort((a, b) => a.position - b.position)
+                    .map((flight, index) => (
+                      <div key={index} className="flex justify-between items-center border-b pb-2">
+                        <div className="flex-1">
+                          <div className="text-sm flex items-center gap-2">
+                            Singles {flight.position}
+                            {flight.retired && (
+                              <span className="text-orange-500 text-xs flex items-center">
+                                <Flag className="h-3 w-3 mr-1" /> Retired
+                              </span>
+                            )}
+                            {flight.defaulted && (
+                              <span className="text-red-500 text-xs flex items-center">
+                                <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          {flight.sets.map((set, setIndex) => (
+                            <div 
+                              key={setIndex} 
+                              className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                set.homeScore > set.awayScore 
+                                  ? 'bg-green-100' 
+                                  : 'bg-red-100'
+                              }`}
+                            >
+                              {set.homeScore}-{set.awayScore}
+                              {set.tiebreak && (
+                                <span className="text-xs ml-1">
+                                  ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
+                                </span>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className="flex-1">
-                        {flight.sets.map((set, setIndex) => (
-                          <div key={setIndex} className="text-sm">
-                            {set.homeScore}-{set.awayScore}
-                            {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
-                            {setIndex < flight.sets.length - 1 ? ', ' : ''}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
-              
-              <h4 className="font-medium text-sm">Varsity Doubles</h4>
-              <div className="space-y-2">
-                {match.flights
-                  .filter(f => f.level === 'varsity' && f.type === 'doubles')
-                  .sort((a, b) => a.position - b.position)
-                  .map((flight, index) => (
-                    <div key={index} className="flex justify-between border-b pb-2">
-                      <div className="flex-1">
-                        <div className="text-sm">
-                          Doubles {flight.position}
-                          {flight.retired && (
-                            <span className="ml-2 text-orange-500 text-xs flex items-center">
-                              <Flag className="h-3 w-3 mr-1" /> Retired
-                            </span>
-                          )}
-                          {flight.defaulted && (
-                            <span className="ml-2 text-red-500 text-xs flex items-center">
-                              <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
-                            </span>
-                          )}
+
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm">Varsity Doubles</h4>
+                <div className="space-y-2">
+                  {match.flights
+                    .filter(f => f.level === 'varsity' && f.type === 'doubles')
+                    .sort((a, b) => a.position - b.position)
+                    .map((flight, index) => (
+                      <div key={index} className="flex justify-between items-center border-b pb-2">
+                        <div className="flex-1">
+                          <div className="text-sm flex items-center gap-2">
+                            Doubles {flight.position}
+                            {flight.retired && (
+                              <span className="text-orange-500 text-xs flex items-center">
+                                <Flag className="h-3 w-3 mr-1" /> Retired
+                              </span>
+                            )}
+                            {flight.defaulted && (
+                              <span className="text-red-500 text-xs flex items-center">
+                                <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          {flight.sets.map((set, setIndex) => (
+                            <div 
+                              key={setIndex} 
+                              className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                set.homeScore > set.awayScore 
+                                  ? 'bg-green-100' 
+                                  : 'bg-red-100'
+                              }`}
+                            >
+                              {set.homeScore}-{set.awayScore}
+                              {set.tiebreak && (
+                                <span className="text-xs ml-1">
+                                  ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
+                                </span>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className="flex-1">
-                        {flight.sets.map((set, setIndex) => (
-                          <div key={setIndex} className="text-sm">
-                            {set.homeScore}-{set.awayScore}
-                            {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
-                            {setIndex < flight.sets.length - 1 ? ', ' : ''}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
-              
-              {match.hasJvMatches && (
-                <>
+            </div>
+
+            {/* JV Matches Section */}
+            {match.hasJvMatches && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <h4 className="font-medium text-sm">JV Singles</h4>
                   <div className="space-y-2">
                     {match.flights
                       .filter(f => f.level === 'jv' && f.type === 'singles')
                       .sort((a, b) => a.position - b.position)
                       .map((flight, index) => (
-                        <div key={`jvs-${index}`} className="flex justify-between border-b pb-2">
+                        <div key={`jvs-${index}`} className="flex justify-between items-center border-b pb-2">
                           <div className="flex-1">
-                            <div className="text-sm">
+                            <div className="text-sm flex items-center gap-2">
                               Singles {flight.position}
                               {flight.retired && (
-                                <span className="ml-2 text-orange-500 text-xs flex items-center">
+                                <span className="text-orange-500 text-xs flex items-center">
                                   <Flag className="h-3 w-3 mr-1" /> Retired
                                 </span>
                               )}
                               {flight.defaulted && (
-                                <span className="ml-2 text-red-500 text-xs flex items-center">
+                                <span className="text-red-500 text-xs flex items-center">
                                   <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
                                 </span>
                               )}
@@ -210,34 +236,46 @@ const MatchCard: React.FC<MatchCardProps> = ({
                           </div>
                           <div className="flex-1">
                             {flight.sets.map((set, setIndex) => (
-                              <div key={setIndex} className="text-sm">
+                              <div 
+                                key={setIndex} 
+                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                  set.homeScore > set.awayScore 
+                                    ? 'bg-green-100' 
+                                    : 'bg-red-100'
+                                }`}
+                              >
                                 {set.homeScore}-{set.awayScore}
-                                {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
-                                {setIndex < flight.sets.length - 1 ? ', ' : ''}
+                                {set.tiebreak && (
+                                  <span className="text-xs ml-1">
+                                    ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
+                                  </span>
+                                )}
                               </div>
                             ))}
                           </div>
                         </div>
                       ))}
                   </div>
-                  
+                </div>
+                
+                <div className="space-y-4">
                   <h4 className="font-medium text-sm">JV Doubles</h4>
                   <div className="space-y-2">
                     {match.flights
                       .filter(f => f.level === 'jv' && f.type === 'doubles')
                       .sort((a, b) => a.position - b.position)
                       .map((flight, index) => (
-                        <div key={`jvd-${index}`} className="flex justify-between border-b pb-2">
+                        <div key={`jvd-${index}`} className="flex justify-between items-center border-b pb-2">
                           <div className="flex-1">
-                            <div className="text-sm">
+                            <div className="text-sm flex items-center gap-2">
                               Doubles {flight.position}
                               {flight.retired && (
-                                <span className="ml-2 text-orange-500 text-xs flex items-center">
+                                <span className="text-orange-500 text-xs flex items-center">
                                   <Flag className="h-3 w-3 mr-1" /> Retired
                                 </span>
                               )}
                               {flight.defaulted && (
-                                <span className="ml-2 text-red-500 text-xs flex items-center">
+                                <span className="text-red-500 text-xs flex items-center">
                                   <AlertTriangle className="h-3 w-3 mr-1" /> Defaulted
                                 </span>
                               )}
@@ -245,19 +283,53 @@ const MatchCard: React.FC<MatchCardProps> = ({
                           </div>
                           <div className="flex-1">
                             {flight.sets.map((set, setIndex) => (
-                              <div key={setIndex} className="text-sm">
+                              <div 
+                                key={setIndex} 
+                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                  set.homeScore > set.awayScore 
+                                    ? 'bg-green-100' 
+                                    : 'bg-red-100'
+                                }`}
+                              >
                                 {set.homeScore}-{set.awayScore}
-                                {set.tiebreak && ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`}
-                                {setIndex < flight.sets.length - 1 ? ', ' : ''}
+                                {set.tiebreak && (
+                                  <span className="text-xs ml-1">
+                                    ({set.tiebreak.homeScore}-{set.tiebreak.awayScore})
+                                  </span>
+                                )}
                               </div>
                             ))}
                           </div>
                         </div>
                       ))}
                   </div>
-                </>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Match Notes Section */}
+            {match.isComplete && (
+              <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Match Summary</h4>
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p>
+                    <strong>Final Score:</strong> {getMatchScoreDisplay()}
+                  </p>
+                  <p>
+                    <strong>Date:</strong> {format(new Date(match.date), 'MMMM d, yyyy')}
+                  </p>
+                  <p>
+                    <strong>Match Type:</strong> {match.isLeagueMatch ? 'League Match' : 'Non-League Match'}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{' '}
+                    {match.homeCoachApproved && match.awayCoachApproved 
+                      ? 'Approved by both coaches' 
+                      : 'Pending approval'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
