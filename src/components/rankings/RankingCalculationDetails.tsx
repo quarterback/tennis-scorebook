@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TeamRanking } from '@/types/ranking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
