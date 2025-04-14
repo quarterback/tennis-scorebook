@@ -11,7 +11,7 @@ const MatchesHeader: React.FC = () => {
   
   return (
     <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 w-full">
-      <h1 className="text-2xl sm:text-3xl font-bold">Matches</h1>
+      <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold">Matches</h1>
       
       <Button 
         className="bg-tennis-blue hover:bg-tennis-darkBlue w-full xs:w-auto text-sm sm:text-base"

@@ -65,14 +65,14 @@ const MediaToolbar = () => {
   };
 
   return (
-    <div className="media-toolbar">
+    <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
       <Button 
         variant="outline" 
         size="sm"
         onClick={() => exportMatchesToCSV(filteredMatches)}
-        className="toolbar-button"
+        className="flex-1 sm:flex-none gap-1.5 text-xs sm:text-sm"
       >
-        <FileDown className="toolbar-icon" />
+        <FileDown className="h-3 w-3 sm:h-4 sm:w-4" />
         {!isMobile && "Export CSV"}
       </Button>
       
@@ -80,9 +80,9 @@ const MediaToolbar = () => {
         variant="outline" 
         size="sm" 
         onClick={handlePrint}
-        className="toolbar-button"
+        className="flex-1 sm:flex-none gap-1.5 text-xs sm:text-sm"
       >
-        <Printer className="toolbar-icon" />
+        <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
         {!isMobile && "Print"}
       </Button>
       
@@ -90,9 +90,9 @@ const MediaToolbar = () => {
         variant="outline" 
         size="sm"
         onClick={handleCopyForMedia}
-        className="toolbar-button"
+        className="flex-1 sm:flex-none gap-1.5 text-xs sm:text-sm"
       >
-        <ClipboardCopy className="toolbar-icon" />
+        <ClipboardCopy className="h-3 w-3 sm:h-4 sm:w-4" />
         {!isMobile && "Copy for Media"}
       </Button>
       
@@ -100,9 +100,9 @@ const MediaToolbar = () => {
         variant="outline" 
         size="sm"
         onClick={handleShare}
-        className="toolbar-button"
+        className="flex-1 sm:flex-none gap-1.5 text-xs sm:text-sm"
       >
-        <Share2 className="toolbar-icon" />
+        <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
         {!isMobile && "Share"}
       </Button>
     </div>

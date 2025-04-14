@@ -243,11 +243,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
 
   return (
     <Card className="match-card">
-      <CardContent className="pt-6">
+      <CardContent className="pt-4 sm:pt-6">
         <div className="match-header">
-          <div className="space-y-2 flex-1">
+          <div className="space-y-1 sm:space-y-2 flex-1">
             <div className="match-date">
-              <Calendar className="h-4 w-4 mr-1" />
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
               {format(new Date(match.date), 'MMMM d, yyyy')}
               {match.isLeagueMatch && (
                 <span className="match-tag">
@@ -256,22 +256,22 @@ const MatchCard: React.FC<MatchCardProps> = ({
               )}
             </div>
             
-            <div className="flex justify-between items-center">
-              <div className="match-title">{homeTeamName} vs {awayTeamName}</div>
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center">
+              <div className="match-title text-base xs:text-lg">{homeTeamName} vs {awayTeamName}</div>
+              <div className="flex items-center gap-2 mt-1 xs:mt-0">
                 {match.isComplete && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <div className="flex">
                       <div title={match.homeCoachApproved ? "Home coach approved" : "Awaiting home coach approval"}>
                         {match.homeCoachApproved ? 
-                          <ShieldCheck className="h-5 w-5 text-green-500" /> : 
-                          <ShieldX className="h-5 w-5 text-gray-300" />
+                          <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" /> : 
+                          <ShieldX className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
                         }
                       </div>
                       <div title={match.awayCoachApproved ? "Away coach approved" : "Awaiting away coach approval"}>
                         {match.awayCoachApproved ? 
-                          <ShieldCheck className="h-5 w-5 text-green-500" /> : 
-                          <ShieldX className="h-5 w-5 text-gray-300" />
+                          <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" /> : 
+                          <ShieldX className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
                         }
                       </div>
                     </div>
@@ -284,9 +284,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={toggleExpand}
-                  className="-mr-2"
+                  className="p-1 -mr-2 h-auto"
                 >
-                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  {isExpanded ? <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" /> : <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />}
                 </Button>
               </div>
             </div>
@@ -294,7 +294,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         </div>
         
         {isExpanded && (
-          <div className="mt-4 space-y-6">
+          <div className="mt-4 space-y-4 sm:space-y-6">
             <div className="match-content">
               <div className="match-section">
                 <h4 className="match-section-title">Varsity Singles</h4>
@@ -305,7 +305,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                     .map((flight, index) => (
                       <div key={index} className="flex justify-between items-center border-b pb-2">
                         <div className="flex-1">
-                          <div className="text-sm flex items-center gap-2">
+                          <div className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                             Singles {flight.position}
                             {flight.retired && (
                               <span className="text-orange-500 text-xs flex items-center">
@@ -319,13 +319,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
                             )}
                           </div>
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 flex flex-wrap justify-end">
                           {flight.sets.map((set, setIndex) => {
                             const homeWonSet = set.homeScore > set.awayScore;
                             return (
                               <div 
                                 key={setIndex} 
-                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                className={`text-xs sm:text-sm inline-block mx-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
                                   homeWonSet 
                                     ? 'bg-green-100' 
                                     : 'bg-red-100'
@@ -335,7 +335,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                                   `${set.homeScore}-${set.awayScore}` : 
                                   `${set.awayScore}-${set.homeScore}`}
                                 {set.tiebreak && (
-                                  <span className="text-xs ml-1">
+                                  <span className="text-2xs sm:text-xs ml-1">
                                     ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
                                       `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
                                       `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
@@ -359,7 +359,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                     .map((flight, index) => (
                       <div key={index} className="flex justify-between items-center border-b pb-2">
                         <div className="flex-1">
-                          <div className="text-sm flex items-center gap-2">
+                          <div className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                             Doubles {flight.position}
                             {flight.retired && (
                               <span className="text-orange-500 text-xs flex items-center">
@@ -373,13 +373,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
                             )}
                           </div>
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 flex flex-wrap justify-end">
                           {flight.sets.map((set, setIndex) => {
                             const homeWonSet = set.homeScore > set.awayScore;
                             return (
                               <div 
                                 key={setIndex} 
-                                className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                className={`text-xs sm:text-sm inline-block mx-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
                                   homeWonSet 
                                     ? 'bg-green-100' 
                                     : 'bg-red-100'
@@ -389,7 +389,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                                   `${set.homeScore}-${set.awayScore}` : 
                                   `${set.awayScore}-${set.homeScore}`}
                                 {set.tiebreak && (
-                                  <span className="text-xs ml-1">
+                                  <span className="text-2xs sm:text-xs ml-1">
                                     ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
                                       `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
                                       `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
@@ -416,7 +416,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                       .map((flight, index) => (
                         <div key={`jvs-${index}`} className="flex justify-between items-center border-b pb-2">
                           <div className="flex-1">
-                            <div className="text-sm flex items-center gap-2">
+                            <div className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                               Singles {flight.position}
                               {flight.retired && (
                                 <span className="text-orange-500 text-xs flex items-center">
@@ -430,13 +430,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
                               )}
                             </div>
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 flex flex-wrap justify-end">
                             {flight.sets.map((set, setIndex) => {
                               const homeWonSet = set.homeScore > set.awayScore;
                               return (
                                 <div 
                                   key={setIndex} 
-                                  className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                  className={`text-xs sm:text-sm inline-block mx-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
                                     homeWonSet 
                                       ? 'bg-green-100' 
                                       : 'bg-red-100'
@@ -446,7 +446,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                                     `${set.homeScore}-${set.awayScore}` : 
                                     `${set.awayScore}-${set.homeScore}`}
                                   {set.tiebreak && (
-                                    <span className="text-xs ml-1">
+                                    <span className="text-2xs sm:text-xs ml-1">
                                       ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
                                         `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
                                         `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
@@ -470,7 +470,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                       .map((flight, index) => (
                         <div key={`jvd-${index}`} className="flex justify-between items-center border-b pb-2">
                           <div className="flex-1">
-                            <div className="text-sm flex items-center gap-2">
+                            <div className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                               Doubles {flight.position}
                               {flight.retired && (
                                 <span className="text-orange-500 text-xs flex items-center">
@@ -484,13 +484,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
                               )}
                             </div>
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 flex flex-wrap justify-end">
                             {flight.sets.map((set, setIndex) => {
                               const homeWonSet = set.homeScore > set.awayScore;
                               return (
                                 <div 
                                   key={setIndex} 
-                                  className={`text-sm inline-block mx-1 px-2 py-1 rounded ${
+                                  className={`text-xs sm:text-sm inline-block mx-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
                                     homeWonSet 
                                       ? 'bg-green-100' 
                                       : 'bg-red-100'
@@ -500,7 +500,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                                     `${set.homeScore}-${set.awayScore}` : 
                                     `${set.awayScore}-${set.homeScore}`}
                                   {set.tiebreak && (
-                                    <span className="text-xs ml-1">
+                                    <span className="text-2xs sm:text-xs ml-1">
                                       ({set.tiebreak.homeScore > set.tiebreak.awayScore ? 
                                         `${set.tiebreak.homeScore}-${set.tiebreak.awayScore}` : 
                                         `${set.tiebreak.awayScore}-${set.tiebreak.homeScore}`})
@@ -518,9 +518,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
             )}
             
             {match.isComplete && (
-              <div className="mt-4 bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Match Summary</h4>
-                <div className="text-sm text-gray-600 space-y-2">
+              <div className="mt-4 bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h4 className="font-medium mb-2 text-sm sm:text-base">Match Summary</h4>
+                <div className="text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-2">
                   <p>
                     <strong>Final Score:</strong> {getMatchScoreDisplay()}
                   </p>
@@ -543,15 +543,15 @@ const MatchCard: React.FC<MatchCardProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="match-actions pt-0">
+      <CardFooter className="match-actions flex-wrap pt-1 sm:pt-0 justify-end">
         {canEditMatch(match) && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => openEditDialog(match)}
-            className="flex items-center"
+            className="flex-1 xs:flex-none flex items-center justify-center"
           >
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             {!isMobile && "Edit"}
           </Button>
         )}
@@ -562,10 +562,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
               <Button
                 variant="default"
                 size="sm"
-                className="bg-green-600 hover:bg-green-700"
+                className="flex-1 xs:flex-none bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                 onClick={() => approveMatch(match.id, 'home')}
               >
-                {isMobile ? "Approve (Home)" : "Approve as Home Coach"}
+                {isMobile ? "Approve (H)" : "Approve as Home Coach"}
               </Button>
             )}
             
@@ -573,10 +573,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
               <Button
                 variant="default"
                 size="sm"
-                className="bg-green-600 hover:bg-green-700"
+                className="flex-1 xs:flex-none bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                 onClick={() => approveMatch(match.id, 'away')}
               >
-                {isMobile ? "Approve (Away)" : "Approve as Away Coach"}
+                {isMobile ? "Approve (A)" : "Approve as Away Coach"}
               </Button>
             )}
           </>
@@ -586,20 +586,20 @@ const MatchCard: React.FC<MatchCardProps> = ({
           variant="outline"
           size="sm"
           onClick={handleExportMatch}
-          className="flex items-center gap-2"
+          className="flex-1 xs:flex-none flex items-center justify-center text-xs sm:text-sm"
         >
-          <FileDown className="h-4 w-4" />
-          {!isMobile && "Export Match"}
+          <FileDown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          {!isMobile && "Export"}
         </Button>
         
         <Button
           variant="outline"
           size="sm"
           onClick={handlePrintMatch}
-          className="flex items-center gap-2"
+          className="flex-1 xs:flex-none flex items-center justify-center text-xs sm:text-sm"
         >
-          <Printer className="h-4 w-4" />
-          {!isMobile && "Print Match"}
+          <Printer className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          {!isMobile && "Print"}
         </Button>
       </CardFooter>
     </Card>
