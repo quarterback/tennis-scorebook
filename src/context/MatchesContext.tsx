@@ -1,21 +1,26 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Match, Team, School, Player, MatchFormData } from '@/types';
 import { useData } from './DataContext';
 import { useAuth } from './AuthContext';
 import useMatchFunctions from '@/hooks/useMatchFunctions';
+
+interface EnhancedMatch extends Match {
+  homeTeamName?: string;
+  awayTeamName?: string;
+}
 
 interface MatchesContextType {
   isAddDialogOpen: boolean;
   setIsAddDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedMatch: Match | null;
-  setSelectedMatch: React.Dispatch<React.SetStateAction<Match | null>>;
+  selectedMatch: EnhancedMatch | null;
+  setSelectedMatch: React.Dispatch<React.SetStateAction<EnhancedMatch | null>>;
   expandedMatchId: string | null;
   setExpandedMatchId: React.Dispatch<React.SetStateAction<string | null>>;
   matchFormData: MatchFormData;
   setMatchFormData: React.Dispatch<React.SetStateAction<MatchFormData>>;
-  filteredMatches: Match[];
+  filteredMatches: EnhancedMatch[];
   filteredTeams: Team[];
   schools: School[];
   teams: Team[];
@@ -24,9 +29,9 @@ interface MatchesContextType {
   getTeamPlayersForSelect: (teamId: string) => { id: string; name: string }[];
   handleAddMatchSubmit: (e: React.FormEvent) => void;
   handleEditMatchSubmit: (e: React.FormEvent) => void;
-  openEditDialog: (match: Match) => void;
-  canEditMatch: (match: Match) => boolean;
-  canApproveMatch: (match: Match, team: 'home' | 'away') => boolean;
+  openEditDialog: (match: EnhancedMatch) => void;
+  canEditMatch: (match: EnhancedMatch) => boolean;
+  canApproveMatch: (match: EnhancedMatch, team: 'home' | 'away') => boolean;
   approveMatch: (matchId: string, team: 'home' | 'away') => void;
   isCoachOfTeam: (teamId: string) => boolean;
   resetMatchForm: () => void;
@@ -60,7 +65,7 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { user } = useAuth();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<EnhancedMatch | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   
   const today = new Date().toISOString().split('T')[0];
@@ -97,13 +102,19 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const resetMatchForm = () => resetForm(today);
 
+  const enhancedMatches: EnhancedMatch[] = matches.map(match => ({
+    ...match,
+    homeTeamName: getTeamName(match.homeTeamId),
+    awayTeamName: getTeamName(match.awayTeamId)
+  }));
+
   const filteredMatches = user?.role === 'coach' && user.schoolId
-    ? matches.filter(match => {
+    ? enhancedMatches.filter(match => {
         const homeTeam = teams.find(t => t.id === match.homeTeamId);
         const awayTeam = teams.find(t => t.id === match.awayTeamId);
         return homeTeam?.schoolId === user.schoolId || awayTeam?.schoolId === user.schoolId;
       })
-    : matches;
+    : enhancedMatches;
   
   const filteredTeams = user?.role === 'coach' && user.schoolId
     ? teams.filter(team => team.schoolId === user.schoolId)
@@ -130,7 +141,7 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return teams.some(t => t.id === teamId && t.schoolId === user.schoolId);
   };
   
-  const canApproveMatch = (match: Match, team: 'home' | 'away') => {
+  const canApproveMatch = (match: EnhancedMatch, team: 'home' | 'away') => {
     if (!match.isComplete) return false;
     if (user?.role === 'admin') return true;
     
@@ -220,7 +231,7 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
   
-  const openEditDialog = (match: Match) => {
+  const openEditDialog = (match: EnhancedMatch) => {
     setSelectedMatch(match);
     
     setMatchFormData({
@@ -251,7 +262,7 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsEditDialogOpen(true);
   };
   
-  const canEditMatch = (match: Match) => {
+  const canEditMatch = (match: EnhancedMatch) => {
     if (user?.role === 'admin') return true;
     if (user?.role === 'coach' && user.schoolId) {
       const homeTeam = teams.find(t => t.id === match.homeTeamId);

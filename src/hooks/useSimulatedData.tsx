@@ -47,7 +47,8 @@ export const useSimulatedData = () => {
         throw new Error("No districts have enough teams (minimum 2 per district) to generate matches");
       }
       
-      // Step 1: Generate players and ladders
+      // Step 1: Generate players and ladders for both genders
+      console.log('Generating players for all teams (boys and girls)...');
       const { players, ladders } = generatePlayerData(teams, schools, selectedSeason.id);
       updateProgress(25);
       
@@ -58,8 +59,23 @@ export const useSimulatedData = () => {
       await new Promise(resolve => setTimeout(resolve, 50));
       updateProgress(50);
       
-      // Step 2: Generate matches
+      // Step 2: Generate matches for both genders
+      console.log('Generating matches for all teams (boys and girls)...');
       const matches = generateMatchData(teams, schools, districts, players, ladders, config);
+      
+      // Log match count by gender to debug
+      const boysMatches = matches.filter(match => {
+        const team = teams.find(t => t.id === match.homeTeamId);
+        return team && team.gender === 'Boys';
+      });
+      
+      const girlsMatches = matches.filter(match => {
+        const team = teams.find(t => t.id === match.homeTeamId);
+        return team && team.gender === 'Girls';
+      });
+      
+      console.log(`Generated ${matches.length} total matches: ${boysMatches.length} boys, ${girlsMatches.length} girls`);
+      
       updateProgress(75);
       
       // Call callback with generated matches

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { FlaskConical } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const Matches = () => {
   const [showSimulation, setShowSimulation] = useState(false);
@@ -40,6 +41,14 @@ const Matches = () => {
             <SimulationControls />
           </>
         )}
+        
+        <Alert className="bg-blue-50 border-blue-200 mb-4">
+          <AlertTitle className="text-blue-700">Match Management Tools</AlertTitle>
+          <AlertDescription className="text-blue-600">
+            Use the search and filter controls to find specific matches. You can filter by team name, gender, and sort by date.
+          </AlertDescription>
+        </Alert>
+        
         <MatchesTabs />
         <MatchDialogs />
       </div>
