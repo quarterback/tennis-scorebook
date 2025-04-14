@@ -14,18 +14,18 @@ const Matches = () => {
   
   return (
     <MatchesProvider>
-      <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <MatchesHeader />
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <MediaToolbar />
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => setShowSimulation(!showSimulation)}
-              className="gap-1.5"
+              className="gap-1.5 text-xs sm:text-sm w-full sm:w-auto"
             >
-              <FlaskConical className="h-4 w-4 text-purple-500" />
+              <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
               {showSimulation ? 'Hide Simulation' : 'Generate Data'}
             </Button>
           </div>

@@ -8,17 +8,17 @@ const MatchesHeader: React.FC = () => {
   const { setIsAddDialogOpen, resetMatchForm } = useMatches();
   
   return (
-    <div className="flex justify-between items-center">
-      <h1 className="text-3xl font-bold">Matches</h1>
+    <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold">Matches</h1>
       
       <Button 
-        className="bg-tennis-blue hover:bg-tennis-darkBlue"
+        className="bg-tennis-blue hover:bg-tennis-darkBlue w-full xs:w-auto text-sm sm:text-base"
         onClick={() => {
           resetMatchForm();
           setIsAddDialogOpen(true);
         }}
       >
-        <Plus className="h-4 w-4 mr-2" />
+        <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
         Add Match
       </Button>
     </div>

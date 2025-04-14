@@ -61,14 +61,14 @@ const MediaToolbar = () => {
   };
 
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
       <Button 
         variant="outline" 
         size="sm"
         onClick={() => exportMatchesToCSV(filteredMatches)}
-        className="gap-1.5"
+        className="gap-1.5 text-xs sm:text-sm"
       >
-        <FileDown className="h-4 w-4" />
+        <FileDown className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline">Export CSV</span>
       </Button>
       
@@ -76,9 +76,9 @@ const MediaToolbar = () => {
         variant="outline" 
         size="sm" 
         onClick={handlePrint}
-        className="gap-1.5"
+        className="gap-1.5 text-xs sm:text-sm"
       >
-        <Printer className="h-4 w-4" />
+        <Printer className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline">Print</span>
       </Button>
       
@@ -86,9 +86,9 @@ const MediaToolbar = () => {
         variant="outline" 
         size="sm"
         onClick={handleCopyForMedia}
-        className="gap-1.5"
+        className="gap-1.5 text-xs sm:text-sm"
       >
-        <ClipboardCopy className="h-4 w-4" />
+        <ClipboardCopy className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline">Copy for Media</span>
       </Button>
       
@@ -96,9 +96,9 @@ const MediaToolbar = () => {
         variant="outline" 
         size="sm"
         onClick={handleShare}
-        className="gap-1.5"
+        className="gap-1.5 text-xs sm:text-sm"
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline">Share</span>
       </Button>
     </div>

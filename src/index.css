@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,6 +59,24 @@
   .team-girls {
     @apply border-l-4 border-tennis-green;
   }
+
+  /* New responsive utility classes */
+  .match-content {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .match-actions {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .flight-container {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3;
+  }
+
+  .flight-card {
+    @apply p-3 bg-white rounded-md shadow-sm border border-gray-200;
+  }
 }
 
 @media print {
@@ -71,16 +90,55 @@
   .match-card {
     display: block !important;
     break-inside: avoid;
+    page-break-inside: avoid;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* Print specific layout */
+  .match-content {
+    display: block !important;
+  }
+
+  .flight-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
   }
 
   /* Optimize layout for printing */
   body {
     font-size: 12pt;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Force background colors to print */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 640px) {
+  .match-card {
+    padding: 0.75rem !important;
+  }
+  
+  .flight-container {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .match-content {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .match-actions button {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.75rem !important;
   }
 }

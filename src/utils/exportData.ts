@@ -125,6 +125,9 @@ export const createDataExport = (data: ExportableData): void => {
   exportAllDataAsJSON(data);
 };
 
+/**
+ * Export a single match to CSV with ordered scores (winner first)
+ */
 export const exportMatchToCSV = (match: Match): void => {
   // Prepare headers for match export
   const headers = [
@@ -138,14 +141,38 @@ export const exportMatchToCSV = (match: Match): void => {
     'awayCoachApproved'
   ];
 
-  // Prepare flight details
-  const flightDetails = match.flights.map(flight => ({
-    [`${flight.level}${flight.type}Position`]: flight.position,
-    [`${flight.level}${flight.type}Sets`]: flight.sets.map(set => 
-      `${set.homeScore}-${set.awayScore}${set.tiebreak ? 
-        ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})` : ''}`
-    ).join('; ')
-  }));
+  // Prepare flight details with winner scores first
+  const flightDetails = match.flights.map(flight => {
+    // Determine formatted sets with winner scores first
+    const formattedSets = flight.sets.map(set => {
+      const homeWonSet = set.homeScore > set.awayScore;
+      const setScore = homeWonSet ? 
+        `${set.homeScore}-${set.awayScore}` : 
+        `${set.awayScore}-${set.homeScore}`;
+      
+      // Format tiebreak if present
+      let tiebreakText = '';
+      if (set.tiebreak) {
+        const homeWonTiebreak = set.tiebreak.homeScore > set.tiebreak.awayScore;
+        tiebreakText = homeWonTiebreak ? 
+          ` (Tiebreak: ${set.tiebreak.homeScore}-${set.tiebreak.awayScore})` : 
+          ` (Tiebreak: ${set.tiebreak.awayScore}-${set.tiebreak.homeScore})`;
+      }
+      
+      return `${setScore}${tiebreakText}`;
+    }).join('; ');
+
+    return {
+      [`${flight.level}${flight.type}Position`]: flight.position,
+      [`${flight.level}${flight.type}Sets`]: formattedSets,
+      [`${flight.level}${flight.type}Winner`]: flight.homePlayerWon ? 'Home' : 'Away'
+    };
+  });
+
+  // Format the final score with winner first
+  const finalScore = match.homeTeamWon ? 
+    `${match.homeTeamScore}-${match.awayTeamScore}` : 
+    `${match.awayTeamScore}-${match.homeTeamScore}`;
 
   // Combine match and flight data
   const matchData = [{
@@ -153,9 +180,7 @@ export const exportMatchToCSV = (match: Match): void => {
     date: match.date,
     homeTeam: match.homeTeamId,
     awayTeam: match.awayTeamId,
-    finalScore: match.homeTeamWon ? 
-      `${match.homeTeamScore}-${match.awayTeamScore}` : 
-      `${match.awayTeamScore}-${match.homeTeamScore}`,
+    finalScore: finalScore,
     isLeagueMatch: match.isLeagueMatch,
     homeCoachApproved: match.homeCoachApproved,
     awayCoachApproved: match.awayCoachApproved,
