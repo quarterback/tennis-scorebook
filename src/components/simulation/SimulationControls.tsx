@@ -19,6 +19,19 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Team, Season } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Create extended list of seasons beyond what's in the database
+const extendedSeasonsList: Season[] = [
+  // Past seasons
+  { id: 'spring-2022', year: 2022, name: 'Spring 2022', isCurrent: false },
+  { id: 'spring-2023', year: 2023, name: 'Spring 2023', isCurrent: false },
+  { id: 'spring-2024', year: 2024, name: 'Spring 2024', isCurrent: false },
+  // Current and future seasons
+  { id: 'spring-2025', year: 2025, name: 'Spring 2025', isCurrent: true },
+  { id: 'spring-2026', year: 2026, name: 'Spring 2026', isCurrent: false },
+  { id: 'spring-2027', year: 2027, name: 'Spring 2027', isCurrent: false },
+  { id: 'spring-2028', year: 2028, name: 'Spring 2028', isCurrent: false },
+];
+
 const SimulationControls: React.FC = () => {
   const { 
     schools, teams, districts, currentSeason, seasons,
@@ -29,16 +42,27 @@ const SimulationControls: React.FC = () => {
   
   const [isOpen, setIsOpen] = useState(false);
   
-  // Season selection
-  const allSeasons = [currentSeason, ...getArchivedSeasons()];
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string>(currentSeason.id);
+  // Season selection - use the extended list instead of just what's in the database
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('spring-2025');
   
   // Date states - default to Oregon's typical spring tennis season: early March to mid-May
-  const defaultStartDate = new Date(new Date().getFullYear(), 2, 1); // March 1st of current year
-  const defaultEndDate = new Date(new Date().getFullYear(), 4, 15); // May 15th of current year
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    new Date(new Date().getFullYear(), 2, 1) // March 1st of current year
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    new Date(new Date().getFullYear(), 4, 15) // May 15th of current year
+  );
   
-  const [startDate, setStartDate] = useState<Date | undefined>(defaultStartDate);
-  const [endDate, setEndDate] = useState<Date | undefined>(defaultEndDate);
+  // Update date defaults when selected season changes
+  useEffect(() => {
+    const selectedSeason = extendedSeasonsList.find(s => s.id === selectedSeasonId);
+    if (selectedSeason) {
+      const year = selectedSeason.year;
+      setStartDate(new Date(year, 2, 1)); // March 1st of selected year
+      setEndDate(new Date(year, 4, 15));  // May 15th of selected year
+    }
+  }, [selectedSeasonId]);
+  
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   
@@ -130,8 +154,13 @@ const SimulationControls: React.FC = () => {
       doubleRoundRobin
     };
     
-    // Find the selected season
-    const selectedSeason = allSeasons.find(season => season.id === selectedSeasonId) || currentSeason;
+    // Find the selected season from our extended list
+    const selectedSeason = extendedSeasonsList.find(season => season.id === selectedSeasonId);
+    
+    if (!selectedSeason) {
+      setSimulationError("Invalid season selected");
+      return;
+    }
     
     try {
       await generateAllData(
@@ -181,6 +210,10 @@ const SimulationControls: React.FC = () => {
     }
   };
   
+  // Get the selected season for date validation
+  const selectedSeason = extendedSeasonsList.find(s => s.id === selectedSeasonId);
+  const selectedYear = selectedSeason?.year || new Date().getFullYear();
+  
   return (
     <div className="mb-6">
       <Card className="bg-white shadow-sm border-slate-200">
@@ -218,7 +251,7 @@ const SimulationControls: React.FC = () => {
               )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Season selector */}
+                {/* Season selector with extended seasons list */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="season-select">Select Season</Label>
@@ -228,7 +261,7 @@ const SimulationControls: React.FC = () => {
                           <History className="h-4 w-4 text-slate-400" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Generate data for past or current seasons</p>
+                          <p className="max-w-xs">Generate data for past, current, or future seasons</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -242,7 +275,7 @@ const SimulationControls: React.FC = () => {
                       <SelectValue placeholder="Select a season" />
                     </SelectTrigger>
                     <SelectContent>
-                      {allSeasons.map(season => (
+                      {extendedSeasonsList.map(season => (
                         <SelectItem key={season.id} value={season.id}>
                           {season.name} {season.isCurrent ? "(Current)" : ""}
                         </SelectItem>
@@ -272,10 +305,10 @@ const SimulationControls: React.FC = () => {
                           setStartDate(date);
                           setStartDateOpen(false);
                         }}
-                        defaultMonth={new Date(new Date().getFullYear(), 2, 1)} // Default to March
+                        defaultMonth={new Date(selectedYear, 2, 1)} // Default to March of selected year
                         disabled={(date) => 
-                          date > (endDate || new Date('2026-12-31')) || 
-                          date < new Date('2024-01-01')
+                          date > (endDate || new Date(`${selectedYear}-12-31`)) || 
+                          date < new Date(`${selectedYear}-01-01`)
                         }
                         initialFocus
                         className="pointer-events-auto"
@@ -305,10 +338,10 @@ const SimulationControls: React.FC = () => {
                           setEndDate(date);
                           setEndDateOpen(false);
                         }}
-                        defaultMonth={new Date(new Date().getFullYear(), 4, 1)} // Default to May
+                        defaultMonth={new Date(selectedYear, 4, 1)} // Default to May of selected year
                         disabled={(date) => 
-                          date < (startDate || new Date('2024-01-01')) || 
-                          date > new Date('2026-12-31')
+                          date < (startDate || new Date(`${selectedYear}-01-01`)) || 
+                          date > new Date(`${selectedYear}-12-31`)
                         }
                         initialFocus
                         className="pointer-events-auto"
@@ -385,7 +418,7 @@ const SimulationControls: React.FC = () => {
               <Alert className="bg-blue-50 border-blue-200">
                 <Info className="h-5 w-5 text-blue-500" />
                 <AlertDescription className="text-blue-800 text-sm">
-                  Season length: <span className="font-medium">{seasonWeeks} weeks</span> ({startDate && endDate ? `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}` : 'Not set'})
+                  Season length: <span className="font-medium">{seasonWeeks} weeks</span> ({startDate && endDate ? `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}` : 'Not set'})
                   <br />
                   <span>This season can theoretically support up to ~{theoreticalMaxMatches} matches per team</span>
                 </AlertDescription>
@@ -395,7 +428,7 @@ const SimulationControls: React.FC = () => {
                 <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">Warning: Simulation will generate historical data</p>
-                  <p className="mt-1">This will create players and matches for the selected season.</p>
+                  <p className="mt-1">This will create players and matches for the selected season ({selectedSeason?.name || ''}).</p>
                 </div>
               </div>
               
