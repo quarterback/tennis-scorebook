@@ -6,10 +6,10 @@ export const usePlayersData = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [transfers, setTransfers] = useState<PlayerTransfer[]>([]);
   
-  // Hardcoded seasons for demonstration
+  // Hardcoded seasons for demonstration - added isCurrent property to fix TypeScript errors
   const [seasons, setSeasons] = useState<Season[]>([
-    { id: 'spring-2023', name: 'Spring 2023', year: 2023 },
-    { id: 'spring-2024', name: 'Spring 2024', year: 2024 },
+    { id: 'spring-2023', name: 'Spring 2023', year: 2023, isCurrent: false },
+    { id: 'spring-2024', name: 'Spring 2024', year: 2024, isCurrent: false },
     { id: 'spring-2025', name: 'Spring 2025', year: 2025, isCurrent: true }
   ]);
   
@@ -74,13 +74,15 @@ export const usePlayersData = () => {
       teamId: toTeamId
     };
     
-    // Add transfer record
+    // Add transfer record - Added seasonId property to fix TypeScript error
+    const currentSeason = getCurrentSeason();
     const transfer: PlayerTransfer = {
       id: crypto.randomUUID(),
       playerId,
       fromTeamId: player.teamId,
       toTeamId,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      seasonId: currentSeason.id // Added the required seasonId property
     };
     
     setTransfers([...transfers, transfer]);
