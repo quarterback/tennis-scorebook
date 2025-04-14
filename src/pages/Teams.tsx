@@ -13,10 +13,58 @@ import ExportDataDialog from '@/components/data/ExportDataDialog';
 
 export default function Teams() {
   const { user } = useAuth();
-  const { schools } = useData();
+  const { schools, teams, players } = useData();
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  const handleRosterReportClick = () => {
+    // Generate and download roster report as CSV
+    const rosterData = players.map(player => {
+      const team = teams.find(t => t.id === player.teamId);
+      const school = team ? schools.find(s => s.id === team.schoolId) : null;
+      
+      return {
+        playerName: player.name,
+        grade: player.grade,
+        teamType: team?.gender || 'Unknown',
+        schoolName: school?.name || 'Unknown',
+        status: player.status
+      };
+    });
+    
+    // Create CSV content
+    const headers = ['playerName', 'grade', 'teamType', 'schoolName', 'status'];
+    const csvRows = [
+      headers.join(','),
+      ...rosterData.map(row => 
+        headers.map(header => {
+          const value = row[header as keyof typeof row];
+          return typeof value === 'string' && value.includes(',') 
+            ? `"${value}"` 
+            : value;
+        }).join(',')
+      )
+    ];
+    
+    const csvContent = csvRows.join('\n');
+    
+    // Download CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'tennis_roster_report.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Roster Report Downloaded",
+      description: `CSV file with ${rosterData.length} players created successfully.`
+    });
+  };
 
   return (
     <div>
@@ -30,7 +78,7 @@ export default function Teams() {
               Add Team
             </Button>
           )}
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleRosterReportClick}>
             <Trophy className="h-4 w-4 mr-2" />
             Roster Report
           </Button>
