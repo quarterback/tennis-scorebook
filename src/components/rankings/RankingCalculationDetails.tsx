@@ -81,7 +81,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="max-w-xs">Athletic Power Ranking: Overall rating on a 0-100 scale based on team performance</p>
+                          <p className="max-w-xs">Athletic Power Rating: Overall rating on a 0-100 scale based on team performance</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -109,7 +109,7 @@ export const RankingCalculationDetails: React.FC<RankingCalculationDetailsProps>
                     <TableCell className="text-center" title="Opponent Strength Index">
                       {team.opponentStrengthIndex.toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-center font-medium">
+                    <TableCell className="text-center font-medium" title="Athletic Power Rating">
                       {team.apr.toFixed(1)}
                     </TableCell>
                   </TableRow>

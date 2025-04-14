@@ -1,4 +1,3 @@
-
 import { useData } from '@/context/DataContext';
 import { Team, School, Match, Flight, District } from '@/types';
 import { TeamRanking, RankingConfig, ClassificationQualifications } from '@/types/ranking';
@@ -41,30 +40,22 @@ export const useRankingCalculator = () => {
   const { generateInsights, findKeyMatchups } = useRankingInsights();
   const { calculateTeamAprs } = useAprCalculator();
   
-  /**
-   * Calculate team rankings with enhanced algorithm and realistic data
-   */
   const calculateRankings = (config: RankingConfig = defaultConfig): TeamRanking[] => {
-    // Initial calculation of FWS for all teams
     const teamScores = new Map<string, number>();
     
-    // First pass: Calculate FWS for all teams
     teams.forEach(team => {
       const fws = calculateFlightWeightedScore(team.id, config);
       teamScores.set(team.id, fws);
     });
     
-    // Second pass: Calculate OSI using the initial scores and build rankings
     const rankings: TeamRanking[] = teams.map(team => {
       const school = schools.find(s => s.id === team.schoolId)!;
       const district = districts.find(d => d.id === school.districtId)!;
       
-      // Get team matches
       const teamMatches = matches.filter(
         m => (m.homeTeamId === team.id || m.awayTeamId === team.id) && m.isComplete
       );
       
-      // Calculate overall team stats
       const wins = teamMatches.filter(m => 
         (m.homeTeamId === team.id && m.homeTeamWon) || 
         (m.awayTeamId === team.id && !m.homeTeamWon)
@@ -75,9 +66,7 @@ export const useRankingCalculator = () => {
         (m.awayTeamId === team.id && m.homeTeamWon)
       ).length;
       
-      // Calculate league-specific stats
       const leagueMatches = teamMatches.filter(m => {
-        // Get opponent team's school
         const opponentTeamId = m.homeTeamId === team.id ? m.awayTeamId : m.homeTeamId;
         const opponentTeam = teams.find(t => t.id === opponentTeamId);
         if (!opponentTeam) return false;
@@ -85,7 +74,6 @@ export const useRankingCalculator = () => {
         const opponentSchool = schools.find(s => s.id === opponentTeam.schoolId);
         if (!opponentSchool) return false;
         
-        // Match is a league match if both teams are from the same district AND the isLeagueMatch flag is true
         return opponentSchool.districtId === school.districtId && m.isLeagueMatch;
       });
       
@@ -99,16 +87,12 @@ export const useRankingCalculator = () => {
         (m.awayTeamId === team.id && m.homeTeamWon)
       ).length;
       
-      // Calculate components with improved formulas
       const fws = teamScores.get(team.id) || 0;
       const lsc = calculateLeagueStrengthCoefficient(school.districtId);
       const osi = calculateOpponentStrengthIndex(team.id, teamScores);
       
-      // Calculate composite score with more balanced weighting
-      // The formula is now: CS = FWS × LSC × OSI
       const compositeScore = fws * lsc * osi;
       
-      // Calculate win percentages
       const totalMatches = wins + losses;
       const winPercentage = totalMatches > 0 ? wins / totalMatches : 0;
       
@@ -135,25 +119,18 @@ export const useRankingCalculator = () => {
         qualifiedForRanking: teamMatches.length >= config.minimumMatches,
         winPercentage,
         leagueWinPercentage,
-        apr: 0  // Initialize with 0, will be updated by calculateTeamAprs
+        apr: 0
       };
     });
     
-    // Sort by composite score, highest first
     const sortedRankings = rankings.sort((a, b) => b.compositeScore - a.compositeScore);
     
-    // Calculate APR for all teams
     const rankingsWithApr = calculateTeamAprs(sortedRankings);
     
-    // Now determine qualification status for each team
     return calculateQualificationStatus(rankingsWithApr);
   };
   
-  /**
-   * Calculate qualification status for teams based on their classification and ranking
-   */
   const calculateQualificationStatus = (rankings: TeamRanking[]): TeamRanking[] => {
-    // Group teams by classification and gender
     const teamsByClassAndGender: Record<string, TeamRanking[]> = {};
     
     rankings.forEach(team => {
@@ -164,11 +141,9 @@ export const useRankingCalculator = () => {
       teamsByClassAndGender[key].push(team);
     });
     
-    // Process each classification
     Object.entries(teamsByClassAndGender).forEach(([key, teamsInClass]) => {
       const [classification, gender] = key.split('-');
       
-      // Find qualification rules for this classification
       const rules = qualificationRules.find(r => r.classification === classification) || {
         classification,
         totalSpots: 8,
@@ -176,10 +151,8 @@ export const useRankingCalculator = () => {
         atLargeBids: 4
       };
       
-      // Create a map of district to top team for automatic qualifiers
       const topTeamByDistrict: Map<string, TeamRanking> = new Map();
       
-      // Group teams by district
       const teamsByDistrict: Record<string, TeamRanking[]> = {};
       teamsInClass.forEach(team => {
         if (!teamsByDistrict[team.districtName]) {
@@ -188,41 +161,32 @@ export const useRankingCalculator = () => {
         teamsByDistrict[team.districtName].push(team);
       });
       
-      // Find top team in each district (automatic qualifiers)
       Object.entries(teamsByDistrict).forEach(([district, districtTeams]) => {
-        // Sort district teams by league win percentage
         const sortedTeams = [...districtTeams].sort((a, b) => {
           const aWinPct = a.leagueWinPercentage || 0;
           const bWinPct = b.leagueWinPercentage || 0;
           
           if (aWinPct !== bWinPct) return bWinPct - aWinPct;
           
-          // If league win percentages are equal, sort by league wins
           if (a.leagueWins !== b.leagueWins) return b.leagueWins - a.leagueWins;
           
-          // If league wins are equal, sort by overall win percentage
           return (b.winPercentage || 0) - (a.winPercentage || 0);
         });
         
-        // Top team in district is automatic qualifier
         if (sortedTeams.length > 0) {
           topTeamByDistrict.set(district, sortedTeams[0]);
         }
       });
       
-      // Mark automatic qualifiers (up to the automaticBids limit)
       let automaticQualifiers: TeamRanking[] = [];
       topTeamByDistrict.forEach(team => {
         automaticQualifiers.push(team);
       });
       
-      // Sort automatic qualifiers by composite score to determine seeding
       automaticQualifiers.sort((a, b) => b.compositeScore - a.compositeScore);
       
-      // Keep only the top N automatic qualifiers based on rules
       automaticQualifiers = automaticQualifiers.slice(0, rules.automaticBids);
       
-      // Mark these teams as automatic qualifiers
       automaticQualifiers.forEach((team, index) => {
         const teamInRankings = teamsInClass.find(t => t.teamId === team.teamId);
         if (teamInRankings) {
@@ -231,21 +195,16 @@ export const useRankingCalculator = () => {
         }
       });
       
-      // Now find at-large qualifiers
-      // Filter out teams that are already automatic qualifiers
       const eligibleForAtLarge = teamsInClass.filter(team => 
         !automaticQualifiers.some(aq => aq.teamId === team.teamId)
       );
       
-      // Sort by composite score
       const sortedForAtLarge = [...eligibleForAtLarge].sort((a, b) => 
         b.compositeScore - a.compositeScore
       );
       
-      // Take top N for at-large bids
       const atLargeQualifiers = sortedForAtLarge.slice(0, rules.atLargeBids);
       
-      // Mark these teams as at-large qualifiers
       atLargeQualifiers.forEach((team, index) => {
         const teamInRankings = teamsInClass.find(t => t.teamId === team.teamId);
         if (teamInRankings) {
