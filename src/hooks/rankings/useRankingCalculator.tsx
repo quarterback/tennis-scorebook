@@ -1,3 +1,4 @@
+
 import { useData } from '@/context/DataContext';
 import { Team, School, Match, Flight, District } from '@/types';
 import { TeamRanking, RankingConfig, ClassificationQualifications } from '@/types/ranking';
@@ -133,7 +134,8 @@ export const useRankingCalculator = () => {
         compositeScore,
         qualifiedForRanking: teamMatches.length >= config.minimumMatches,
         winPercentage,
-        leagueWinPercentage
+        leagueWinPercentage,
+        apr: 0  // Initialize with 0, will be updated by calculateTeamAprs
       };
     });
     
