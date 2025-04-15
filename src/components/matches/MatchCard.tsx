@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Match, Player } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -51,9 +50,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const getMatchScoreDisplay = () => {
     if (match.homeTeamScore !== undefined && match.awayTeamScore !== undefined) {
       if (match.homeTeamWon) {
-        return `${homeTeamName} ${match.homeTeamScore}-${match.awayTeamScore}`;
+        return `${match.homeTeamScore}-${match.awayTeamScore} ${homeTeamName}`;
       } else {
-        return `${awayTeamName} ${match.awayTeamScore}-${match.homeTeamScore}`;
+        return `${match.awayTeamScore}-${match.homeTeamScore} ${awayTeamName}`;
       }
     }
     return match.homeTeamWon ? `${homeTeamName} won` : `${awayTeamName} won`;
@@ -261,20 +260,26 @@ const MatchCard: React.FC<MatchCardProps> = ({
               <div className="flex items-center gap-2 mt-1 xs:mt-0">
                 {match.isComplete && (
                   <div className="flex items-center gap-1 sm:gap-2">
-                    <div className="flex">
-                      <div title={match.homeCoachApproved ? "Home coach approved" : "Awaiting home coach approval"}>
-                        {match.homeCoachApproved ? 
-                          <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" /> : 
-                          <ShieldX className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
-                        }
+                    {(isHomeCoach || isAwayCoach) && (
+                      <div className="flex">
+                        {isHomeCoach && !match.homeCoachApproved && (
+                          <div title="Approve as home team">
+                            <ShieldX 
+                              className="h-4 w-4 text-gray-300 cursor-pointer hover:text-green-500" 
+                              onClick={() => approveMatch(match.id, 'home')}
+                            />
+                          </div>
+                        )}
+                        {isAwayCoach && !match.awayCoachApproved && (
+                          <div title="Approve as away team">
+                            <ShieldX 
+                              className="h-4 w-4 text-gray-300 cursor-pointer hover:text-green-500" 
+                              onClick={() => approveMatch(match.id, 'away')}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <div title={match.awayCoachApproved ? "Away coach approved" : "Awaiting away coach approval"}>
-                        {match.awayCoachApproved ? 
-                          <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" /> : 
-                          <ShieldX className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
-                        }
-                      </div>
-                    </div>
+                    )}
                     <span className="match-score">
                       {getMatchScoreDisplay()}
                     </span>
@@ -551,7 +556,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
             onClick={() => openEditDialog(match)}
             className="flex-1 xs:flex-none flex items-center justify-center"
           >
-            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             {!isMobile && "Edit"}
           </Button>
         )}
