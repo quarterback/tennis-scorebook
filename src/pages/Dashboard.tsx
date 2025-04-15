@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, School, CheckCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PlayerLeaderboard from '@/components/dashboard/PlayerLeaderboard';
 
 const Dashboard = () => {
   const { schools, teams, matches } = useData();
@@ -72,6 +73,39 @@ const Dashboard = () => {
     const school = schools.find(s => s.id === team.schoolId);
     return `${school?.name || 'Unknown'} ${team.gender}`;
   };
+
+  // Sample data for player leaderboards
+  const sampleTopSingles = [
+    { id: "s1", name: "Sophia Chen", school: "Catlin Gabel", wins: 13, losses: 0, powerRating: 9.8 },
+    { id: "s2", name: "Isabella Martinez", school: "Oregon Episcopal", wins: 12, losses: 1, powerRating: 9.6 },
+    { id: "s3", name: "Emma Thompson", school: "Valley Catholic", wins: 11, losses: 2, powerRating: 9.3 },
+    { id: "s4", name: "Olivia Jackson", school: "North Valley", wins: 10, losses: 2, powerRating: 9.1 },
+    { id: "s5", name: "Madison Taylor", school: "Cascade", wins: 12, losses: 3, powerRating: 8.9 }
+  ];
+
+  const sampleTopDoubles = [
+    { id: "d1", players: "Lin/Garcia", school: "Catlin Gabel", wins: 12, losses: 1, powerRating: 9.7 },
+    { id: "d2", players: "Wilson/Davis", school: "St. Mary's", wins: 11, losses: 1, powerRating: 9.5 },
+    { id: "d3", players: "Rodriguez/Kim", school: "La Grande", wins: 10, losses: 2, powerRating: 9.3 },
+    { id: "d4", players: "Johnson/Patel", school: "Philomath", wins: 9, losses: 3, powerRating: 9.0 },
+    { id: "d5", players: "Lee/Washington", school: "The Dalles", wins: 11, losses: 4, powerRating: 8.8 }
+  ];
+
+  const seasonInsights = {
+    undefeatedCount: 3,
+    upsetOfSeason: "Philomath's Johnson/Patel over Catlin Gabel's Lin/Garcia (April 12)",
+    longestStreak: "Sophia Chen (Catlin Gabel) - 24 consecutive matches dating back to 2024",
+    crossClassSuccess: "Class 4A La Grande has defeated three 5A teams this season",
+    mostImproved: "Estacada (+35% win rate from last season)"
+  };
+
+  const tournamentSchedule = [
+    { districtName: "Special District 1", dates: "May 10-11", location: "Oregon Episcopal" },
+    { districtName: "Special District 2", dates: "May 9-10", location: "Cascade" },
+    { districtName: "Special District 3", dates: "May 11-12", location: "North Valley" },
+    { districtName: "Special District 4", dates: "May 10-11", location: "The Dalles" },
+    { districtName: "Special District 5", dates: "May 9-10", location: "La Grande" }
+  ];
   
   return (
     <div className="space-y-6">
@@ -128,6 +162,14 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Player Leaderboard Component */}
+      <PlayerLeaderboard 
+        topSingles={sampleTopSingles}
+        topDoubles={sampleTopDoubles}
+        insights={seasonInsights}
+        tournaments={tournamentSchedule}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
