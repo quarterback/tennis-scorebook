@@ -5,6 +5,7 @@ import { useFlightWeightedScore } from './useFlightWeightedScore';
 import { useLeagueStrengthCoefficient } from './useLeagueStrengthCoefficient';
 import { useOpponentStrengthIndex } from './useOpponentStrengthIndex';
 import { useAprCalculator } from './useAprCalculator';
+import { getHistoricalData } from '@/utils/rankingConstants';
 
 export const useRankingsBase = (
   teams: Team[], 
@@ -12,9 +13,10 @@ export const useRankingsBase = (
   matches: Match[], 
   districts: any[]
 ) => {
+  const historicalData = getHistoricalData();
   const { calculateFlightWeightedScore } = useFlightWeightedScore(matches);
-  const { calculateLeagueStrengthCoefficient } = useLeagueStrengthCoefficient(districts, []);
-  const { calculateOpponentStrengthIndex } = useOpponentStrengthIndex(teams, schools, matches, []);
+  const { calculateLeagueStrengthCoefficient } = useLeagueStrengthCoefficient(districts, historicalData);
+  const { calculateOpponentStrengthIndex } = useOpponentStrengthIndex(teams, schools, matches, historicalData);
   const { calculateTeamAprs } = useAprCalculator();
 
   const calculateBaseRankings = (config: any): TeamRanking[] => {

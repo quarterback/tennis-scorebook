@@ -31,6 +31,7 @@ export const useRankingCalculator = () => {
   const { teams, schools, matches, districts } = useData();
   const { calculateBaseRankings } = useRankingsBase(teams, schools, matches, districts);
   const { calculateQualificationStatus } = useQualificationStatus();
+  const { generateInsights, findKeyMatchups } = useRankingInsights();
   const defaultConfig = getDefaultConfig();
   const historicalData = getHistoricalData();
   
@@ -43,6 +44,8 @@ export const useRankingCalculator = () => {
     calculateRankings,
     defaultConfig,
     historicalData,
-    qualificationRules
+    qualificationRules,
+    generateInsights,
+    findKeyMatchups
   };
 };
