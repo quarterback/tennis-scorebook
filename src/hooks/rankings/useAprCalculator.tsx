@@ -3,26 +3,35 @@ import { TeamRanking } from '@/types/ranking';
 import { APR_CONSTANTS } from '@/utils/aprConstants';
 
 export const useAprCalculator = () => {
-  // Calculate APR directly from composite score, normalized to 0-100 scale
-  const calculateApr = (compositeScore: number): number => {
-    // Normalize to 0-100 scale based on maximum possible score
-    const normalizedApr = (compositeScore / APR_CONSTANTS.MAX_COMPOSITE_SCORE) * 100;
-    
-    // Round to specified decimal places and ensure non-negative
-    return Math.max(0, Math.round(normalizedApr * Math.pow(10, APR_CONSTANTS.DECIMAL_PLACES)) / 
-      Math.pow(10, APR_CONSTANTS.DECIMAL_PLACES));
+  /**
+   * Calculates the Athletic Power Rating (APR) for each team
+   * Normalizes scores to a 0-100 scale for easier interpretation
+   */
+  const calculateTeamAprs = (rankings: TeamRanking[]): TeamRanking[] => {
+    return rankings.map(team => {
+      // Calculate the APR on a 0-100 scale
+      let apr = 0;
+      
+      if (APR_CONSTANTS.SCALE_TO_100) {
+        // Scale the composite score to a 0-100 range
+        apr = (team.compositeScore / APR_CONSTANTS.MAX_COMPOSITE_SCORE) * 100;
+        
+        // Ensure the APR doesn't exceed 100
+        apr = Math.min(apr, 100);
+      } else {
+        // Use the raw composite score
+        apr = team.compositeScore;
+      }
+      
+      // Round to specified decimal places
+      apr = Number(apr.toFixed(APR_CONSTANTS.DECIMAL_PLACES));
+      
+      return {
+        ...team,
+        apr
+      };
+    });
   };
 
-  // Calculate APR for a list of teams
-  const calculateTeamAprs = (teams: TeamRanking[]): TeamRanking[] => {
-    if (teams.length === 0) return [];
-    
-    // Calculate APR for each team using the normalization formula
-    return teams.map(team => ({
-      ...team,
-      apr: calculateApr(team.compositeScore)
-    }));
-  };
-
-  return { calculateApr, calculateTeamAprs };
+  return { calculateTeamAprs };
 };
