@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TabsContent } from '@/components/ui/tabs';
-import { Match, Team, School, Player } from '@/types';
+import { Match, Team, School, Player, Classification } from '@/types';
 import MatchCard from './MatchCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,8 +32,10 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [genderFilter, setGenderFilter] = useState<'all' | 'boys' | 'girls'>('all');
+  const [classificationFilter, setClassificationFilter] = useState<'all' | Classification>('all');
+  const [districtFilter, setDistrictFilter] = useState<string>('all');
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
-  
+
   // Process matches: filter, sort, and apply tabValue (upcoming/completed/all)
   useEffect(() => {
     let processed = matches.filter(match => {
@@ -56,9 +58,24 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
     // Apply gender filter
     if (genderFilter !== 'all') {
       processed = processed.filter(match => {
-        // Extract gender information from team name (assumes team names include "Boys" or "Girls")
         const homeTeamName = getTeamName(match.homeTeamId).toLowerCase();
         return genderFilter === 'boys' ? homeTeamName.includes('boys') : homeTeamName.includes('girls');
+      });
+    }
+
+    // Apply classification filter
+    if (classificationFilter !== 'all') {
+      processed = processed.filter(match => {
+        const homeTeamName = getTeamName(match.homeTeamId).toLowerCase();
+        return homeTeamName.includes(classificationFilter.toLowerCase());
+      });
+    }
+
+    // Apply district filter
+    if (districtFilter !== 'all') {
+      processed = processed.filter(match => {
+        const homeTeamName = getTeamName(match.homeTeamId).toLowerCase();
+        return homeTeamName.includes(`district ${districtFilter}`);
       });
     }
     
@@ -70,7 +87,7 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
     });
     
     setFilteredMatches(processed);
-  }, [matches, tabValue, searchTerm, sortOrder, genderFilter, getTeamName]);
+  }, [matches, tabValue, searchTerm, sortOrder, genderFilter, classificationFilter, districtFilter, getTeamName]);
 
   const toggleSortOrder = () => {
     setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -88,7 +105,7 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
             className="pl-8"
           />
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             value={genderFilter}
             onValueChange={(value) => setGenderFilter(value as 'all' | 'boys' | 'girls')}
@@ -103,6 +120,41 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
               <SelectItem value="girls">Girls Teams</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select
+            value={classificationFilter}
+            onValueChange={(value) => setClassificationFilter(value as 'all' | Classification)}
+          >
+            <SelectTrigger className="w-[130px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Classification" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              <SelectItem value="6A">6A</SelectItem>
+              <SelectItem value="5A">5A</SelectItem>
+              <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={districtFilter}
+            onValueChange={setDistrictFilter}
+          >
+            <SelectTrigger className="w-[130px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="District" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Districts</SelectItem>
+              <SelectItem value="1">District 1</SelectItem>
+              <SelectItem value="2">District 2</SelectItem>
+              <SelectItem value="3">District 3</SelectItem>
+              <SelectItem value="4">District 4</SelectItem>
+              <SelectItem value="5">District 5</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button
             variant="outline"
             size="sm"
@@ -135,6 +187,8 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
           No {tabValue === 'upcoming' ? 'upcoming' : tabValue === 'completed' ? 'completed' : ''} matches found
           {searchTerm && ' matching your search criteria'}
           {genderFilter !== 'all' && ` for ${genderFilter} teams`}
+          {classificationFilter !== 'all' && ` in ${classificationFilter}`}
+          {districtFilter !== 'all' && ` in District ${districtFilter}`}
         </div>
       )}
     </TabsContent>
