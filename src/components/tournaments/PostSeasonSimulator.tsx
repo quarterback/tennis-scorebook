@@ -2,15 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Trophy, Calendar, Users, Info, PlayCircle, FlaskConical } from 'lucide-react';
+import { Trophy, Calendar, Users, Info, PlayCircle, FlaskConical, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTournamentBracket } from '@/hooks/useTournamentBracket';
-import { Gender, Classification } from '@/types';
+import { Gender, Classification, Match } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SelectValue, SelectTrigger, SelectContent, SelectItem, Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import BracketDisplay from './BracketDisplay';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PostSeasonSimulatorProps {
   gender: Gender;
@@ -24,23 +25,19 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
     playoffTiebreakers,
     generateQualifiedTeams, 
     autoGenerateBracket, 
-    handleWinnerSelect,
-    setupPlayoffTiebreaker,
+    simulateRound,
     simulateTiebreaker,
     qualificationRules
   } = useTournamentBracket(gender, classification);
   
   const { toast } = useToast();
-  const [selectedTiebreaker, setSelectedTiebreaker] = useState<string | null>(null);
-  const [tiebreakMatches, setTiebreakMatches] = useState<{
-    id: string;
-    team1Name: string;
-    team2Name: string;
-  }[]>([]);
+  const [selectedMatchDetails, setSelectedMatchDetails] = useState<Match | null>(null);
+  const [showMatchDetailsDialog, setShowMatchDetailsDialog] = useState(false);
+  const [tiedMatches, setTiedMatches] = useState<{id: string; team1Name: string; team2Name: string;}[]>([]);
   
   useEffect(() => {
-    // Collect any matches that end in a tie that need tiebreakers
-    const tiedMatches: {id: string; team1Name: string; team2Name: string;}[] = [];
+    // Collect any matches that end in a tie and need tiebreakers
+    const newTiedMatches: {id: string; team1Name: string; team2Name: string;}[] = [];
     
     bracket.rounds.forEach(round => {
       round.matches.forEach(match => {
@@ -49,7 +46,7 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
           // If the score is tied (e.g., "4-4")
           const [home, away] = match.score.split('-').map(Number);
           if (home === away) {
-            tiedMatches.push({
+            newTiedMatches.push({
               id: match.id,
               team1Name: match.team1.name,
               team2Name: match.team2.name
@@ -59,7 +56,7 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
       });
     });
     
-    setTiebreakMatches(tiedMatches);
+    setTiedMatches(newTiedMatches);
   }, [bracket]);
   
   const handleGenerateBracket = () => {
@@ -72,47 +69,37 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
   };
   
   const handleSimulateRound = (roundIndex: number) => {
+    simulateRound(roundIndex);
+    
     const round = bracket.rounds[roundIndex];
-    if (!round) return;
-    
-    // Simulate all matches in this round
-    round.matches.forEach(match => {
-      // Only simulate if both teams are assigned and match isn't completed
-      if (match.team1.id && match.team2.id && !match.completed) {
-        // Random winner (60% chance higher seed wins)
-        const higherSeedWins = Math.random() < 0.6;
-        
-        // Determine if team1 is higher seed
-        const team1IsHigherSeed = match.team1.seed < match.team2.seed;
-        
-        // Set winner based on seeding and random chance
-        const winner = (team1IsHigherSeed && higherSeedWins) || 
-                      (!team1IsHigherSeed && !higherSeedWins) ? 'team1' : 'team2';
-                      
-        handleWinnerSelect(match.id, winner);
-      }
-    });
-    
-    toast({
-      title: "Round Simulated",
-      description: `Simulated ${round.name} matches with detailed results`
-    });
+    if (round) {
+      toast({
+        title: "Round Simulated",
+        description: `Simulated ${round.name} matches with detailed results`
+      });
+    }
   };
   
-  const handleSimulateTiebreaker = () => {
-    if (!selectedTiebreaker) return;
-    
-    const winner = simulateTiebreaker(selectedTiebreaker);
-    
-    if (winner) {
+  const handleViewMatchDetails = (match: any) => {
+    if (match.matchDetails) {
+      setSelectedMatchDetails(match.matchDetails);
+      setShowMatchDetailsDialog(true);
+    } else {
       toast({
-        title: "Tiebreaker Completed",
-        description: `Team ${winner === 'team1' ? '1' : '2'} won the playoff tiebreaker`
+        title: "No Match Details",
+        description: "This match hasn't been simulated yet",
+        variant: "destructive"
       });
-      
-      // Reset selection
-      setSelectedTiebreaker(null);
     }
+  };
+  
+  const handleResolveTiebreaker = (matchId: string) => {
+    simulateTiebreaker(matchId);
+    
+    toast({
+      title: "Tiebreaker Resolved",
+      description: "The playoff tiebreaker has been simulated and a winner determined"
+    });
   };
   
   return (
@@ -162,8 +149,8 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
                 
                 <TabsContent value="bracket" className="p-4 bg-white rounded-md">
                   <BracketDisplay 
-                    bracket={bracket} 
-                    onWinnerSelect={handleWinnerSelect} 
+                    rounds={bracket.rounds}
+                    onViewMatch={handleViewMatchDetails}
                   />
                 </TabsContent>
                 
@@ -196,34 +183,21 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
                         Playoff Tiebreakers
                       </h3>
                       
-                      {tiebreakMatches.length > 0 ? (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="tiebreaker-select">Select tied match:</Label>
-                            <Select 
-                              value={selectedTiebreaker || ""}
-                              onValueChange={setSelectedTiebreaker}
-                            >
-                              <SelectTrigger id="tiebreaker-select">
-                                <SelectValue placeholder="Select a tied match" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {tiebreakMatches.map(match => (
-                                  <SelectItem key={match.id} value={match.id}>
-                                    {match.team1Name} vs {match.team2Name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <Button 
-                            onClick={handleSimulateTiebreaker}
-                            disabled={!selectedTiebreaker}
-                            className="w-full"
-                          >
-                            Simulate Tiebreaker Matches
-                          </Button>
+                      {tiedMatches.length > 0 ? (
+                        <div className="space-y-3">
+                          {tiedMatches.map(match => (
+                            <div key={match.id} className="p-3 bg-gray-50 rounded-md">
+                              <p className="mb-2 font-medium">{match.team1Name} vs {match.team2Name}</p>
+                              <Button 
+                                onClick={() => handleResolveTiebreaker(match.id)}
+                                className="w-full"
+                                variant="secondary"
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Resolve Tiebreaker
+                              </Button>
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <p className="text-gray-500 text-sm">
@@ -238,6 +212,106 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
           </div>
         </CardContent>
       </Card>
+
+      {/* Match Details Dialog */}
+      <Dialog open={showMatchDetailsDialog} onOpenChange={setShowMatchDetailsDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Match Details</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[500px] pr-4">
+            {selectedMatchDetails && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 text-center py-3 bg-gray-100 rounded-md mb-4">
+                  <div>{selectedMatchDetails.homeTeamScore}</div>
+                  <div className="font-bold">Final Score</div>
+                  <div>{selectedMatchDetails.awayTeamScore}</div>
+                </div>
+                
+                <div className="space-y-6">
+                  <h3 className="font-semibold text-lg border-b pb-2">Singles Matches</h3>
+                  {selectedMatchDetails.flights
+                    .filter(f => f.type === 'singles')
+                    .sort((a, b) => a.position - b.position)
+                    .map(flight => (
+                      <div key={flight.id} className="border p-3 rounded-md">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium">Singles Position {flight.position}</h4>
+                          <span className={`px-2 py-1 rounded text-xs ${flight.homePlayerWon ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                            Winner: {flight.homePlayerWon ? 'Home' : 'Away'}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <Label className="text-xs text-gray-500">Home Player</Label>
+                            <p className="font-medium">{flight.homePlayers[0]}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-500">Away Player</Label>
+                            <p className="font-medium">{flight.awayPlayers[0]}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="text-xs font-medium mb-1">Set Scores</div>
+                          <div className="space-y-1">
+                            {flight.sets.map((set, idx) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>Set {idx+1}:</span>
+                                <span className="font-medium">{set.homeScore}-{set.awayScore}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                
+                <div className="space-y-6">
+                  <h3 className="font-semibold text-lg border-b pb-2">Doubles Matches</h3>
+                  {selectedMatchDetails.flights
+                    .filter(f => f.type === 'doubles')
+                    .sort((a, b) => a.position - b.position)
+                    .map(flight => (
+                      <div key={flight.id} className="border p-3 rounded-md">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium">Doubles Position {flight.position}</h4>
+                          <span className={`px-2 py-1 rounded text-xs ${flight.homePlayerWon ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                            Winner: {flight.homePlayerWon ? 'Home' : 'Away'}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <Label className="text-xs text-gray-500">Home Players</Label>
+                            <p className="font-medium">{flight.homePlayers.join(', ')}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-500">Away Players</Label>
+                            <p className="font-medium">{flight.awayPlayers.join(', ')}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="text-xs font-medium mb-1">Set Scores</div>
+                          <div className="space-y-1">
+                            {flight.sets.map((set, idx) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>Set {idx+1}:</span>
+                                <span className="font-medium">{set.homeScore}-{set.awayScore}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

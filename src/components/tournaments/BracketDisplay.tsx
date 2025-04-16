@@ -1,246 +1,111 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import TournamentRound from './TournamentRound';
+import { Eye } from 'lucide-react';
 
-export interface BracketPosition {
-  slot: number;
-  participant: {
-    seed: number;
+interface BracketDisplayProps {
+  rounds: Array<{
     name: string;
-    school: string;
-  };
+    matches: Array<{
+      id: string;
+      team1: { id: string; name: string; school: string; seed: number };
+      team2: { id: string; name: string; school: string; seed: number };
+      winner?: 'team1' | 'team2';
+      roundIndex: number;
+      matchIndex: number;
+      completed: boolean;
+      score?: string;
+      matchDetails?: any;
+    }>;
+  }>;
+  onViewMatch?: (match: any) => void;
 }
 
-export interface BracketMatch {
-  id: string;
-  player1: {
-    seed: number | null;
-    name: string;
-    school: string;
-  };
-  player2: {
-    seed: number | null;
-    name: string;
-    school: string;
-  };
-  result: string | null;
-}
-
-export interface BracketRound {
-  name: string;
-  matches: BracketMatch[];
-}
-
-export interface BracketDisplayProps {
-  bracketSize?: number;
-  bracketPositions?: BracketPosition[];
-  type?: 'Singles' | 'Doubles' | 'Team';
-  onEditClick?: () => void;
-  bracket?: {
-    rounds: {
-      name: string;
-      matches: {
-        id: string;
-        team1: { id: string; name: string; school: string; seed: number };
-        team2: { id: string; name: string; school: string; seed: number };
-        winner?: 'team1' | 'team2';
-        roundIndex: number;
-        matchIndex: number;
-        completed: boolean;
-        score?: string;
-      }[];
-    }[];
-  };
-  onWinnerSelect?: (matchId: string, winner: 'team1' | 'team2') => void;
-}
-
-const BracketDisplay: React.FC<BracketDisplayProps> = ({
-  bracketSize = 8,
-  bracketPositions = [],
-  type = 'Singles',
-  onEditClick,
-  bracket,
-  onWinnerSelect
+const BracketDisplay: React.FC<BracketDisplayProps> = ({ 
+  rounds,
+  onViewMatch 
 }) => {
-  // If we have a bracket object, use that for rendering
-  if (bracket && bracket.rounds.length > 0) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h4 className="text-sm font-medium">Tournament Bracket</h4>
-          {onEditClick && (
-            <Button variant="outline" size="sm" onClick={onEditClick}>
-              Edit Bracket
-            </Button>
-          )}
-        </div>
-        
-        <div className="border rounded-lg overflow-hidden">
-          {bracket.rounds.map((round, roundIndex) => (
-            <div key={round.name} className="p-4 border-b last:border-b-0">
-              <h3 className="font-medium mb-4">{round.name}</h3>
-              <div className="space-y-4">
-                {round.matches.map((match) => (
-                  <div 
-                    key={match.id} 
-                    className="border rounded-md p-3 bg-white"
-                  >
+  return (
+    <div className="flex overflow-x-auto pb-4 space-x-4">
+      {rounds.map((round, roundIndex) => (
+        <div key={roundIndex} className="flex-shrink-0 w-64">
+          <div className="font-bold text-center mb-4 bg-gray-100 py-2 rounded">
+            {round.name}
+          </div>
+          <div className="space-y-6">
+            {round.matches.map((match, matchIndex) => (
+              <Card 
+                key={match.id} 
+                className={`relative ${match.completed ? 'border-green-300' : 'border-gray-200'}`}
+              >
+                <CardContent className="p-3">
+                  <div className="space-y-4">
                     <div 
-                      className={`flex justify-between items-center p-2 ${
-                        match.winner === 'team1' ? 'bg-green-50 border-l-4 border-green-500' : ''
+                      className={`p-2 rounded ${
+                        match.winner === 'team1' 
+                          ? 'bg-green-50 border border-green-200' 
+                          : 'bg-gray-50 border border-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs bg-blue-100 px-1.5 py-0.5 rounded">
-                          {match.team1.seed || '?'}
-                        </span>
-                        <span className="font-medium">{match.team1.name}</span>
-                        <span className="text-gray-500 text-sm">{match.team1.school}</span>
+                      <div className="flex justify-between">
+                        <div className="flex items-center">
+                          <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs mr-2">
+                            {match.team1.seed || '?'}
+                          </span>
+                          <span className="font-medium truncate max-w-[120px]">{match.team1.name}</span>
+                        </div>
+                        {match.winner === 'team1' && (
+                          <span className="text-green-600 font-bold">W</span>
+                        )}
                       </div>
-                      {match.completed && match.winner === 'team1' && (
-                        <span className="text-green-600 text-sm font-medium">Winner</span>
-                      )}
+                      <div className="text-xs text-gray-500 ml-8 truncate">{match.team1.school}</div>
                     </div>
-                    
-                    <div className="flex items-center justify-center text-sm text-gray-500 my-1">
-                      vs
-                      {match.score && <span className="ml-2 font-mono">{match.score}</span>}
-                    </div>
-                    
+
                     <div 
-                      className={`flex justify-between items-center p-2 ${
-                        match.winner === 'team2' ? 'bg-green-50 border-l-4 border-green-500' : ''
+                      className={`p-2 rounded ${
+                        match.winner === 'team2' 
+                          ? 'bg-green-50 border border-green-200' 
+                          : 'bg-gray-50 border border-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs bg-blue-100 px-1.5 py-0.5 rounded">
-                          {match.team2.seed || '?'}
-                        </span>
-                        <span className="font-medium">{match.team2.name}</span>
-                        <span className="text-gray-500 text-sm">{match.team2.school}</span>
+                      <div className="flex justify-between">
+                        <div className="flex items-center">
+                          <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs mr-2">
+                            {match.team2.seed || '?'}
+                          </span>
+                          <span className="font-medium truncate max-w-[120px]">{match.team2.name}</span>
+                        </div>
+                        {match.winner === 'team2' && (
+                          <span className="text-green-600 font-bold">W</span>
+                        )}
                       </div>
-                      {match.completed && match.winner === 'team2' && (
-                        <span className="text-green-600 text-sm font-medium">Winner</span>
-                      )}
+                      <div className="text-xs text-gray-500 ml-8 truncate">{match.team2.school}</div>
                     </div>
-                    
-                    {onWinnerSelect && !match.completed && match.team1.id && match.team2.id && (
-                      <div className="mt-2 flex gap-2 justify-center">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => onWinnerSelect(match.id, 'team1')}
-                        >
-                          {match.team1.name} Wins
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => onWinnerSelect(match.id, 'team2')}
-                        >
-                          {match.team2.name} Wins
-                        </Button>
+
+                    {match.score && (
+                      <div className="text-center border-t pt-2 flex items-center justify-between">
+                        <span className="text-sm font-medium">Score: {match.score}</span>
+                        
+                        {onViewMatch && match.completed && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="p-1 h-auto"
+                            onClick={() => onViewMatch(match)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
-    );
-  }
-  
-  // Fall back to the original display if no bracket object is provided
-  // Calculate number of rounds
-  const numRounds = Math.ceil(Math.log2(bracketSize));
-  
-  // Generate round names
-  const getRoundName = (roundIndex: number, totalRounds: number) => {
-    if (roundIndex === totalRounds - 1) return "Finals";
-    if (roundIndex === totalRounds - 2) return "Semi-Finals";
-    if (roundIndex === totalRounds - 3) return "Quarter-Finals";
-    return `Round of ${Math.pow(2, totalRounds - roundIndex)}`;
-  };
-  
-  // Generate rounds for the bracket
-  const generateBracketView = () => {
-    // Generate rounds for the bracket
-    const rounds = Array.from({ length: numRounds }, (_, roundIndex) => {
-      const matchesInRound = Math.pow(2, numRounds - roundIndex - 1);
-      const roundName = getRoundName(roundIndex, numRounds);
-      
-      // Generate matches for this round
-      const matches = Array.from({ length: matchesInRound }, (_, matchIndex) => {
-        // First round has actual participants
-        if (roundIndex === 0) {
-          const seedNumber = matchIndex * 2 + 1;
-          const opponent = seedNumber + 1;
-          
-          const participant1 = bracketPositions.find(p => p.slot === seedNumber)?.participant || {
-            seed: seedNumber,
-            name: "TBD",
-            school: ""
-          };
-          
-          const participant2 = bracketPositions.find(p => p.slot === opponent)?.participant || {
-            seed: opponent,
-            name: "TBD",
-            school: ""
-          };
-          
-          return {
-            id: `${type.toLowerCase()}-r${roundIndex}-m${matchIndex}`,
-            player1: participant1,
-            player2: participant2,
-            result: null
-          };
-        } else {
-          // Later rounds have TBD participants
-          return {
-            id: `${type.toLowerCase()}-r${roundIndex}-m${matchIndex}`,
-            player1: { seed: null, name: "TBD", school: "" },
-            player2: { seed: null, name: "TBD", school: "" },
-            result: null
-          };
-        }
-      });
-      
-      return {
-        name: roundName,
-        matches
-      };
-    });
-    
-    return rounds;
-  };
-  
-  const bracketRounds = generateBracketView();
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h4 className="text-sm font-medium">{bracketSize}-Player Bracket</h4>
-        {onEditClick && (
-          <Button variant="outline" size="sm" onClick={onEditClick}>
-            Edit Bracket
-          </Button>
-        )}
-      </div>
-      
-      <div className="border rounded-lg overflow-hidden">
-        {bracketRounds.map((round) => (
-          <TournamentRound 
-            key={round.name}
-            name={round.name}
-            matches={round.matches}
-          />
-        ))}
-      </div>
+      ))}
     </div>
   );
 };

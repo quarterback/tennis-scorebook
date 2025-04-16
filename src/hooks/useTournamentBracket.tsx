@@ -22,6 +22,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
         matchIndex: number;
         completed: boolean;
         score?: string;
+        matchDetails?: Match;
       }>;
     }>;
   }>({ rounds: [] });
@@ -153,6 +154,50 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     return { rounds };
   }, [getQualificationRules]);
 
+  // Get unique school players and assign them to positions
+  const assignPlayersToPositions = useCallback((
+    teamId: string,
+    positionsCount: number = 4, // Default for singles or doubles positions
+    positionType: 'singles' | 'doubles' = 'singles'
+  ) => {
+    const teamPlayers = players.filter(p => p.teamId === teamId);
+    
+    if (teamPlayers.length === 0) {
+      // If no players found, create dummy player IDs
+      return Array(positionsCount).fill('unknown');
+    }
+    
+    // Shuffle available players
+    const shuffledPlayers = [...teamPlayers].sort(() => Math.random() - 0.5);
+    
+    // For singles positions, we need one player per position
+    if (positionType === 'singles') {
+      // Get first positionsCount players, or repeat if not enough
+      const result: string[] = [];
+      for (let i = 0; i < positionsCount; i++) {
+        const playerIndex = i % shuffledPlayers.length;
+        result.push(shuffledPlayers[playerIndex].id);
+      }
+      return result;
+    } 
+    // For doubles, we need pairs of players for each position
+    else {
+      const result: string[][] = [];
+      // Each doubles position needs 2 players
+      const totalPlayersNeeded = positionsCount * 2;
+      
+      for (let i = 0; i < positionsCount; i++) {
+        const pair: string[] = [];
+        for (let j = 0; j < 2; j++) {
+          const playerIndex = (i * 2 + j) % shuffledPlayers.length;
+          pair.push(shuffledPlayers[playerIndex].id);
+        }
+        result.push(pair);
+      }
+      return result;
+    }
+  }, [players]);
+
   // Simulate a full flight between two teams
   const simulateFlightMatch = useCallback((
     homeTeamId: string, 
@@ -219,17 +264,20 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       throw new Error("Teams not found");
     }
     
-    // Get players for each team
-    const homePlayers = players.filter(p => p.teamId === homeTeamId);
-    const awayPlayers = players.filter(p => p.teamId === awayTeamId);
+    // Assign players to positions - each player plays only one position per match
+    const homeSinglesIds = assignPlayersToPositions(homeTeamId, 4, 'singles');
+    const awaySinglesIds = assignPlayersToPositions(awayTeamId, 4, 'singles');
+    
+    const homeDoublesIds = assignPlayersToPositions(homeTeamId, 4, 'doubles') as string[][];
+    const awayDoublesIds = assignPlayersToPositions(awayTeamId, 4, 'doubles') as string[][];
     
     // Simple roster selection - just use the first players we find
     const flights: Flight[] = [];
     
     // Generate singles flights (1-4)
     for (let i = 0; i < 4; i++) {
-      const homePlayer = homePlayers[i] ? [homePlayers[i].id] : ['unknown'];
-      const awayPlayer = awayPlayers[i] ? [awayPlayers[i].id] : ['unknown'];
+      const homePlayer = [homeSinglesIds[i] || 'unknown'];
+      const awayPlayer = [awaySinglesIds[i] || 'unknown'];
       
       const flight = simulateFlightMatch(
         homeTeamId, 
@@ -262,12 +310,9 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     
     // Generate doubles flights (1-4)
     for (let i = 0; i < 4; i++) {
-      const homePlayerIds = homePlayers.slice(4 + i*2, 6 + i*2).map(p => p.id);
-      const awayPlayerIds = awayPlayers.slice(4 + i*2, 6 + i*2).map(p => p.id);
-      
-      // If we don't have enough players, use placeholders
-      while (homePlayerIds.length < 2) homePlayerIds.push('unknown');
-      while (awayPlayerIds.length < 2) awayPlayerIds.push('unknown');
+      // Use doubles assignments
+      const homePlayerIds = homeDoublesIds[i] || ['unknown', 'unknown'];
+      const awayPlayerIds = awayDoublesIds[i] || ['unknown', 'unknown'];
       
       const flight = simulateFlightMatch(
         homeTeamId, 
@@ -304,7 +349,6 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     
     // Get the school names for the location
     const homeSchool = schools.find(s => s.id === homeTeam.schoolId);
-    const homeSchoolName = homeSchool ? homeSchool.name : "Unknown School";
     
     // Create match object
     const matchId = uuidv4();
@@ -328,7 +372,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     };
     
     return match;
-  }, [teams, schools, players, simulateFlightMatch]);
+  }, [teams, schools, assignPlayersToPositions, simulateFlightMatch]);
 
   // Handle playoff tiebreaker setup
   const setupPlayoffTiebreaker = useCallback((
@@ -421,6 +465,9 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
               new Date().toISOString().split('T')[0]
             );
             
+            // Store match details
+            updatedBracket.rounds[i].matches[j].matchDetails = simulatedMatch;
+            
             // Add the match to the database
             addMatch(simulatedMatch);
             
@@ -495,6 +542,30 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     return generateBracket(teams);
   }, [generateQualifiedTeams, generateBracket]);
 
+  // Simulate entire round automatically
+  const simulateRound = useCallback((roundIndex: number) => {
+    const round = bracket.rounds[roundIndex];
+    if (!round) return;
+    
+    // Simulate all matches in this round
+    round.matches.forEach(match => {
+      // Only simulate if both teams are assigned and match isn't completed
+      if (match.team1.id && match.team2.id && !match.completed) {
+        // Random winner (60% chance higher seed wins)
+        const higherSeedWins = Math.random() < 0.6;
+        
+        // Determine if team1 is higher seed
+        const team1IsHigherSeed = match.team1.seed < match.team2.seed;
+        
+        // Set winner based on seeding and random chance
+        const winner = (team1IsHigherSeed && higherSeedWins) || 
+                    (!team1IsHigherSeed && !higherSeedWins) ? 'team1' : 'team2';
+                    
+        handleWinnerSelect(match.id, winner);
+      }
+    });
+  }, [bracket, handleWinnerSelect]);
+
   return {
     bracket,
     qualifiedTeams,
@@ -505,6 +576,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     setupPlayoffTiebreaker,
     simulateTiebreaker,
     autoGenerateBracket,
+    simulateRound,
     qualificationRules: getQualificationRules()
   };
 };
