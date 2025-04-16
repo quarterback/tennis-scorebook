@@ -1,147 +1,141 @@
-
-import { Player, Team, Gender, Classification } from '@/types';
-import { PlayerStatus, PlayerSkillTier } from '@/types';
-import { generatePlayerName } from './playerNames';
+import { Player } from '@/types';
 
 /**
- * Determine school classification from team
+ * Determine a team's archetype more deterministically
+ * This affects roster composition and overall strength
  */
-export const getSchoolClassification = (team: Team, schools: any[]): Classification => {
-  const school = schools.find(s => s.id === team.schoolId);
-  if (!school) return '6A'; // Default to 6A if not found
-  return school.classification as Classification;
-};
-
-/**
- * Generate appropriate team size based on school classification
- */
-export const determineTeamSize = (classification: Classification): number => {
-  switch(classification) {
-    case '6A':
-      return Math.floor(Math.random() * 6) + 15; // 15-20 players
-    case '5A':
-      return Math.floor(Math.random() * 5) + 13; // 13-17 players
-    case '4A/3A/2A/1A':
-      return Math.floor(Math.random() * 4) + 10;  // 10-13 players
-    default:
-      return Math.floor(Math.random() * 5) + 13; // Default to 5A size
-  }
-};
-
-/**
- * Determine team archetype for player distribution
- */
-export const determineTeamArchetype = (teamId: string): 'dominant' | 'strong' | 'mid-tier' | 'rebuilding' => {
-  // Use hash of team ID to consistently assign archetype
-  const hash = teamId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const normalized = hash % 100;
+export const determineTeamArchetype = (teamId: string): 'dominant' | 'strong' | 'mid-tier' | 'weak' => {
+  // Extract school and gender from team ID (format: "school-gender")
+  const parts = teamId.split('-');
+  const schoolKey = parts[0];
+  const gender = parts[parts.length - 1];
   
-  // Special case for Jesuit-girls which should always be dominant
-  if (teamId.includes('jesuit') && teamId.includes('girls')) {
+  // List of historically dominant programs
+  const dominantGirlsPrograms = [
+    'jesuit', 'summit', 'lincoln', 'oregon-episcopal', 'catlin-gabel', 
+    'marist', 'st-marys-medford', 'central-catholic'
+  ];
+  
+  const dominantBoysPrograms = [
+    'jesuit', 'lincoln', 'summit', 'oregon-episcopal', 'catlin-gabel', 
+    'sunset', 'central-catholic'
+  ];
+  
+  // List of historically strong programs
+  const strongGirlsPrograms = [
+    'sunset', 'lake-oswego', 'wilsonville', 'west-linn', 'crescent-valley',
+    'west-albany', 'st-marys-academy'
+  ];
+  
+  const strongBoysPrograms = [
+    'west-linn', 'lake-oswego', 'crescent-valley', 'wilson', 'lakeridge',
+    'south-eugene', 'west-albany', 'mountain-view'
+  ];
+  
+  // Check if team is from a dominant program
+  if (gender === 'girls' && dominantGirlsPrograms.includes(schoolKey)) {
     return 'dominant';
   }
   
-  // Special case for historically strong programs
-  if (
-    (teamId.includes('catlin-gabel') || 
-     teamId.includes('oregon-episcopal') || 
-     teamId.includes('marist') || 
-     teamId.includes('st-marys-medford')) &&
-    teamId.includes('girls')
-  ) {
-    // 75% chance to be dominant or strong
-    return normalized < 40 ? 'dominant' : 
-           normalized < 75 ? 'strong' : 
-           normalized < 90 ? 'mid-tier' : 'rebuilding';
+  if (gender === 'boys' && dominantBoysPrograms.includes(schoolKey)) {
+    return 'dominant';
   }
   
-  // Normal distribution
-  if (normalized < 10) return 'dominant';      // 10% chance - 1 per league
-  if (normalized < 30) return 'strong';        // 20% chance - 2 per league
-  if (normalized < 70) return 'mid-tier';      // 40% chance - 4 per league
-  return 'rebuilding';                         // 30% chance - 3 per league
+  // Check if team is from a strong program
+  if (gender === 'girls' && strongGirlsPrograms.includes(schoolKey)) {
+    return 'strong';
+  }
+  
+  if (gender === 'boys' && strongBoysPrograms.includes(schoolKey)) {
+    return 'strong';
+  }
+  
+  // For other schools, use a weighted random distribution
+  // with more mid-tier teams than weak/strong
+  const rand = Math.random();
+  
+  if (rand < 0.1) { // 10% chance for non-listed schools to be strong
+    return 'strong';
+  } else if (rand < 0.7) { // 60% chance to be mid-tier
+    return 'mid-tier';
+  } else { // 30% chance to be weak
+    return 'weak';
+  }
 };
 
 /**
- * Determine team strategic approach
+ * Determine a team's size based on archetype and classification
  */
-export const determineTeamStrategy = (teamId: string): 'singles-focused' | 'doubles-focused' | 'balanced' => {
-  // Use team ID hash for consistent strategy assignment
-  const hash = teamId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const normalized = hash % 3;
+export const determineTeamSize = (
+  archetype: 'dominant' | 'strong' | 'mid-tier' | 'weak',
+  classification: string
+): number => {
+  // Base size by classification
+  let baseSize = 
+    classification === '6A' ? 14 :
+    classification === '5A' ? 12 :
+    classification === '4A' ? 10 :
+    classification === '3A' ? 9 :
+    classification === '2A' ? 8 : 7;
   
-  if (normalized === 0) return 'singles-focused';
-  if (normalized === 1) return 'doubles-focused';
+  // Adjust based on archetype
+  const sizeModifier =
+    archetype === 'dominant' ? 2 :
+    archetype === 'strong' ? 1 :
+    archetype === 'mid-tier' ? 0 : -1;
+  
+  // Add some randomness for variation
+  const randomVariance = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+  
+  return Math.max(7, baseSize + sizeModifier + randomVariance);
+};
+
+/**
+ * Get the school classification
+ */
+export const getSchoolClassification = (
+  schoolId: string, 
+  schools: any[]
+): string => {
+  const school = schools.find(s => s.id === schoolId);
+  return school?.classification || '6A';
+};
+
+/**
+ * Determine a team's preferred strategy
+ */
+export const determineTeamStrategy = (
+  teamId: string
+): 'singles-focused' | 'doubles-focused' | 'balanced' => {
+  // Extract school from team ID
+  const schoolKey = teamId.split('-')[0];
+  
+  // Some schools traditionally focus on singles or doubles
+  const singlesSchools = ['jesuit', 'summit', 'lincoln', 'west-linn'];
+  const doublesSchools = ['central-catholic', 'lake-oswego', 'sunset'];
+  
+  if (singlesSchools.includes(schoolKey)) {
+    return 'singles-focused';
+  }
+  
+  if (doublesSchools.includes(schoolKey)) {
+    return 'doubles-focused';
+  }
+  
+  // Most teams are balanced
   return 'balanced';
 };
 
 /**
- * Assign skill tier to a player based on team archetype, classification, and random chance
+ * Assign a player's skill tier
+ * Used when updating players
  */
 export const assignPlayerSkillTier = (
-  index: number, 
-  teamArchetype: 'dominant' | 'strong' | 'mid-tier' | 'rebuilding',
-  classification: Classification,
-  isPrivateSchool: boolean = false
-): PlayerSkillTier => {
-  // Top 4 players get higher chances for better skill tiers
-  const isTopPlayer = index < 4;
-  
-  // Private schools get a bonus for elite players
-  const privateSchoolBonus = isPrivateSchool ? 0.15 : 0;
-  
-  // Base chances for elite tier by team archetype and classification
-  let eliteChance = 0;
-  
-  if (isTopPlayer) {
-    // Base chances for top players by archetype
-    if (teamArchetype === 'dominant') {
-      eliteChance = classification === '6A' ? 0.6 : 
-                    classification === '5A' ? 0.5 : 0.4;
-    } else if (teamArchetype === 'strong') {
-      eliteChance = classification === '6A' ? 0.3 : 
-                    classification === '5A' ? 0.25 : 0.2;
-    } else if (teamArchetype === 'mid-tier') {
-      eliteChance = classification === '6A' ? 0.15 : 
-                    classification === '5A' ? 0.1 : 0.05;
-    } else { // rebuilding
-      eliteChance = classification === '6A' ? 0.05 : 0.02;
-    }
-  } else {
-    // Non-top players have much lower chances
-    eliteChance = teamArchetype === 'dominant' ? 0.1 : 
-                  teamArchetype === 'strong' ? 0.05 : 0.02;
-  }
-  
-  // Apply private school bonus for elite players
-  eliteChance += privateSchoolBonus;
-  
-  // Base chances for competitive tier by team archetype
-  let competitiveChance = 0;
-  
-  if (isTopPlayer) {
-    if (teamArchetype === 'dominant') {
-      competitiveChance = 0.85;
-    } else if (teamArchetype === 'strong') {
-      competitiveChance = 0.7;
-    } else if (teamArchetype === 'mid-tier') {
-      competitiveChance = 0.5;
-    } else { // rebuilding
-      competitiveChance = 0.4;
-    }
-  } else {
-    // Non-top players
-    competitiveChance = teamArchetype === 'dominant' ? 0.6 : 
-                        teamArchetype === 'strong' ? 0.4 : 
-                        teamArchetype === 'mid-tier' ? 0.3 : 0.2;
-  }
-  
-  // Roll for skill tier
-  const roll = Math.random();
-  
-  if (roll < eliteChance) {
+  skillRating: number
+): 'elite' | 'competitive' | 'developmental' => {
+  if (skillRating >= 7.5) {
     return 'elite';
-  } else if (roll < eliteChance + competitiveChance) {
+  } else if (skillRating >= 5.0) {
     return 'competitive';
   } else {
     return 'developmental';
@@ -149,94 +143,54 @@ export const assignPlayerSkillTier = (
 };
 
 /**
- * Generate a random grade (9-12) with weighted distribution
- * More seniors and juniors on varsity teams
+ * Generate a player's grade (9-12)
  */
 export const generatePlayerGrade = (): number => {
-  const weights = [0.15, 0.25, 0.35, 0.25]; // 9th, 10th, 11th, 12th
-  const random = Math.random();
+  const rand = Math.random();
   
-  let cumulativeWeight = 0;
-  for (let i = 0; i < weights.length; i++) {
-    cumulativeWeight += weights[i];
-    if (random < cumulativeWeight) {
-      return i + 9; // grades 9-12
-    }
+  if (rand < 0.1) {
+    return 9; // Freshman
+  } else if (rand < 0.35) {
+    return 10; // Sophomore
+  } else if (rand < 0.65) {
+    return 11; // Junior
+  } else {
+    return 12; // Senior
   }
-  
-  return 9; // default to freshman if something goes wrong
 };
 
 /**
- * Generate a roster of players for a team
- * Team size based on school classification
+ * Generate a team roster
  */
 export const generateTeamRoster = (
-  teamId: string, 
-  schoolId: string,
-  seasonId: string,
-  schools: any[] = [],
-  size?: number // Optional override for team size
-): Player[] => {
-  // Determine classification and private school status
-  const school = schools.find(s => s.id === schoolId);
-  const classification = school?.classification || '6A';
-  const isPrivateSchool = school?.name?.includes('Catholic') || 
-                          school?.name?.includes('Christian') || 
-                          school?.name?.includes('Academy') || 
-                          school?.name?.includes('Prep') ||
-                          school?.name?.includes('Episcopal') ||
-                          school?.name?.includes('Catlin Gabel') ||
-                          school?.name?.includes('St. Mary');
+  teamId: string,
+  teamSize: number
+): string[] => {
+  const roster: string[] = [];
   
-  // Determine team archetype and strategy
-  const teamArchetype = determineTeamArchetype(teamId);
-  const teamStrategy = determineTeamStrategy(teamId);
-  
-  // Determine roster size based on classification if not provided
-  const rosterSize = size ?? determineTeamSize(classification as Classification);
-  
-  const players: Player[] = [];
-  
-  const gender = teamId.endsWith('-girls') ? 'Girls' : 'Boys';
-  
-  for (let i = 0; i < rosterSize; i++) {
-    // Assign skill tier based on position in roster, archetype, and classification
-    const skillTier = assignPlayerSkillTier(i, teamArchetype, classification as Classification, isPrivateSchool);
-    
-    const player: Player = {
-      id: crypto.randomUUID(),
-      name: generatePlayerName(gender),
-      grade: generatePlayerGrade(),
-      teamId,
-      seasonId,
-      status: 'active' as PlayerStatus,
-      seasons: [seasonId],
-      skillTier // Add the skill tier to the player object
-    };
-    
-    players.push(player);
+  for (let i = 0; i < teamSize; i++) {
+    roster.push(crypto.randomUUID());
   }
   
-  return players;
+  return roster;
 };
 
 /**
- * Get player information by ID with ladder position
+ * Get a player with their rank on the team ladder
  */
 export const getPlayerWithRank = (
   playerId: string,
-  players: Player[],
+  allPlayers: Player[],
   ladder: any
-): { player: Player, rank: number } | null => {
-  const player = players.find(p => p.id === playerId);
-  if (!player) return null;
+): { player: Player, rank: number } | undefined => {
+  const player = allPlayers.find(p => p.id === playerId);
+  if (!player) return undefined;
   
-  const ladderPosition = ladder.rankings.find((r: any) => r.playerId === playerId);
-  if (!ladderPosition) return null;
+  const ranking = ladder.rankings.find((r: any) => r.playerId === playerId);
+  if (!ranking) return undefined;
   
   return {
     player,
-    rank: ladderPosition.rank
+    rank: ranking.rank
   };
 };

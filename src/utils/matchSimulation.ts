@@ -13,6 +13,7 @@ interface StrengthAssessment {
 
 /**
  * Assess team strength based on archetype, classification and player skill tiers
+ * with adjustments for historically dominant programs
  */
 const assessTeamStrength = (
   team: Team,
@@ -23,16 +24,60 @@ const assessTeamStrength = (
   const classification = school?.classification || '6A';
   const archetype = determineTeamArchetype(team.id);
   
-  // Base strength by archetype
+  // Base strength by archetype with increased differentiation
   let baseStrength = 
-    archetype === 'dominant' ? 8 :
-    archetype === 'strong' ? 6 :
-    archetype === 'mid-tier' ? 4 : 2;
+    archetype === 'dominant' ? 10 :   // Increased from 8
+    archetype === 'strong' ? 7.5 :    // Increased from 6
+    archetype === 'mid-tier' ? 5 :    // Increased from 4
+    archetype === 'weak' ? 3 : 1.5;   // Increased differentiation for weak teams
   
-  // Classification modifier
+  // Classification modifier with greater differentiation
   const classModifier = 
     classification === '6A' ? 1.2 :
-    classification === '5A' ? 1.0 : 0.8;
+    classification === '5A' ? 1.0 : 
+    classification === '4A' ? 0.9 :
+    classification === '3A' ? 0.8 :
+    classification === '2A' ? 0.7 : 0.6;
+  
+  // Historical program bonus
+  let historicalBonus = 1.0;
+  
+  // Apply special bonuses for historically dominant programs
+  if (school) {
+    // Girls tennis powerhouses
+    if (team.gender === 'Girls') {
+      if (school.name === 'Jesuit') {
+        historicalBonus = 1.4; // Jesuit girls dominate
+      } else if (
+        school.name === 'Oregon Episcopal' || 
+        school.name === 'Catlin Gabel' || 
+        school.name === 'Marist Catholic' || 
+        school.name === "St. Mary's (Medford)"
+      ) {
+        historicalBonus = 1.3; // Other historically strong programs
+      } else if (
+        school.name === 'Summit' || 
+        school.name === 'Lincoln' ||
+        school.name === 'Central Catholic' ||
+        school.name === 'Sunset'
+      ) {
+        historicalBonus = 1.2; // Other strong 6A programs
+      }
+    } 
+    // Boys tennis powerhouses
+    else if (team.gender === 'Boys') {
+      if (school.name === 'Jesuit' || school.name === 'Lincoln') {
+        historicalBonus = 1.3; // Top boys programs
+      } else if (
+        school.name === 'Summit' || 
+        school.name === 'Central Catholic' ||
+        school.name === 'Oregon Episcopal' ||
+        school.name === 'Catlin Gabel'
+      ) {
+        historicalBonus = 1.2; // Other strong programs
+      }
+    }
+  }
   
   // Count elite and competitive players
   const teamPlayers = players.filter(p => p.teamId === team.id);
@@ -43,7 +88,7 @@ const assessTeamStrength = (
   const skillTierBonus = (elitePlayers * 0.5) + (competitivePlayers * 0.2);
   
   return {
-    baseStrength: baseStrength * classModifier,
+    baseStrength: baseStrength * classModifier * historicalBonus,
     archetype,
     classification,
     skillTierBonus
@@ -114,12 +159,17 @@ const calculatePositionStrength = (
  * @returns Object with home and away scores
  */
 export const generateSetScore = (homeStrength: number, awayStrength: number): { homeScore: number, awayScore: number, tiebreak?: { homeScore: number, awayScore: number } } => {
-  // Calculate win probability based on relative strengths
+  // Calculate win probability based on relative strengths with more weight on skill difference
   const totalStrength = homeStrength + awayStrength;
-  const homeWinProbability = homeStrength / totalStrength;
+  // Increase skill impact on win probability
+  const skillImpact = 1.2; // Increased from default
+  const rawHomeWinProbability = (homeStrength / totalStrength) * skillImpact;
+  
+  // Clamp probability between 0.05-0.95
+  const homeWinProbability = Math.max(0.05, Math.min(0.95, rawHomeWinProbability));
   
   // Add slight home court advantage
-  const adjustedHomeWinProb = Math.min(0.95, homeWinProbability * 1.05);
+  const adjustedHomeWinProb = Math.min(0.95, homeWinProbability * 1.08); // Increased home advantage
   
   // Determine winner
   const homeWins = Math.random() < adjustedHomeWinProb;
@@ -129,27 +179,28 @@ export const generateSetScore = (homeStrength: number, awayStrength: number): { 
   
   // Calculate strength difference for score determination
   const strengthDiff = Math.abs(homeStrength - awayStrength);
-  const isDominant = strengthDiff > 4;
-  const isStrong = strengthDiff > 2 && strengthDiff <= 4;
-  const isClose = strengthDiff <= 2;
+  // More pronounced score differentials based on team strength differences
+  const isDominant = strengthDiff > 3.5; // Reduced from 4
+  const isStrong = strengthDiff > 1.8 && strengthDiff <= 3.5; // Adjusted ranges 
+  const isClose = strengthDiff <= 1.8;
   
   if (homeWins) {
     // Home player/team wins
     if (isDominant) {
       // Dominant win (6-0, 6-1)
       homeScore = 6;
-      awayScore = Math.random() < 0.7 ? 0 : 1;
+      awayScore = Math.random() < 0.8 ? 0 : 1; // Increased chance of 6-0 score
     } else if (isStrong) {
       // Clear win (6-2, 6-3)
       homeScore = 6;
-      awayScore = Math.random() < 0.5 ? 2 : 3;
+      awayScore = Math.random() < 0.6 ? 2 : 3;
     } else if (isClose) {
       // Close win (6-4, 7-5, 7-6)
       const closeType = Math.random();
-      if (closeType < 0.6) {
+      if (closeType < 0.7) { // More likely 6-4 than 7-5 or 7-6
         homeScore = 6;
         awayScore = 4;
-      } else if (closeType < 0.8) {
+      } else if (closeType < 0.9) {
         homeScore = 7;
         awayScore = 5;
       } else {
@@ -161,19 +212,19 @@ export const generateSetScore = (homeStrength: number, awayStrength: number): { 
     // Away player/team wins
     if (isDominant) {
       // Dominant win (0-6, 1-6)
-      homeScore = Math.random() < 0.7 ? 0 : 1;
+      homeScore = Math.random() < 0.8 ? 0 : 1; // Increased chance of 0-6 score
       awayScore = 6;
     } else if (isStrong) {
       // Clear win (2-6, 3-6)
-      homeScore = Math.random() < 0.5 ? 2 : 3;
+      homeScore = Math.random() < 0.6 ? 2 : 3;
       awayScore = 6;
     } else if (isClose) {
       // Close win (4-6, 5-7, 6-7)
       const closeType = Math.random();
-      if (closeType < 0.6) {
+      if (closeType < 0.7) { // More likely 4-6 than 5-7 or 6-7
         homeScore = 4;
         awayScore = 6;
-      } else if (closeType < 0.8) {
+      } else if (closeType < 0.9) {
         homeScore = 5;
         awayScore = 7;
       } else {
@@ -427,8 +478,35 @@ export const simulateMatch = (
   const homeFlightWins = flights.filter(f => f.homePlayerWon).length;
   const awayFlightWins = flights.filter(f => !f.homePlayerWon).length;
   
-  // Check for tie (4-4 in high school tennis)
-  const isTie = homeFlightWins === awayFlightWins;
+  // Significantly reduce chance of ties
+  // In high school tennis, ties (4-4) should be rare
+  const shouldForceTiebreaker = Math.random() > 0.88; // Only about 12% chance to allow a tie
+  const isTie = homeFlightWins === awayFlightWins && !shouldForceTiebreaker;
+  
+  // If it would be a tie but we want to force a tiebreaker, adjust one flight result
+  if (homeFlightWins === awayFlightWins && shouldForceTiebreaker && flights.length > 0) {
+    // Select a random flight to flip
+    const flightToFlip = flights[Math.floor(Math.random() * flights.length)];
+    
+    // Determine which team should win (weighted by team strength assessment)
+    const homeTeamAssessment = assessTeamStrength(homeTeam, schools, allPlayers);
+    const awayTeamAssessment = assessTeamStrength(awayTeam, schools, allPlayers);
+    
+    const totalStrength = homeTeamAssessment.baseStrength + awayTeamAssessment.baseStrength;
+    const homeWinProb = homeTeamAssessment.baseStrength / totalStrength;
+    
+    // Flip the result
+    flightToFlip.homePlayerWon = Math.random() < homeWinProb;
+    
+    // Update flight counts
+    if (flightToFlip.homePlayerWon) {
+      homeFlightWins++;
+      awayFlightWins--;
+    } else {
+      homeFlightWins--;
+      awayFlightWins++;
+    }
+  }
   
   // For playoff matches, simulate tiebreaker rounds if needed
   let tiebreakRound = null;

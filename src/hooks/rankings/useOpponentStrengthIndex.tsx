@@ -48,16 +48,44 @@ export const useOpponentStrengthIndex = (
       }
     });
     
-    // Get the team's school
+    // Get the team's school and gender
     const team = teams.find(t => t.id === teamId);
     const school = team ? schools.find(s => s.id === team.schoolId) : null;
     
-    // Apply a strength modifier for historically strong schools
+    // Apply a strength modifier for historically strong schools with increased values
     let strengthModifier = 1.0;
-    if (school) {
+    
+    if (school && team) {
       const schoolKey = school.name.toLowerCase().replace(/\s+/g, '-');
-      if (historicalData.topSchools.includes(schoolKey)) {
-        strengthModifier = 1.1; // 10% boost for historically strong programs
+      const gender = team.gender;
+      
+      // Enhanced modifiers for historically dominant programs
+      if (gender === 'Girls') {
+        if (school.name === 'Jesuit') {
+          strengthModifier = 1.25; // Increased from 1.1 for Jesuit Girls
+        } else if (
+          historicalData.topSchools.includes(schoolKey) ||
+          school.name === 'Oregon Episcopal' || 
+          school.name === 'Catlin Gabel' || 
+          school.name === 'Marist Catholic' || 
+          school.name === "St. Mary's (Medford)"
+        ) {
+          strengthModifier = 1.15; // Increased from 1.1 for other top programs
+        }
+      } else {
+        // Boys programs
+        if (school.name === 'Jesuit' || school.name === 'Lincoln') {
+          strengthModifier = 1.2; // Dominant boys programs
+        } else if (historicalData.topSchools.includes(schoolKey)) {
+          strengthModifier = 1.1; // Other top boys programs
+        }
+      }
+      
+      // Additional classification adjustment - higher classifications deserve a boost
+      if (school.classification === '6A') {
+        strengthModifier *= 1.05; // 5% bonus for 6A schools
+      } else if (school.classification === '5A') {
+        strengthModifier *= 1.03; // 3% bonus for 5A schools
       }
     }
     
