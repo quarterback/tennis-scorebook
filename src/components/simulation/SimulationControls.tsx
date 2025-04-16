@@ -206,6 +206,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
             name: `${team.gender === 'Boys' ? 'Player' : 'Player'} ${Math.floor(Math.random() * 100)}`,
             grade: Math.floor(Math.random() * 4) + 9,
             teamId: team.id,
+            seasonId: currentSeason.id, // Add the required seasonId property
             seasons: [currentSeason.id],
             skillTier: 'developmental' as PlayerSkillTier,
             gender: team.gender
