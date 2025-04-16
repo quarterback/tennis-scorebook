@@ -11,7 +11,7 @@ export const useFlightWeightedScore = (matches: Match[]) => {
    * 2nd Doubles = 0.5 pt
    * 3rd Singles = 0.45 pt
    * 3rd Doubles = 0.35 pt
-   * Ties count as half a win
+   * Ties count as half a win (but are extremely rare now)
    */
   const calculateFlightWeightedScore = (teamId: string, config: RankingConfig): number => {
     let score = 0;
@@ -29,9 +29,16 @@ export const useFlightWeightedScore = (matches: Match[]) => {
       m => new Date(m.date) <= cutoffDate
     );
     
+    let tieCount = 0;
+    
     // For each match, calculate flight-weighted points with enhanced scoring
     validMatches.forEach(match => {
       const isHomeTeam = match.homeTeamId === teamId;
+      
+      // Check if the match is a tie
+      if (match.isTie) {
+        tieCount++;
+      }
       
       // Process each flight in the match
       match.flights.forEach(flight => {
@@ -40,7 +47,7 @@ export const useFlightWeightedScore = (matches: Match[]) => {
         
         // Determine if this team won the flight
         const teamWon = isHomeTeam ? flight.homePlayerWon : !flight.homePlayerWon;
-        const isTie = flight.homePlayerWon === undefined; // Flight ended in tie
+        const isTie = flight.homePlayerWon === undefined; // Flight ended in tie (extremely rare now)
         
         // Determine the weight for this flight
         let flightWeight = 0;
@@ -82,6 +89,11 @@ export const useFlightWeightedScore = (matches: Match[]) => {
         });
       }
     });
+    
+    // Log the tie count for debugging
+    if (tieCount > 0) {
+      console.log(`Team ${teamId} has ${tieCount} ties`);
+    }
     
     return score;
   };

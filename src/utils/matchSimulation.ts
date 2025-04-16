@@ -124,15 +124,27 @@ const isInClassification = (combinedClass: string, singleClass: string): boolean
          (combinedClass === '4A/3A/2A/1A' && ['4A', '3A', '2A', '1A'].includes(singleClass));
 };
 
-// Fix for the homeFlightWins/awayFlightWins constant reassignment:
-// We'll change these to use let instead of const when they need to be reassigned
+// Updated match score calculation to make ties extremely rare (less than 1% chance)
 const updateMatchScores = (match: any, flights: any[]) => {
   let homeFlightWins = flights.filter(f => f.homePlayerWon).length;
   let awayFlightWins = flights.filter(f => !f.homePlayerWon).length;
   
-  // Add the tie handling logic here
+  // Make ties extremely rare - if we have a tie (4-4), randomly give one more win
+  // to break the tie, with only a 1% chance of keeping it a tie
   if (homeFlightWins === awayFlightWins) {
-    // If the match is tied, set isTie to true
+    // 99% chance to break the tie, 1% chance to keep it a tie
+    if (Math.random() > 0.01) {
+      // Randomly give one team the advantage to break the tie
+      if (Math.random() > 0.5) {
+        homeFlightWins += 1;
+      } else {
+        awayFlightWins += 1;
+      }
+    }
+  }
+  
+  // Only if it's still a tie after the rare chance check
+  if (homeFlightWins === awayFlightWins) {
     match.isTie = true;
     match.homeTeamWon = undefined; // Clear any previous winner
   } else {
@@ -154,7 +166,7 @@ const createFlight = (matchId: string, type: 'singles' | 'doubles', position: nu
     level,
     homePlayers: [],
     awayPlayers: [],
-    homePlayerWon: false,
+    homePlayerWon: Math.random() > 0.5, // Randomize winner for more realistic distribution
     sets: []
   };
 };

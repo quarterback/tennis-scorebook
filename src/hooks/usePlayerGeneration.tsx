@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Player, Team, School } from '@/types';
+import { Player, Team, School, Gender } from '@/types';
 import { generatePlayerName, generatePlayerGrade, assignPlayerSkillTier } from '@/utils/playerSimulation';
 import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
 import { determineTeamArchetype, determineTeamSize } from '@/utils/playerGeneration';
@@ -108,11 +108,6 @@ export const usePlayerGeneration = () => {
         const singlesPreference = skillTier === 'elite' 
           ? 0.6 + (Math.random() * 0.4) // 0.6-1.0 for elite
           : 0.2 + (Math.random() * 0.8); // 0.2-1.0 for others
-        
-        // Extract first and last name from the generated name string
-        const nameParts = playerNameResult.split(' ');
-        const firstName = nameParts[0];
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
         
         const player: Player = {
           id: crypto.randomUUID(),
