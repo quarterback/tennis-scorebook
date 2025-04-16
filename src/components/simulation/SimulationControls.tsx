@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { PlayerSkillTier } from '@/types';
@@ -7,18 +8,18 @@ const SimulationControls = () => {
     teams,
     players,
     addPlayer,
-    generateMatches,
-    generatingMatches,
+    addMatch,
     schools,
     districts,
-    ladders,
-    generatePlayers,
-    isGeneratingPlayers
+    deleteAllMatches,
+    deleteAllPlayers
   } = useData();
   
   const [startDate, setStartDate] = useState('2024-09-01');
   const [endDate, setEndDate] = useState('2025-05-31');
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(true);
+  const [generatingMatches, setGeneratingMatches] = useState(false);
+  const [isGeneratingPlayers, setIsGeneratingPlayers] = useState(false);
   
   useEffect(() => {
     const today = new Date();
@@ -29,14 +30,49 @@ const SimulationControls = () => {
   }, []);
   
   const handleGenerateMatches = () => {
-    generateMatches({
-      startDate: startDate,
-      endDate: endDate,
-      doubleRoundRobin: doubleRoundRobin
+    setGeneratingMatches(true);
+    
+    // Clear existing matches first
+    deleteAllMatches();
+    
+    // Import needed hook dynamically to avoid circular dependencies
+    import('@/hooks/useMatchGeneration').then(({ useMatchGeneration }) => {
+      const { generateMatchData } = useMatchGeneration();
+      
+      try {
+        const matches = generateMatchData(
+          teams,
+          schools,
+          districts,
+          players,
+          [], // Empty ladders array as it's not actually used in the simulation logic
+          {
+            startDate,
+            endDate,
+            doubleRoundRobin: doubleRoundRobin
+          }
+        );
+        
+        // Add all generated matches to the state
+        matches.forEach(match => {
+          addMatch(match);
+        });
+        
+        console.log(`Generated ${matches.length} matches successfully`);
+      } catch (error) {
+        console.error('Error generating matches:', error);
+      } finally {
+        setGeneratingMatches(false);
+      }
     });
   };
   
   const handleGeneratePlayers = () => {
+    setIsGeneratingPlayers(true);
+    
+    // Clear existing players first
+    deleteAllPlayers();
+    
     const currentSeason = {
       id: crypto.randomUUID(),
       year: new Date().getFullYear(),
@@ -44,23 +80,25 @@ const SimulationControls = () => {
       isCurrent: true
     };
     
-    generatePlayers(teams, schools, currentSeason.id);
-  };
-  
-  const addMissingPlayers = (teamId: string, playersNeeded: number, seasonId: string) => {
-    const team = teams.find(t => t.id === teamId);
-    if (!team) return;
-    
-    for (let i = 0; i < playersNeeded; i++) {
-      addPlayer({
-        name: `${team.gender === 'Boys' ? 'Player' : 'Player'} ${Math.floor(Math.random() * 100)}`,
-        grade: Math.floor(Math.random() * 4) + 9,
-        teamId: teamId,
-        seasons: [seasonId],
-        skillTier: 'developmental' as PlayerSkillTier,
-        gender: team.gender // Add gender field to fix the TS error
-      });
-    }
+    // Import needed hook dynamically
+    import('@/hooks/usePlayerGeneration').then(({ usePlayerGeneration }) => {
+      const { generatePlayerData } = usePlayerGeneration();
+      
+      try {
+        const { players: generatedPlayers } = generatePlayerData(teams, schools, currentSeason.id);
+        
+        // Add all generated players to the state
+        generatedPlayers.forEach(player => {
+          addPlayer(player);
+        });
+        
+        console.log(`Generated ${generatedPlayers.length} players successfully`);
+      } catch (error) {
+        console.error('Error generating players:', error);
+      } finally {
+        setIsGeneratingPlayers(false);
+      }
+    });
   };
   
   const handleAddPlayersToAllTeams = () => {
@@ -76,7 +114,16 @@ const SimulationControls = () => {
       const playersNeeded = 12 - teamPlayers.length;
       
       if (playersNeeded > 0) {
-        addMissingPlayers(team.id, playersNeeded, currentSeason.id);
+        for (let i = 0; i < playersNeeded; i++) {
+          addPlayer({
+            name: `${team.gender === 'Boys' ? 'Player' : 'Player'} ${Math.floor(Math.random() * 100)}`,
+            grade: Math.floor(Math.random() * 4) + 9,
+            teamId: team.id,
+            seasons: [currentSeason.id],
+            skillTier: 'developmental' as PlayerSkillTier,
+            gender: team.gender // Add gender field to fix the TS error
+          });
+        }
       }
     });
   };
@@ -108,12 +155,12 @@ const SimulationControls = () => {
       <div className="round-robin-select">
         <label>
           Double Round Robin:
-          <select
-            value={doubleRoundRobin}
-            onChange={e => setDoubleRoundRobin(e.target.value === 'true')}
+          <select 
+            value={doubleRoundRobin ? "true" : "false"}
+            onChange={e => setDoubleRoundRobin(e.target.value === "true")}
           >
-            <option value={true}>Yes</option>
-            <option value={false}>No</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
           </select>
         </label>
       </div>

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Player, Team, School, Gender } from '@/types';
+import { Player, Team, School, Gender, PlayerSkillTier } from '@/types';
 import { generatePlayerName, generatePlayerGrade, assignPlayerSkillTier } from '@/utils/playerSimulation';
 import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
 import { determineTeamArchetype, determineTeamSize } from '@/utils/playerGeneration';
@@ -56,12 +56,12 @@ export const usePlayerGeneration = () => {
       const teamPlayers: Player[] = [];
       
       for (let i = 0; i < rosterSize; i++) {
-        const playerNameResult = generatePlayerName(team.gender === 'Girls' ? 'female' : 'male');
+        const playerName = generatePlayerName(team.gender === 'Girls' ? 'female' : 'male');
         const playerGrade = generatePlayerGrade();
         
         // Calculate player skill tier based on team archetype
         // This determines if they're elite/competitive/developmental
-        let skillTier: 'elite' | 'competitive' | 'developmental';
+        let skillTier: PlayerSkillTier;
         const rand = Math.random();
         
         if (rand < elitePlayerRatio) {
@@ -111,14 +111,15 @@ export const usePlayerGeneration = () => {
         
         const player: Player = {
           id: crypto.randomUUID(),
-          name: playerNameResult,
+          name: playerName,
           teamId: team.id,
           gender: team.gender,
           grade: playerGrade,
           skillTier,
           skillRating: finalSkill,
           singles_preference: singlesPreference,
-          seasonId: seasonId
+          seasonId: seasonId,
+          seasons: [seasonId]
         };
         
         teamPlayers.push(player);
@@ -126,7 +127,7 @@ export const usePlayerGeneration = () => {
       
       // Sort players by skill for ladder creation
       const sortedPlayers = [...teamPlayers].sort((a, b) => 
-        (b.skillRating ?? 0) - (a.skillRating ?? 0)
+        (b.skillRating || 0) - (a.skillRating || 0)
       );
       players.push(...sortedPlayers);
       
