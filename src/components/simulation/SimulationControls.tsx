@@ -26,7 +26,11 @@ import { useSeasonCalculations } from './hooks/useSeasonCalculations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
-const SimulationControls: React.FC = () => {
+interface SimulationControlsProps {
+  onSimulationComplete?: (results: any) => void;
+}
+
+const SimulationControls: React.FC<SimulationControlsProps> = ({ onSimulationComplete }) => {
   const { 
     schools, teams, districts, currentSeason, seasons,
     addPlayer, addMatch, getArchivedSeasons,
@@ -154,7 +158,7 @@ const SimulationControls: React.FC = () => {
     }
     
     try {
-      await generateAllData(
+      const results = await generateAllData(
         teams,
         schools,
         districts,
@@ -194,6 +198,11 @@ const SimulationControls: React.FC = () => {
           }
         }
       );
+      
+      // Call the onSimulationComplete callback if provided
+      if (onSimulationComplete && results) {
+        onSimulationComplete(results);
+      }
     } catch (error) {
       if (error instanceof Error) {
         setSimulationError(error.message);
