@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
@@ -38,17 +37,23 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     seasons: []
   });
   
-  // Filter schools if coach
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [newPlayerGrade, setNewPlayerGrade] = useState('9');
+  const [newPlayerData, setNewPlayerData] = useState<Omit<Player, 'id' | 'status' | 'seasonId'>>({
+    name: '',
+    grade: 9,
+    teamId: '',
+    seasons: []
+  });
+  
   const filteredSchools = user?.role === 'coach' && user.schoolId
     ? schools.filter(school => school.id === user.schoolId)
     : schools;
   
-  // Filter schools based on classification if provided
   const classificationFilteredSchools = filter.classification 
     ? filteredSchools.filter(school => school.classification === filter.classification)
     : filteredSchools;
   
-  // Set initial school selection based on first available school
   useEffect(() => {
     if (classificationFilteredSchools.length > 0 && !selectedSchoolId) {
       setSelectedSchoolId(classificationFilteredSchools[0].id);
@@ -56,13 +61,11 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     }
   }, [classificationFilteredSchools, selectedSchoolId]);
   
-  // Get teams for the selected school
   const schoolTeams = teams.filter(team => 
     team.schoolId === selectedSchoolId && (!filter.classification || 
     schools.find(s => s.id === team.schoolId)?.classification === filter.classification)
   );
   
-  // Get the selected school
   const selectedSchool = schools.find(s => s.id === selectedSchoolId);
   
   const handleAddTeam = (e: React.FormEvent) => {
@@ -76,22 +79,63 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     setIsAddTeamDialogOpen(false);
   };
   
-  const handleAddPlayer = (e: React.FormEvent) => {
+  const handleAddPlayer = () => {
+    const selectedTeam = teams.find(t => t.id === selectedTeamId);
+    if (!selectedTeam) return;
+    
+    addPlayer({
+      name: newPlayerName,
+      grade: Number(newPlayerGrade),
+      teamId: selectedTeamId,
+      seasons: [],
+      gender: selectedTeam.gender
+    });
+    
+    setNewPlayerName('');
+    setNewPlayerGrade('9');
+    setIsAddPlayerDialogOpen(false);
+  };
+  
+  const handlePlayerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedTeamId) {
-      addPlayer({
-        name: playerFormData.name,
-        grade: playerFormData.grade,
+    const selectedTeam = teams.find(t => t.id === selectedTeamId);
+    if (!selectedTeam) return;
+    
+    addPlayer({
+      name: newPlayerName,
+      grade: Number(newPlayerGrade),
+      teamId: selectedTeamId,
+      seasons: [currentSeason?.id || ''],
+      gender: selectedTeam.gender
+    });
+    
+    setNewPlayerName('');
+    setNewPlayerGrade('9');
+    setIsAddPlayerDialogOpen(false);
+  };
+  
+  const handleChangeNewPlayerValues = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const selectedTeam = teams.find(t => t.id === selectedTeamId);
+    
+    if (name === 'name') {
+      setNewPlayerName(value);
+      setNewPlayerData({
+        name: value,
+        grade: Number(newPlayerGrade),
         teamId: selectedTeamId,
-        seasons: [currentSeason.id] // Add the current season ID
+        seasons: [],
+        gender: selectedTeam?.gender || 'Boys'
       });
-      setPlayerFormData({
-        name: '',
-        grade: 9,
+    } else if (name === 'grade') {
+      setNewPlayerGrade(value);
+      setNewPlayerData({
+        name: newPlayerName,
+        grade: Number(value),
         teamId: selectedTeamId,
-        seasons: []
+        seasons: [],
+        gender: selectedTeam?.gender || 'Boys'
       });
-      setIsAddPlayerDialogOpen(false);
     }
   };
   

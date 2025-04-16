@@ -1,7 +1,8 @@
+
 // Let's update the utility to reduce ties and to handle the correct types
 
 import { Team, School, Match, Player, Flight, Set } from '@/types';
-import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
+import { TeamLadder } from '@/types/ranking';
 
 /**
  * Generate a match between two teams
@@ -41,18 +42,50 @@ export const generateMatch = (
     flights.push(flight);
   }
   
-  // Create match object
+  // Simulate match results
+  let homeWins = 0;
+  let awayWins = 0;
+  
+  flights.forEach(flight => {
+    const homeWin = flight.homePlayerWon;
+    if (homeWin) {
+      homeWins++;
+    } else {
+      awayWins++;
+    }
+  });
+  
+  // Now apply the rare tie rule - only 1% chance to have an actual tie
+  // This is to ensure we have some ties for testing but they're very rare
+  if (homeWins === awayWins && Math.random() > 0.01) {
+    // Break the tie 99% of the time
+    if (Math.random() > 0.5) {
+      // Home team gets one more win
+      flights[Math.floor(Math.random() * flights.length)].homePlayerWon = true;
+      homeWins++;
+    } else {
+      // Away team gets one more win
+      flights[Math.floor(Math.random() * flights.length)].homePlayerWon = false;
+      awayWins++;
+    }
+  }
+  
+  // Create match object with correct score
   const match: Match = {
     id: crypto.randomUUID(),
     date: config.startDate,
     homeTeamId: homeTeam.id,
     awayTeamId: awayTeam.id,
     isLeagueMatch: config.isLeagueMatch,
-    isComplete: false,
+    isComplete: true, // Set to true as we've simulated the match
     hasJvMatches: false,
     homeCoachApproved: false,
     awayCoachApproved: false,
-    flights: flights
+    flights: flights,
+    homeTeamScore: homeWins,
+    awayTeamScore: awayWins,
+    homeTeamWon: homeWins > awayWins ? true : homeWins < awayWins ? false : undefined,
+    isTie: homeWins === awayWins
   };
   
   return match;
@@ -117,56 +150,96 @@ export const generateDistrictMatches = (
   return matches;
 };
 
-// Fix for the classification comparison error:
-// When comparing to values like "4A", we need to check if the combined classification string contains it
-const isInClassification = (combinedClass: string, singleClass: string): boolean => {
-  return combinedClass === singleClass || 
-         (combinedClass === '4A/3A/2A/1A' && ['4A', '3A', '2A', '1A'].includes(singleClass));
-};
-
-// Updated match score calculation to make ties extremely rare (less than 1% chance)
-const updateMatchScores = (match: any, flights: any[]) => {
-  let homeFlightWins = flights.filter(f => f.homePlayerWon).length;
-  let awayFlightWins = flights.filter(f => !f.homePlayerWon).length;
+// Create a flight with proper scores and a winner
+const createFlight = (matchId: string, type: 'singles' | 'doubles', position: number, level: 'varsity' | 'jv'): Flight => {
+  // Determine a winner randomly
+  const homeWin = Math.random() > 0.5;
   
-  // Make ties extremely rare - if we have a tie (4-4), randomly give one more win
-  // to break the tie, with only a 1% chance of keeping it a tie
-  if (homeFlightWins === awayFlightWins) {
-    // 99% chance to break the tie, 1% chance to keep it a tie
-    if (Math.random() > 0.01) {
-      // Randomly give one team the advantage to break the tie
-      if (Math.random() > 0.5) {
-        homeFlightWins += 1;
+  // Generate realistic scores for tennis sets
+  const sets: Set[] = [];
+  
+  // Randomly determine number of sets (2-3)
+  const numSets = Math.floor(Math.random() * 2) + 2;
+  
+  if (homeWin) {
+    // Home player wins
+    for (let i = 0; i < numSets; i++) {
+      if (i < 2) { // First two sets
+        if (Math.random() > 0.2) {
+          // Home player wins set decisively
+          sets.push({
+            homeScore: 6,
+            awayScore: Math.floor(Math.random() * 4)
+          });
+        } else {
+          // Home player wins close set
+          sets.push({
+            homeScore: 7,
+            awayScore: 5 + Math.floor(Math.random() * 2),
+            tiebreak: Math.random() > 0.5 ? {
+              homeScore: 7,
+              awayScore: 5
+            } : undefined
+          });
+        }
       } else {
-        awayFlightWins += 1;
+        // Third set (if played)
+        sets.push({
+          homeScore: 6,
+          awayScore: Math.floor(Math.random() * 4)
+        });
+      }
+    }
+  } else {
+    // Away player wins
+    for (let i = 0; i < numSets; i++) {
+      if (i < 2) { // First two sets
+        if (Math.random() > 0.2) {
+          // Away player wins set decisively
+          sets.push({
+            homeScore: Math.floor(Math.random() * 4),
+            awayScore: 6
+          });
+        } else {
+          // Away player wins close set
+          sets.push({
+            homeScore: 5 + Math.floor(Math.random() * 2),
+            awayScore: 7,
+            tiebreak: Math.random() > 0.5 ? {
+              homeScore: 5,
+              awayScore: 7
+            } : undefined
+          });
+        }
+      } else {
+        // Third set (if played)
+        sets.push({
+          homeScore: Math.floor(Math.random() * 4),
+          awayScore: 6
+        });
       }
     }
   }
   
-  // Only if it's still a tie after the rare chance check
-  if (homeFlightWins === awayFlightWins) {
-    match.isTie = true;
-    match.homeTeamWon = undefined; // Clear any previous winner
-  } else {
-    match.isTie = false;
-    match.homeTeamWon = homeFlightWins > awayFlightWins;
-  }
+  // Create score display string
+  const scoreDisplay = sets.map(set => {
+    let display = `${set.homeScore}-${set.awayScore}`;
+    if (set.tiebreak) {
+      display += ` (${set.tiebreak.homeScore}-${set.tiebreak.awayScore})`;
+    }
+    return display;
+  }).join(', ');
   
-  match.homeTeamScore = homeFlightWins;
-  match.awayTeamScore = awayFlightWins;
-};
-
-// Make sure that matchId is included in all flight objects
-const createFlight = (matchId: string, type: 'singles' | 'doubles', position: number, level: 'varsity' | 'jv') => {
   return {
     id: crypto.randomUUID(),
-    matchId: matchId, // Ensure matchId is included
+    matchId,
     type,
     position,
     level,
     homePlayers: [],
     awayPlayers: [],
-    homePlayerWon: Math.random() > 0.5, // Randomize winner for more realistic distribution
-    sets: []
+    homePlayerWon: homeWin,
+    sets,
+    scoreDisplay
   };
 };
