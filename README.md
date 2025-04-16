@@ -1,36 +1,34 @@
 # 🟢 Tennis Scorebook
+# Oregon High School Tennis Scorebook
 
-A modern ranking and scorekeeping system for high school tennis, built to replace the limitations of our existing very bad tennis online scorebook and provide a transparent, flexible model for evaluating team performance in real time modeled for tennis!
+This is a modern alternative to TennisReporting built for Oregon high school tennis. It supports dual match recording, player rosters, lineup generation, and team-level ranking based on a custom model optimized for the OSAA's competitive structure.
 
----
+## 🚧 Features (WIP)
 
-## 🎯 Purpose
+- Full dual match entry system
+- Team + player roster management
+- League + classification organization
+- Automatically calculated **APR Ranking** using the new OSAA Team Tennis Ranking Model
+- Handles ties, forfeits, and tournaments
+- Integration-ready with a simulation system for model testing (coming soon)
 
-This project began as an experiment to address long-standing frustrations with the current lack of intelligent, explainable tennis rankings in Oregon high school tennis. It now includes:
+## 📊 Ranking Model Overview
 
-- A fully defined ranking algorithm designed specifically for dual match play
-- A team tennis results entry and standings engine
-- A real-time APR (Adjusted Playoff Ranking) calculator based on match quality and opponent strength
-- A roadmap toward a full replacement of our current system
+The system uses a custom APR (Adjusted Playoff Ranking) formula:
 
----
+Where:
 
-## 📊 Features
+- `WS10` = **Weighted Scoring across 5 key flights**
+  - 1st Singles Win = 1.00 pts
+  - 1st Doubles Win = 1.00 pts
+  - 2nd Singles Win = 0.75 pts
+  - 2nd Doubles Win = 0.50 pts
+  - 3rd Singles Win = 0.40 pts
+- `OSI` = **Opponent Strength Index**, based on the average WS10 of opponents played
+- Ties count as **half-wins**
+- League strength is no longer baked into the formula (removal of LSC for neutrality)
 
-- 🔢 **Custom APR Ranking System**
-  - Based on 3 components: Flight-Weighted Score (FWS), Opponent Strength Index (OSI), and WS10 (best 10-match average)
-  - Weights meaningful positions (1S, 1D, 2S, 2D, 3S)
-  - Cross-classification neutral — no unfair boosts or penalties
-
-- 📒 **Match Data System**
-  - Dual match input with full lineup cards
-  - Tie support (4–4 matches count as 0.5 wins/losses)
-  - Tournaments and doubleheaders supported
-
-- 🧠 **AI-Accelerated Simulation Tools**
-  - Realistic match generation for testing and visualization
-  - League-wide season modeling
-  - APR and OSI auto-calculation from results
+More on the model here: [docs/apr_ranking_model.md](docs/apr_ranking_model.md)
 
 ---
 
@@ -48,7 +46,7 @@ Currently in testing. Simulated data is being used to validate the formula and o
 Next up:
 - Standings UI
 - Editable match viewer
-- CSV import/export for coaches
+- CSV import/export for coaches & media
 
 ---
 
@@ -56,7 +54,5 @@ Next up:
 
 This is a personal tool developed to fix a niche-but-infuriating problem. If you're interested in helping, do let me know..but it's mostly a silly thing I'm playing around with. 
 
-> 🧠 [@quarterback.bsky.social](https://bsky.app/profile/quarterback.bsky.social)  
-> 🧪 Built for Oregon, but adaptable anywhere.
 
 ---
