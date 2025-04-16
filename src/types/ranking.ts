@@ -38,6 +38,7 @@ export interface TeamRanking {
   qualificationStatus?: 'automatic' | 'at-large' | 'none'; // Tournament qualification status
   qualificationSeed?: number; // Seed in the tournament if qualified
   apr: number; // APR on 0-100 scale
+  classificationRank?: number; // Rank within classification
 }
 
 export interface RankingConfig {

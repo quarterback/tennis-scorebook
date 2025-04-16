@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy } from 'lucide-react';
+import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,9 @@ const SimulatorPage: React.FC = () => {
   const [tournamentGender, setTournamentGender] = useState<Gender>('Boys');
   const [tournamentClassification, setTournamentClassification] = useState<Classification>('6A');
   
+  // State for filtering results by classification
+  const [selectedClassification, setSelectedClassification] = useState<string>('all');
+  
   const openDocumentation = () => {
     window.open('https://github.com/quarterback/tennis-scorebook/tree/main/simulator', '_blank');
   };
@@ -45,6 +48,18 @@ const SimulatorPage: React.FC = () => {
       description: `Generated ${results.teams?.length || 0} teams and ${results.matches?.length || 0} matches.`,
     });
   };
+  
+  // Get unique classifications from rankings results
+  const availableClassifications = simulationResults.rankings 
+    ? ['all', ...new Set(simulationResults.rankings.map(team => team.classification))]
+    : ['all'];
+  
+  // Filter rankings by selected classification
+  const filteredRankings = simulationResults.rankings
+    ? selectedClassification === 'all' 
+      ? simulationResults.rankings 
+      : simulationResults.rankings.filter(team => team.classification === selectedClassification)
+    : [];
   
   return (
     <div className="space-y-6">
@@ -189,12 +204,35 @@ const SimulatorPage: React.FC = () => {
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ListOrdered className="h-5 w-5 text-blue-500" />
-                    APR Rankings
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ListOrdered className="h-5 w-5 text-blue-500" />
+                      APR Rankings
+                    </div>
+                    
+                    {/* Classification filter */}
+                    <div className="flex items-center space-x-2">
+                      <Filter className="h-4 w-4 text-muted-foreground" />
+                      <Select 
+                        value={selectedClassification} 
+                        onValueChange={setSelectedClassification}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Filter by classification" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableClassifications.map(classification => (
+                            <SelectItem key={classification} value={classification}>
+                              {classification === 'all' ? 'All Classifications' : classification}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </CardTitle>
                   <CardDescription>
                     Teams ranked by their APR (Adjusted Playoff Ranking) scores
+                    {selectedClassification !== 'all' && ` - ${selectedClassification} Classification`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -210,7 +248,7 @@ const SimulatorPage: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {simulationResults.rankings?.map((team, index) => (
+                        {filteredRankings.map((team, index) => (
                           <tr key={team.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
                             <td className="p-2">{index + 1}</td>
                             <td className="p-2 font-medium">{team.name}</td>

@@ -1,3 +1,4 @@
+
 import { useData } from '@/context/DataContext';
 import { TeamRanking, RankingConfig, ClassificationQualifications } from '@/types/ranking';
 import { useRankingsBase } from './useRankingsBase';
@@ -65,6 +66,9 @@ export const useRankingCalculator = () => {
           team.apr = highestScore > 0 
             ? Math.round((team.compositeScore / highestScore) * 100) 
             : 0;
+            
+          // Also store the rank within classification for display purposes
+          team.classificationRank = index + 1;
         });
       }
       

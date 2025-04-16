@@ -3,19 +3,30 @@ import React from 'react';
 import { TeamRanking, RankingConfig } from '@/types/ranking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Award, Medal, Calendar, Trophy, Shield } from 'lucide-react';
+import { Award, Medal, Calendar, Trophy, Shield, Filter } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TeamRankingsTableProps {
   qualifiedTeams: TeamRanking[];
   defaultConfig: RankingConfig;
+  selectedClassification?: string;
+  onClassificationChange?: (classification: string) => void;
 }
 
-export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedTeams, defaultConfig }) => {
+export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ 
+  qualifiedTeams, 
+  defaultConfig,
+  selectedClassification,
+  onClassificationChange
+}) => {
   // Get current date and cutoff date for comparison
   const today = new Date();
   const cutoffDate = new Date(defaultConfig.cutoffDate);
   const isBeforeCutoff = today < cutoffDate;
+
+  // Get unique classifications
+  const classifications = ['all', ...new Set(qualifiedTeams.map(team => team.classification))];
 
   return (
     <Card>
@@ -28,9 +39,33 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
               (Minimum {defaultConfig.minimumMatches} matches required)
             </span>
           </div>
-          <div className="flex items-center text-sm font-normal text-gray-500">
-            <Calendar className="h-4 w-4 mr-1" />
-            {isBeforeCutoff ? 'Projected Rankings' : 'Final Rankings'}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center text-sm font-normal text-gray-500">
+              <Calendar className="h-4 w-4 mr-1" />
+              {isBeforeCutoff ? 'Projected Rankings' : 'Final Rankings'}
+            </div>
+            
+            {/* Classification filter */}
+            {onClassificationChange && (
+              <div className="flex items-center gap-1">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select 
+                  value={selectedClassification || 'all'} 
+                  onValueChange={onClassificationChange}
+                >
+                  <SelectTrigger className="w-[160px] h-8 text-xs">
+                    <SelectValue placeholder="Filter by classification" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classifications.map(classification => (
+                      <SelectItem key={classification} value={classification}>
+                        {classification === 'all' ? 'All Classifications' : classification}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -59,7 +94,9 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({ qualifiedT
                           ${index === 0 ? 'bg-yellow-100 text-yellow-800' : 
                             index === 1 ? 'bg-gray-100 text-gray-800' : 
                             index === 2 ? 'bg-amber-100 text-amber-800' : ''}`}>
-                          {index + 1}
+                          {selectedClassification && selectedClassification !== 'all' 
+                            ? team.classificationRank 
+                            : index + 1}
                         </span>
                         {index < 3 && (
                           <Medal className={`h-4 w-4 ml-1 ${

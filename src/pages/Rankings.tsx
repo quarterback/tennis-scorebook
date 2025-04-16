@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,7 @@ const Rankings = () => {
   const [selectedClassification, setSelectedClassification] = useState<Classification>('6A');
   const [selectedTab, setSelectedTab] = useState<string>('rankings');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
+  const [filterClassification, setFilterClassification] = useState<string>('all');
   
   const availableDistricts = getDistrictsByClassification(selectedClassification);
   
@@ -31,7 +33,8 @@ const Rankings = () => {
   const filteredRankings = rankings.filter(ranking => 
     ranking.gender === selectedGender && 
     ranking.classification === selectedClassification &&
-    (selectedDistrict === 'all' || ranking.districtName === selectedDistrict)
+    (selectedDistrict === 'all' || ranking.districtName === selectedDistrict) &&
+    (filterClassification === 'all' || ranking.classification === filterClassification)
   );
   
   filteredRankings.sort((a, b) => b.apr - a.apr);
@@ -139,6 +142,7 @@ const Rankings = () => {
         onClassificationChange={(value) => {
           setSelectedClassification(value as Classification);
           setSelectedDistrict('all'); // Reset district when classification changes
+          setFilterClassification('all'); // Reset classification filter when main classification changes
         }}
         onDistrictChange={setSelectedDistrict}
       />
@@ -170,7 +174,9 @@ const Rankings = () => {
         <TabsContent value="rankings">
           <TeamRankingsTable 
             qualifiedTeams={qualifiedTeams} 
-            defaultConfig={defaultConfig} 
+            defaultConfig={defaultConfig}
+            selectedClassification={filterClassification}
+            onClassificationChange={setFilterClassification}
           />
           
           <UnqualifiedTeamsTable 
