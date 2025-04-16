@@ -142,7 +142,6 @@ const SimulatorPage: React.FC = () => {
       <Tabs defaultValue="ui" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-4">
           <TabsTrigger value="ui">Web Interface</TabsTrigger>
-          <TabsTrigger value="cli">Command Line</TabsTrigger>
           <TabsTrigger value="results" className="relative">
             Results
             {simulationResults.teams?.length ? (
@@ -196,67 +195,6 @@ const SimulatorPage: React.FC = () => {
                     Calculates team rankings using the Weighted Score and Opponent Strength Index
                   </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="cli" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Terminal className="h-5 w-5 text-green-500" />
-                Command Line Interface
-              </CardTitle>
-              <CardDescription>
-                Run the simulator directly from your terminal
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>
-                The simulator can be run directly from the command line. Click a command to copy it to your clipboard.
-              </p>
-              
-              <div className="space-y-3">
-                <div className="bg-slate-50 p-3 rounded border">
-                  <p className="text-sm font-medium mb-2">Basic simulation with default settings:</p>
-                  <Button 
-                    variant="secondary" 
-                    className="font-mono text-xs w-full justify-start overflow-x-auto"
-                    onClick={() => handleRunCommand("python simulator/main.py")}
-                  >
-                    python simulator/main.py
-                  </Button>
-                </div>
-                
-                <div className="bg-slate-50 p-3 rounded border">
-                  <p className="text-sm font-medium mb-2">Run with custom parameters:</p>
-                  <Button 
-                    variant="secondary" 
-                    className="font-mono text-xs w-full justify-start overflow-x-auto"
-                    onClick={() => handleRunCommand("python simulator/main.py --matches 16 --strength-variance 0.15 --export")}
-                  >
-                    python simulator/main.py --matches 16 --strength-variance 0.15 --export
-                  </Button>
-                </div>
-                
-                <div className="bg-slate-50 p-3 rounded border">
-                  <p className="text-sm font-medium mb-2">Create sample teams file:</p>
-                  <Button 
-                    variant="secondary" 
-                    className="font-mono text-xs w-full justify-start overflow-x-auto"
-                    onClick={() => handleRunCommand("python simulator/main.py --create-sample")}
-                  >
-                    python simulator/main.py --create-sample
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="mt-4 bg-yellow-50 p-4 rounded border border-yellow-200">
-                <p className="text-sm text-yellow-800">
-                  <strong>Note:</strong> You need to run these commands from the project root directory.
-                  Make sure you have Python installed and all required dependencies.
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -329,7 +267,6 @@ const SimulatorPage: React.FC = () => {
                         <tr>
                           <th className="text-left p-2">Rank</th>
                           <th className="text-left p-2">Team</th>
-                          <th className="text-left p-2">Conference</th>
                           <th className="text-left p-2">Record</th>
                           <th className="text-right p-2">APR</th>
                         </tr>
@@ -339,13 +276,6 @@ const SimulatorPage: React.FC = () => {
                           <tr key={team.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
                             <td className="p-2">{index + 1}</td>
                             <td className="p-2 font-medium">{team.name}</td>
-                            <td className="p-2">
-                              {team.name.includes('Metro') ? 'Metro' :
-                               team.name.includes('Three Rivers') ? 'Three Rivers' :
-                               team.name.includes('Mt. Hood') ? 'Mt. Hood' :
-                               team.name.includes('Pacific') ? 'Pacific' :
-                               team.name.includes('Southwest') ? 'Southwest' : 'Other'}
-                            </td>
                             <td className="p-2">{team.record}</td>
                             <td className="p-2 text-right font-mono">{team.apr.toFixed(2)}</td>
                           </tr>
