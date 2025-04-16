@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -15,7 +14,8 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Rocket
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -44,6 +44,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/matches', icon: <Calendar className="h-4 w-4 mr-2" />, label: 'Matches' },
     { path: '/standings', icon: <Award className="h-4 w-4 mr-2" />, label: 'Standings' },
     { path: '/rankings', icon: <BarChart3 className="h-4 w-4 mr-2" />, label: 'Rankings' },
+    { path: '/simulator', icon: <Rocket className="h-4 w-4 mr-2" />, label: 'Simulator' },
   ];
   
   const scrollNav = (direction: 'left' | 'right') => {
