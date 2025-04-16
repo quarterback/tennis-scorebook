@@ -1,3 +1,4 @@
+
 // Types for the ranking system
 
 export interface FlightWeight {
@@ -25,16 +26,18 @@ export interface TeamRanking {
   matchesPlayed: number;
   wins: number;
   losses: number;
+  ties?: number; // Optional field for ties
   leagueWins: number;
   leagueLosses: number;
+  leagueTies?: number; // Optional field for league ties
   leagueMatchesPlayed: number;
   flightWeightedScore: number;
   leagueStrengthCoefficient: number;
   opponentStrengthIndex: number;
   compositeScore: number;
   qualifiedForRanking: boolean; // True if team has played minimum required matches
-  winPercentage?: number; // Overall win percentage
-  leagueWinPercentage?: number; // League-only win percentage
+  winPercentage?: number; // Overall win percentage (includes ties as half-wins)
+  leagueWinPercentage?: number; // League-only win percentage (includes ties as half-wins)
   qualificationStatus?: 'automatic' | 'at-large' | 'none'; // Tournament qualification status
   qualificationSeed?: number; // Seed in the tournament if qualified
   apr: number; // APR on 0-100 scale
@@ -111,6 +114,8 @@ export interface MatchGenerationConfig {
   maxRegularSeasonMatches: number; // Default 16
   maxTotalMatches: number; // Default 20 (including tournaments)
   doubleRoundRobin: boolean; // Whether to schedule double round-robin for districts
+  useNoAdScoring?: boolean; // Whether to use no-ad scoring
+  useThirdSetTiebreak?: boolean; // Whether to use 10-point tiebreak for third set
 }
 
 // Tournament structure
@@ -144,6 +149,17 @@ export interface TournamentMatchup {
   score?: [number, number]; // Team scores [teamOne, teamTwo]
   roundIndex?: number; // Round index for tracking progression
   matchIndex?: number; // Match index within the round
+  needsTiebreaker?: boolean; // Whether this match needs a tiebreaker (4-4 tie in playoffs)
+  tiebreakResult?: {
+    teamOneScore: number;
+    teamTwoScore: number;
+    flights: Array<{
+      type: 'singles' | 'doubles';
+      position: number;
+      teamOneWon: boolean;
+      score: string;
+    }>;
+  };
 }
 
 // Qualification rules for state tournaments
@@ -164,4 +180,20 @@ export interface QualifiedTeam {
   qualificationType: 'automatic' | 'at-large';
   seed: number;
   compositeScore: number;
+}
+
+// Oregon High School Tennis-specific configuration
+export interface OregonTennisConfig {
+  noAdScoring: boolean; // Use no-ad scoring (first to 4 points wins game)
+  setsToWin: number; // Typically 2 (best of 3)
+  gamesToWinSet: number; // Typically 6 with 2-game lead
+  tiebreakAt: number; // Typically 6-6
+  thirdSetTiebreak: boolean; // Use 10-point tiebreak for third set
+  maxSinglesFlights: number; // Typically 4
+  maxDoublesFlights: number; // Typically 4
+  countTiesAsHalfWin: boolean; // Count 4-4 ties as 0.5 win
+  playoffTiebreaker: {
+    flightCount: number; // Typically 3 (2 singles, 1 doubles)
+    pointsToWin: number; // Typically 10 (with 2-point lead)
+  };
 }

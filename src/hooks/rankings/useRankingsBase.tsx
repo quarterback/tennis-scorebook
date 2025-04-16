@@ -35,16 +35,22 @@ export const useRankingsBase = (
         m => (m.homeTeamId === team.id || m.awayTeamId === team.id) && m.isComplete
       );
       
+      // Count wins, losses, and ties
       const wins = teamMatches.filter(m => 
-        (m.homeTeamId === team.id && m.homeTeamWon) || 
-        (m.awayTeamId === team.id && !m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === true) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === false)
+      ).length;
+      
+      const ties = teamMatches.filter(m => 
+        m.isTie === true || (m.homeTeamWon === undefined && m.isComplete)
       ).length;
       
       const losses = teamMatches.filter(m => 
-        (m.homeTeamId === team.id && !m.homeTeamWon) || 
-        (m.awayTeamId === team.id && m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === false) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === true)
       ).length;
       
+      // League matches only
       const leagueMatches = teamMatches.filter(m => {
         const opponentTeamId = m.homeTeamId === team.id ? m.awayTeamId : m.homeTeamId;
         const opponentTeam = teams.find(t => t.id === opponentTeamId);
@@ -57,26 +63,35 @@ export const useRankingsBase = (
       });
       
       const leagueWins = leagueMatches.filter(m => 
-        (m.homeTeamId === team.id && m.homeTeamWon) || 
-        (m.awayTeamId === team.id && !m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === true) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === false)
+      ).length;
+      
+      const leagueTies = leagueMatches.filter(m => 
+        m.isTie === true || (m.homeTeamWon === undefined && m.isComplete)
       ).length;
       
       const leagueLosses = leagueMatches.filter(m => 
-        (m.homeTeamId === team.id && !m.homeTeamWon) || 
-        (m.awayTeamId === team.id && m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === false) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === true)
       ).length;
       
+      // Get APR components
       const fws = teamScores.get(team.id) || 0;
       const lsc = calculateLeagueStrengthCoefficient(school.districtId);
       const osi = calculateOpponentStrengthIndex(team.id, teamScores);
       
-      const compositeScore = fws * lsc * osi;
+      // APR = FWS × OSI
+      const compositeScore = fws * osi;
       
-      const totalMatches = wins + losses;
-      const winPercentage = totalMatches > 0 ? wins / totalMatches : 0;
+      // Calculate win percentages (counting ties as half wins)
+      const totalMatches = wins + losses + ties;
+      const winPercentage = totalMatches > 0 ? 
+        (wins + (ties * 0.5)) / totalMatches : 0;
       
-      const totalLeagueMatches = leagueWins + leagueLosses;
-      const leagueWinPercentage = totalLeagueMatches > 0 ? leagueWins / totalLeagueMatches : 0;
+      const totalLeagueMatches = leagueWins + leagueLosses + leagueTies;
+      const leagueWinPercentage = totalLeagueMatches > 0 ? 
+        (leagueWins + (leagueTies * 0.5)) / totalLeagueMatches : 0;
       
       return {
         teamId: team.id,
@@ -88,8 +103,10 @@ export const useRankingsBase = (
         matchesPlayed: teamMatches.length,
         wins,
         losses,
+        ties,
         leagueWins,
         leagueLosses,
+        leagueTies,
         leagueMatchesPlayed: leagueMatches.length,
         flightWeightedScore: fws,
         leagueStrengthCoefficient: lsc,
@@ -98,7 +115,7 @@ export const useRankingsBase = (
         qualifiedForRanking: teamMatches.length >= config.minimumMatches,
         winPercentage,
         leagueWinPercentage,
-        apr: 0
+        apr: 0 // Will be calculated in calculateTeamAprs
       };
     });
 

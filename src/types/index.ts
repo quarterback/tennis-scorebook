@@ -62,12 +62,24 @@ export interface Match {
   isLeagueMatch: boolean;
   isComplete: boolean;
   hasJvMatches?: boolean;
-  homeTeamWon?: boolean;
+  homeTeamWon?: boolean; // May be undefined for ties
+  isTie?: boolean; // New field to explicitly mark 4-4 ties
   homeCoachApproved?: boolean;
   awayCoachApproved?: boolean;
   flights: Flight[];
   homeTeamScore?: number; // Added for match score display
   awayTeamScore?: number; // Added for match score display
+  tiebreakRound?: TiebreakRound; // New field for playoff tiebreaker
+}
+
+export interface TiebreakRound {
+  flights: [
+    { type: 'singles'; position: 1 | 2 | 3 | 4; homePlayerWon?: boolean; score?: string },
+    { type: 'singles'; position: 1 | 2 | 3 | 4; homePlayerWon?: boolean; score?: string },
+    { type: 'doubles'; position: 1 | 2 | 3 | 4; homePlayerWon?: boolean; score?: string }
+  ];
+  homeTeamWon?: boolean;
+  isComplete?: boolean;
 }
 
 export interface Flight {
@@ -82,6 +94,7 @@ export interface Flight {
   homePlayerWon?: boolean;
   retired?: boolean; // New field for player retired/quit early
   defaulted?: boolean; // New field for forfeit/default
+  scoreDisplay?: string; // New field for formatted score display (e.g., "6-4, 7-5")
 }
 
 export interface Set {
@@ -93,7 +106,7 @@ export interface Set {
   };
 }
 
-// Extend TeamStanding to include qualification information and winning percentages
+// Extended TeamStanding to include qualification information and winning percentages
 export interface TeamStanding {
   teamId: string;
   teamName: string;
@@ -103,10 +116,12 @@ export interface TeamStanding {
   districtName: string;
   overallWins: number;
   overallLosses: number;
+  overallTies: number; // Added to support ties (counts as 0.5 win)
   leagueWins: number;
   leagueLosses: number;
-  overallWinPct: number; // Added property
-  leagueWinPct: number;  // Added property
+  leagueTies: number; // Added to support ties (counts as 0.5 win)
+  overallWinPct: number; // Calculate including ties as half-wins
+  leagueWinPct: number; // Calculate including ties as half-wins
   qualificationStatus?: 'automatic' | 'at-large' | 'none';
   qualificationSeed?: number;
 }
@@ -119,6 +134,7 @@ export interface MatchFormData {
   isComplete: boolean;
   hasJvMatches?: boolean;
   homeTeamWon?: boolean;
+  isTie?: boolean; // Added to support ties
   homeCoachApproved?: boolean;
   awayCoachApproved?: boolean;
   homeTeamScore?: number;
@@ -133,7 +149,9 @@ export interface MatchFormData {
     homePlayerWon?: boolean;
     retired?: boolean;
     defaulted?: boolean;
+    scoreDisplay?: string; // New field for formatted score display
   }>;
+  tiebreakRound?: TiebreakRound; // For playoffs
 }
 
 export interface PlayerTransfer {

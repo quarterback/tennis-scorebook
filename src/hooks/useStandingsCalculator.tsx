@@ -1,3 +1,4 @@
+
 import { Team, School, Match, District, Gender, Classification, TeamStanding } from '@/types';
 
 export const useStandingsCalculator = (
@@ -41,13 +42,19 @@ export const useStandingsCalculator = (
         m => (m.homeTeamId === team.id || m.awayTeamId === team.id) && m.isComplete
       );
       
-      // Only count completed matches
+      // Count wins, losses, and ties
       const overallWins = teamMatches.filter(m => 
-        (m.homeTeamId === team.id && m.homeTeamWon) || (m.awayTeamId === team.id && !m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === true) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === false)
+      ).length;
+      
+      const overallTies = teamMatches.filter(m => 
+        m.isTie === true || (m.homeTeamWon === undefined && m.isComplete)
       ).length;
       
       const overallLosses = teamMatches.filter(m => 
-        (m.homeTeamId === team.id && !m.homeTeamWon) || (m.awayTeamId === team.id && m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === false) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === true)
       ).length;
       
       // League matches (only matches within the same district/league)
@@ -66,16 +73,25 @@ export const useStandingsCalculator = (
       });
       
       const leagueWins = leagueMatches.filter(m => 
-        (m.homeTeamId === team.id && m.homeTeamWon) || (m.awayTeamId === team.id && !m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === true) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === false)
+      ).length;
+      
+      const leagueTies = leagueMatches.filter(m => 
+        m.isTie === true || (m.homeTeamWon === undefined && m.isComplete)
       ).length;
       
       const leagueLosses = leagueMatches.filter(m => 
-        (m.homeTeamId === team.id && !m.homeTeamWon) || (m.awayTeamId === team.id && m.homeTeamWon)
+        (m.homeTeamId === team.id && m.homeTeamWon === false) || 
+        (m.awayTeamId === team.id && m.homeTeamWon === true)
       ).length;
       
-      // Calculate winning percentages
-      const overallWinPct = overallWins / Math.max(1, overallWins + overallLosses);
-      const leagueWinPct = leagueWins / Math.max(1, leagueWins + leagueLosses);
+      // Calculate winning percentages with ties counting as half-wins
+      const overallWinPct = (overallWins + (overallTies * 0.5)) / 
+                           Math.max(1, overallWins + overallLosses + overallTies);
+      
+      const leagueWinPct = (leagueWins + (leagueTies * 0.5)) / 
+                          Math.max(1, leagueWins + leagueLosses + leagueTies);
       
       return {
         teamId: team.id,
@@ -86,8 +102,10 @@ export const useStandingsCalculator = (
         districtName: district?.name || 'Unknown District',
         overallWins,
         overallLosses,
+        overallTies,
         leagueWins,
         leagueLosses,
+        leagueTies,
         overallWinPct,
         leagueWinPct
       };
