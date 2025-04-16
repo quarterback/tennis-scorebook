@@ -1,4 +1,3 @@
-
 """
 Generates a full season schedule and simulates all matches
 """
@@ -37,15 +36,18 @@ def generate_league_schedule(
     if len(district_teams) < config["min_teams_per_district"]:
         return []  # Skip districts with too few teams
     
-    # Determine if we need double round robin
+    # Determine if we need double round robin based on district size
     double_round = len(district_teams) < config["double_round_robin_threshold"]
     
     # Calculate matches per team based on district size
     team_count = len(district_teams)
     round_count = 2 if double_round else 1
-    matches_per_team = min(
-        (team_count - 1) * round_count,
-        config["matches_per_team"]
+    
+    # Calculate target league matches per team (80% of total matches)
+    # Ensure we hit minimum match count by adjusting league matches accordingly
+    league_match_target = max(
+        math.floor(config["min_matches_per_team"] * config["league_match_percentage"]),
+        min((team_count - 1) * round_count, math.floor(config["matches_per_team"] * config["league_match_percentage"]))
     )
     
     # Create list of teams and shuffle
@@ -120,11 +122,8 @@ def generate_non_league_matches(
     for team_id, match_count in team_match_counts.items():
         team = teams[team_id]
         
-        # How many more matches does this team need
-        matches_needed = min(
-            config["max_matches_per_team"] - match_count, 
-            config["matches_per_team"] - match_count
-        )
+        # How many more matches does this team need to reach the minimum?
+        matches_needed = max(0, config["min_matches_per_team"] - match_count)
         
         if matches_needed <= 0:
             continue
@@ -142,14 +141,19 @@ def generate_non_league_matches(
                 
             other_team = teams[other_id]
             
+            # Ensure teams are same gender
+            if other_team.gender != team.gender:
+                continue
+                
             # Check if teams are already scheduled to play
-            already_playing = any(
-                (m.home_team_id == team_id and m.away_team_id == other_id) or
+            already_playing = sum(
+                1 for m in existing_matches + new_matches
+                if (m.home_team_id == team_id and m.away_team_id == other_id) or
                 (m.home_team_id == other_id and m.away_team_id == team_id)
-                for m in existing_matches + new_matches
             )
             
-            if already_playing:
+            # Limit teams playing each other to twice per season
+            if already_playing >= 2:
                 continue
             
             # Calculate priority score (higher = better match)
@@ -159,9 +163,14 @@ def generate_non_league_matches(
             if other_team.classification == team.classification:
                 priority += 3.0
             
-            # Prioritize teams that need more matches
-            matches_other_needs = config["matches_per_team"] - other_count
-            priority += matches_other_needs / config["matches_per_team"]
+            # Prioritize teams that need more matches to reach minimum
+            other_needed = max(0, config["min_matches_per_team"] - other_count)
+            if other_needed > 0:
+                priority += 2.0
+            
+            # Prioritize teams that won't exceed max match count
+            if other_count + 1 <= config["max_matches_per_team"]:
+                priority += 1.0
             
             potential_opponents.append((other_id, priority))
         
@@ -194,6 +203,10 @@ def generate_non_league_matches(
             # Update counts
             team_match_counts[home_id] += 1
             team_match_counts[away_id] += 1
+            
+            # Stop if we've reached the maximum match count
+            if team_match_counts[team_id] >= config["max_matches_per_team"]:
+                break
     
     # Sort by date
     new_matches.sort(key=lambda m: m.date)

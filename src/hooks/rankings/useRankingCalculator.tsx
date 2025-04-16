@@ -1,4 +1,3 @@
-
 import { useData } from '@/context/DataContext';
 import { TeamRanking, RankingConfig, ClassificationQualifications } from '@/types/ranking';
 import { useRankingsBase } from './useRankingsBase';
@@ -42,7 +41,37 @@ export const useRankingCalculator = () => {
     // Apply qualification status by gender and classification
     const rankingsWithQualification = calculateQualificationStatus(baseRankings, qualificationRules);
     
-    return rankingsWithQualification;
+    // Calculate APR values for each classification separately
+    // This ensures rankings are not conflated across classifications
+    const classifications = [...new Set(rankingsWithQualification.map(r => r.classification))];
+    
+    let finalRankings: TeamRanking[] = [];
+    
+    classifications.forEach(classification => {
+      // Get teams of this classification
+      const classificationTeams = rankingsWithQualification.filter(
+        team => team.classification === classification
+      );
+      
+      // Sort by composite score
+      const sortedTeams = [...classificationTeams].sort((a, b) => b.compositeScore - a.compositeScore);
+      
+      // Normalize APR to 0-100 scale within each classification
+      if (sortedTeams.length > 0) {
+        const highestScore = sortedTeams[0].compositeScore;
+        
+        sortedTeams.forEach((team, index) => {
+          // Calculate APR (0-100 scale) relative to the highest score in this classification
+          team.apr = highestScore > 0 
+            ? Math.round((team.compositeScore / highestScore) * 100) 
+            : 0;
+        });
+      }
+      
+      finalRankings = [...finalRankings, ...sortedTeams];
+    });
+    
+    return finalRankings;
   };
   
   const getRankingsByGenderAndClassification = (

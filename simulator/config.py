@@ -39,11 +39,12 @@ DEFAULT_MATCH_CONFIG = {
 
 # Season configuration
 DEFAULT_SEASON_CONFIG = {
-    "matches_per_team": 16,
-    "max_matches_per_team": 20,
+    "matches_per_team": 16,         # Target average matches per team (was 16)
+    "min_matches_per_team": 12,     # Minimum acceptable matches per team
+    "max_matches_per_team": 18,     # Maximum acceptable matches per team
+    "league_match_percentage": 0.8, # 80% of matches should be league matches
     "double_round_robin_threshold": 8,  # Teams per district for double round robin
-    "league_match_ratio": 0.75,  # Percentage of matches that are league matches
-    "min_teams_per_district": 3,  # Minimum teams required for a valid district
+    "min_teams_per_district": 3,    # Minimum teams required for a valid district
 }
 
 # Simulation parameters

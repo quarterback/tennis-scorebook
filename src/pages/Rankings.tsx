@@ -34,6 +34,8 @@ const Rankings = () => {
     (selectedDistrict === 'all' || ranking.districtName === selectedDistrict)
   );
   
+  filteredRankings.sort((a, b) => b.apr - a.apr);
+  
   const qualifiedTeams = filteredRankings.filter(r => r.qualifiedForRanking);
   const unqualifiedTeams = filteredRankings.filter(r => !r.qualifiedForRanking);
   
@@ -140,6 +142,22 @@ const Rankings = () => {
         }}
         onDistrictChange={setSelectedDistrict}
       />
+      
+      <Card className="bg-white mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2 text-tennis-blue" />
+            {selectedClassification} {selectedGender} APR Rankings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-500 mb-4">
+            APR rankings are calculated separately for each classification. 
+            The highest ranked team in each classification receives a score of 100, with all other teams 
+            scored relative to that team.
+          </p>
+        </CardContent>
+      </Card>
       
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-4">
