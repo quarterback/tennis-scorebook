@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   const [bracketPositions, setBracketPositions] = useState<BracketPosition[]>([]);
   const [activeTab, setActiveTab] = useState<string>("manual");
   
-  // Get tournament bracket functionality
   const {
     bracket,
     qualifiedTeams,
@@ -60,12 +58,9 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
     qualificationRules
   } = useTournamentBracket(gender, classification);
 
-  // Initialize bracket positions
   useEffect(() => {
-    // Create empty bracket positions based on bracketSize
     const positions: BracketPosition[] = [];
     for (let i = 0; i < bracketSize; i++) {
-      // Check if there's already a participant in this position
       const existingParticipant = participants.find(p => p.seed === i + 1);
       positions.push({
         slot: i + 1,
@@ -75,7 +70,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
     setBracketPositions(positions);
   }, [bracketSize, participants]);
 
-  // Effect to generate qualifiers
   useEffect(() => {
     if (activeTab === "auto") {
       generateQualifiedTeams();
@@ -84,11 +78,8 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   
   const handleBracketSizeChange = (size: string) => {
     const newSize = parseInt(size);
-    // Only allow sizes 2, 4, 8, 16, 32, 48
     if ([2, 4, 8, 16, 32, 48].includes(newSize)) {
       setBracketSize(newSize);
-      
-      // Reset participants if decreasing bracket size
       if (newSize < participants.length) {
         setParticipants(prev => prev.slice(0, newSize));
       }
@@ -107,7 +98,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
     e.preventDefault();
     if (!draggedParticipant) return;
     
-    // If dropping on an already filled position, swap them
     const newPositions = [...bracketPositions];
     const draggedPositionIndex = newPositions.findIndex(p => 
       p.participant && (
@@ -116,21 +106,16 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
       )
     );
     
-    // Update the position where we're dropping
     const dropPositionIndex = newPositions.findIndex(p => p.slot === position.slot);
     
-    // If dragged participant was already in the bracket
     if (draggedPositionIndex >= 0) {
-      // If dropping onto an occupied slot, swap them
       if (position.participant) {
         newPositions[draggedPositionIndex].participant = position.participant;
       } else {
-        // If dropping onto an empty slot, just remove from original position
         newPositions[draggedPositionIndex].participant = null;
       }
     }
     
-    // Place dragged participant in new position
     newPositions[dropPositionIndex].participant = {
       ...draggedParticipant,
       seed: position.slot
@@ -138,7 +123,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
     
     setBracketPositions(newPositions);
     
-    // Update participants array for consistency
     const updatedParticipants = newPositions
       .filter(pos => pos.participant !== null)
       .map(pos => ({
@@ -155,14 +139,12 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   };
   
   const removeParticipant = (participant: BracketParticipant) => {
-    // Remove from participants array
     setParticipants(participants.filter(p => 
       (p.playerId && participant.playerId) ? p.playerId !== participant.playerId :
       (p.teamId && participant.teamId) ? p.teamId !== participant.teamId :
       false
     ));
     
-    // Also remove from any bracket position
     const newPositions = [...bracketPositions];
     const posIndex = newPositions.findIndex(pos => 
       pos.participant && (
@@ -178,7 +160,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
   };
   
   const saveBracket = () => {
-    // This would save the bracket to the database in a real implementation
     setIsEditing(false);
     console.log('Bracket saved:', {
       type,
@@ -194,11 +175,46 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
     handleWinnerSelect(matchId, winner);
   };
 
-  // Handle auto-generate button click
   const handleAutoGenerate = () => {
     autoGenerateBracket();
   };
   
+  const convertBracketPositionsToRounds = () => {
+    const rounds = [];
+    
+    const firstRoundMatches = [];
+    for (let i = 0; i < bracketPositions.length / 2; i++) {
+      const team1Pos = bracketPositions[i * 2];
+      const team2Pos = bracketPositions[i * 2 + 1];
+      
+      firstRoundMatches.push({
+        id: `match-${i}`,
+        team1: {
+          id: team1Pos.participant?.teamId || team1Pos.participant?.playerId || "",
+          name: team1Pos.participant?.name || "TBD",
+          school: team1Pos.participant?.school || "",
+          seed: team1Pos.slot
+        },
+        team2: {
+          id: team2Pos.participant?.teamId || team2Pos.participant?.playerId || "",
+          name: team2Pos.participant?.name || "TBD", 
+          school: team2Pos.participant?.school || "",
+          seed: team2Pos.slot
+        },
+        roundIndex: 0,
+        matchIndex: i,
+        completed: false
+      });
+    }
+    
+    rounds.push({
+      name: "First Round",
+      matches: firstRoundMatches
+    });
+    
+    return rounds;
+  };
+
   return (
     <div className="space-y-4 mt-4">
       <Card>
@@ -242,7 +258,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Available Players/Teams Panel */}
                   <BracketParticipantSelector 
                     type={type}
                     gender={gender}
@@ -255,7 +270,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
                     onDragStart={handleDragStart}
                   />
                   
-                  {/* Bracket Positions Panel */}
                   <BracketPositionGrid 
                     bracketPositions={bracketPositions}
                     onDragOver={handleDragOver}
@@ -290,7 +304,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Automatic Qualifiers */}
                     <div>
                       <h4 className="text-xs uppercase font-semibold text-gray-500 mb-2">Automatic Qualifiers</h4>
                       {qualifiedTeams
@@ -308,7 +321,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
                         ))}
                     </div>
                     
-                    {/* At-Large Qualifiers */}
                     <div>
                       <h4 className="text-xs uppercase font-semibold text-gray-500 mb-2">At-Large Qualifiers</h4>
                       {qualifiedTeams
@@ -328,7 +340,6 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
                   </div>
                 </div>
                 
-                {/* Preview of auto-generated bracket */}
                 {bracket.rounds.length > 0 && (
                   <div className="mt-4">
                     <h3 className="text-sm font-medium mb-2">Tournament Bracket Preview</h3>
@@ -373,10 +384,7 @@ const TournamentBracketEditor: React.FC<TournamentBracketEditorProps> = ({
             <div className="space-y-6">
               {activeTab === "manual" ? (
                 <BracketDisplay 
-                  bracketSize={bracketSize}
-                  bracketPositions={bracketPositions}
-                  type={type}
-                  onEditClick={() => setIsEditing(true)}
+                  rounds={convertBracketPositionsToRounds()}
                 />
               ) : (
                 <div className="mt-4">
