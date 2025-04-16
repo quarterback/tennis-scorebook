@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useData } from '@/context/DataContext';
-import { Player, PlayerSkillTier, Season } from '@/types';
+import { Player, PlayerSkillTier, Season, Team } from '@/types';
 
 interface PlayerGenerationControlsProps {
   isGeneratingPlayers: boolean;
@@ -21,13 +21,26 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
 }) => {
   const { toast } = useToast();
   const { teams, players, addPlayer, deleteAllPlayers, schools } = useData();
+  const [generatingStatus, setGeneratingStatus] = useState<string>('');
   
   const handleGeneratePlayers = () => {
-    // Import needed hook dynamically
+    // Check if we have teams available
+    if (teams.length === 0) {
+      toast({
+        title: "No Teams Available",
+        description: "There are no teams available to generate players for. Please create teams first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Import needed hook dynamically to avoid circular dependencies
+    setGeneratingStatus('Importing player generation utilities...');
     import('@/hooks/usePlayerGeneration').then(({ usePlayerGeneration }) => {
-      const { generatePlayerData } = usePlayerGeneration();
-      
       try {
+        const { generatePlayerData } = usePlayerGeneration();
+        
+        setGeneratingStatus('Generating players...');
         const selectedSeason = seasons.find(s => s.id === selectedSeasonId) || {
           id: crypto.randomUUID(),
           year: new Date().getFullYear(),
@@ -35,6 +48,10 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
           isCurrent: true
         };
         
+        // Log teams before generation to help debug
+        console.log(`Generating players for ${teams.length} teams:`, teams);
+        
+        // Generate players for all available teams
         const { players: generatedPlayers } = generatePlayerData(teams, schools, selectedSeason.id);
         
         // Add all generated players to the state
@@ -42,15 +59,18 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
           addPlayer(player);
         });
         
+        setGeneratingStatus('');
+        
         toast({
           title: "Player Generation Complete",
-          description: `Generated ${generatedPlayers.length} players successfully`,
+          description: `Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`,
           variant: "default"
         });
         
-        console.log(`Generated ${generatedPlayers.length} players successfully`);
+        console.log(`Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`);
       } catch (error) {
         console.error('Error generating players:', error);
+        setGeneratingStatus('');
         toast({
           title: "Error Generating Players",
           description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -61,12 +81,26 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
   };
 
   const handleAddPlayersToAllTeams = () => {
+    // Check if we have teams available
+    if (teams.length === 0) {
+      toast({
+        title: "No Teams Available",
+        description: "There are no teams available to add players to. Please create teams first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const currentSeason = seasons.find(s => s.id === selectedSeasonId) || {
       id: crypto.randomUUID(),
       year: new Date().getFullYear(),
       name: `Spring ${new Date().getFullYear()}`,
       isCurrent: true
     };
+    
+    console.log(`Adding players to ${teams.length} teams:`, teams);
+    
+    let playersAdded = 0;
     
     teams.forEach(team => {
       const teamPlayers = players.filter(p => p.teamId === team.id);
@@ -84,38 +118,50 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
             gender: team.gender
           };
           addPlayer(newPlayer);
+          playersAdded++;
         }
       }
     });
     
     toast({
       title: "Players Added",
-      description: "Added players to all teams that needed them",
+      description: `Added ${playersAdded} players to ${teams.length} teams that needed them`,
       variant: "default"
     });
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button 
-        variant="outline" 
-        onClick={handleGeneratePlayers} 
-        disabled={isGeneratingPlayers || disabled}
-        className="flex items-center gap-2"
-      >
-        <Users className="h-4 w-4" />
-        {isGeneratingPlayers ? 'Generating Players...' : 'Generate Players'}
-      </Button>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          onClick={handleGeneratePlayers} 
+          disabled={isGeneratingPlayers || disabled}
+          className="flex items-center gap-2"
+        >
+          <Users className="h-4 w-4" />
+          {isGeneratingPlayers || generatingStatus ? 
+            `${generatingStatus || 'Generating Players...'}` : 
+            'Generate Players'}
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          onClick={handleAddPlayersToAllTeams}
+          disabled={disabled}
+          className="flex items-center gap-2"
+        >
+          <Users className="h-4 w-4" />
+          Add Players to All Teams
+        </Button>
+      </div>
       
-      <Button 
-        variant="outline" 
-        onClick={handleAddPlayersToAllTeams}
-        disabled={disabled}
-        className="flex items-center gap-2"
-      >
-        <Users className="h-4 w-4" />
-        Add Players to All Teams
-      </Button>
+      {teams.length === 0 && (
+        <div className="text-sm text-amber-600 font-medium bg-amber-50 p-3 rounded-md">
+          Warning: No teams are available in the system. Players can't be generated without teams.
+          Please go to the Teams page to create teams first.
+        </div>
+      )}
     </div>
   );
 };
