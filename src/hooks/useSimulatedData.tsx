@@ -95,7 +95,7 @@ export const useSimulatedData = () => {
           const district = districts.find(d => d.id === school?.districtId);
           const teamMatches = matches.filter(m => m.homeTeamId === team.id || m.awayTeamId === team.id);
           
-          // Calculate win-loss record
+          // Calculate win-loss-tie record
           const wins = teamMatches.filter(m => 
             (m.homeTeamId === team.id && m.homeTeamWon) || 
             (m.awayTeamId === team.id && !m.homeTeamWon)
@@ -106,10 +106,35 @@ export const useSimulatedData = () => {
             (m.awayTeamId === team.id && m.homeTeamWon)
           ).length;
           
-          // Calculate simulated APR based on wins, losses and district strength
-          const aprBase = (wins / Math.max(1, wins + losses)) * 100;
-          const districtBonus = district?.name ? (district.name.length % 5) * 2 : 0;
-          const randomFactor = Math.random() * 10;
+          const ties = teamMatches.filter(m => 
+            m.isTie === true
+          ).length;
+          
+          // Calculate simulated APR using the proper formula
+          // APR = FWS × OSI × WS10
+          const aprBaseFactor = Math.min(1.0, (wins + (0.5 * ties)) / 10); // WS10 factor
+          
+          // Base APR calculation using archetype & historical strength
+          let baseApr = 0;
+          
+          // Specific team handling for historically dominant programs
+          const isJesuitGirls = school?.name === 'Jesuit' && team.gender === 'Girls';
+          const isPrivateSchool = school?.name?.includes('Academy') || 
+                                  school?.name?.includes('Catholic') || 
+                                  school?.name?.includes('Christian') ||
+                                  school?.name?.includes('Episcopal') ||
+                                  school?.name?.includes('Catlin Gabel') ||
+                                  school?.name?.includes('Marist') ||
+                                  school?.name?.includes("St. Mary's");
+          
+          // Add special metrics for certain schools
+          const historicalStrength = isJesuitGirls ? 1.5 : 
+                                     isPrivateSchool ? 1.2 : 1.0;
+          
+          // Generate realistic APR base values
+          const flightWeightedScore = (wins * 4) + (ties * 2); // Simple approximation
+          const opponentStrength = 0.85 + (Math.random() * 0.35); // 0.85-1.2 range
+          baseApr = flightWeightedScore * opponentStrength * aprBaseFactor * historicalStrength;
           
           return {
             id: team.id,
@@ -117,8 +142,8 @@ export const useSimulatedData = () => {
             classification: school?.classification || 'Unknown',
             conference: district?.name || 'Unknown',
             gender: team.gender,
-            record: `${wins}-${losses}`,
-            apr: aprBase + districtBonus + randomFactor
+            record: `${wins}-${losses}${ties > 0 ? `-${ties}` : ''}`,
+            apr: baseApr
           };
         }),
         matches: matches.map(match => {
@@ -132,7 +157,7 @@ export const useSimulatedData = () => {
             date: match.date,
             homeTeam: homeSchool?.name || 'Unknown',
             awayTeam: awaySchool?.name || 'Unknown',
-            score: `${match.homeTeamScore}-${match.awayTeamScore}`,
+            score: match.isTie ? "4-4" : `${match.homeTeamScore}-${match.awayTeamScore}`,
             gender: homeTeam?.gender || 'Unknown',
             classification: homeSchool?.classification || 'Unknown',
             conference: homeDistrict?.name || 'Unknown'

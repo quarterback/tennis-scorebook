@@ -1,3 +1,4 @@
+
 import { Match, Flight, Team, School, Player } from '@/types';
 import type { Set } from '@/types'; // Type-only import to avoid conflict with global Set
 import { TeamLadder } from '@/types/ranking';
@@ -324,453 +325,260 @@ export const simulateMatch = (
   // Create flights from line-up
   const flights: Flight[] = [];
   
-  // Decide lineup strategy based on team archetypes
-  // Dominant teams are more likely to use best players in singles
-  // Rebuilding teams may try different approaches
-  
-  // Probability for top players to play singles based on team archetype
-  const homeTopPlaySinglesProb = 
-    homeArchetype === 'dominant' ? 0.85 :
-    homeArchetype === 'strong' ? 0.75 :
-    homeArchetype === 'mid-tier' ? 0.65 : 0.55;
+  // Generate flights for each position
+  flightTypes.forEach(({ type, position, level }) => {
+    // Do we have enough players to fill this flight?
+    const homeFreePlayersCount = homePlayers.filter(p => !p.selected).length;
+    const awayFreePlayersCount = awayPlayers.filter(p => !p.selected).length;
     
-  const awayTopPlaySinglesProb = 
-    awayArchetype === 'dominant' ? 0.85 :
-    awayArchetype === 'strong' ? 0.75 :
-    awayArchetype === 'mid-tier' ? 0.65 : 0.55;
-  
-  const homeTopPlaySingles = Math.random() < homeTopPlaySinglesProb;
-  const awayTopPlaySingles = Math.random() < awayTopPlaySinglesProb;
-  
-  // Assign players to positions based on strategy
-  if (homeTopPlaySingles) {
-    // Home team assigns top players to singles
-    let homeFirstSingles = homePlayers[0].id;
-    let homeSecondSingles = homePlayers[1].id;
-    homePlayers[0].selected = true;
-    homePlayers[1].selected = true;
-    selectedHomePlayers.add(homeFirstSingles);
-    selectedHomePlayers.add(homeSecondSingles);
-  } else {
-    // Alternative strategy: top players play doubles together
-    let homeFirstDoubles = [homePlayers[0].id, homePlayers[1].id];
-    homePlayers[0].selected = true;
-    homePlayers[1].selected = true;
-    selectedHomePlayers.add(homeFirstDoubles[0]);
-    selectedHomePlayers.add(homeFirstDoubles[1]);
-  }
-  
-  if (awayTopPlaySingles) {
-    // Away team assigns top players to singles
-    let awayFirstSingles = awayPlayers[0].id;
-    let awaySecondSingles = awayPlayers[1].id;
-    awayPlayers[0].selected = true;
-    awayPlayers[1].selected = true;
-    selectedAwayPlayers.add(awayFirstSingles);
-    selectedAwayPlayers.add(awaySecondSingles);
-  } else {
-    // Alternative strategy: top players play doubles together
-    let awayFirstDoubles = [awayPlayers[0].id, awayPlayers[1].id];
-    awayPlayers[0].selected = true;
-    awayPlayers[1].selected = true;
-    selectedAwayPlayers.add(awayFirstDoubles[0]);
-    selectedAwayPlayers.add(awayFirstDoubles[1]);
-  }
-  
-  // Fill in remaining positions
-  for (const flight of flightTypes) {
-    const flightId = crypto.randomUUID();
+    // For singles we need 1 player from each team, for doubles we need 2
+    const needPerTeam = type === 'singles' ? 1 : 2;
     
-    let homeFlightPlayers: string[] = [];
-    let awayFlightPlayers: string[] = [];
-    
-    // Singles positions
-    if (flight.type === 'singles') {
-      // Find next available home player
-      for (const player of homePlayers) {
-        if (!player.selected) {
-          player.selected = true;
-          homeFlightPlayers = [player.id];
-          selectedHomePlayers.add(player.id);
-          break;
+    if (homeFreePlayersCount >= needPerTeam && awayFreePlayersCount >= needPerTeam) {
+      let homeFlight: string[] = [];
+      let awayFlight: string[] = [];
+      
+      // Select home players for this flight
+      if (type === 'singles') {
+        // Find best available player
+        const homePlayer = homePlayers.find(p => !p.selected);
+        if (homePlayer) {
+          homePlayer.selected = true;
+          homeFlight = [homePlayer.id];
+        }
+      } else {
+        // For doubles, take best available pair where possible
+        // Get best available player
+        const homePlayer1 = homePlayers.find(p => !p.selected);
+        if (homePlayer1) {
+          homePlayer1.selected = true;
+          
+          // Then get a good partner for them (not necessarily next best)
+          const homePlayer2Options = homePlayers.filter(p => !p.selected);
+          if (homePlayer2Options.length > 0) {
+            // Pick a player - for variety sometimes pick 2nd or 3rd best
+            const randomIndex = homePlayer2Options.length > 2 ? 
+              Math.floor(Math.random() * Math.min(3, homePlayer2Options.length)) : 0;
+            const homePlayer2 = homePlayer2Options[randomIndex];
+            homePlayer2.selected = true;
+            homeFlight = [homePlayer1.id, homePlayer2.id];
+          }
         }
       }
       
-      // Find next available away player
-      for (const player of awayPlayers) {
-        if (!player.selected) {
-          player.selected = true;
-          awayFlightPlayers = [player.id];
-          selectedAwayPlayers.add(player.id);
-          break;
+      // Select away players for this flight
+      if (type === 'singles') {
+        // Find best available player
+        const awayPlayer = awayPlayers.find(p => !p.selected);
+        if (awayPlayer) {
+          awayPlayer.selected = true;
+          awayFlight = [awayPlayer.id];
+        }
+      } else {
+        // For doubles, take best available pair where possible
+        // Get best available player
+        const awayPlayer1 = awayPlayers.find(p => !p.selected);
+        if (awayPlayer1) {
+          awayPlayer1.selected = true;
+          
+          // Then get a good partner for them (not necessarily next best)
+          const awayPlayer2Options = awayPlayers.filter(p => !p.selected);
+          if (awayPlayer2Options.length > 0) {
+            // Pick a player - for variety sometimes pick 2nd or 3rd best
+            const randomIndex = awayPlayer2Options.length > 2 ? 
+              Math.floor(Math.random() * Math.min(3, awayPlayer2Options.length)) : 0;
+            const awayPlayer2 = awayPlayer2Options[randomIndex];
+            awayPlayer2.selected = true;
+            awayFlight = [awayPlayer1.id, awayPlayer2.id];
+          }
         }
       }
-    } 
-    // Doubles positions
-    else {
-      // Find next two available home players
-      const homeDoublesTeam: string[] = [];
-      for (const player of homePlayers) {
-        if (!player.selected && homeDoublesTeam.length < 2) {
-          player.selected = true;
-          homeDoublesTeam.push(player.id);
-          selectedHomePlayers.add(player.id);
-        }
-      }
-      homeFlightPlayers = homeDoublesTeam;
       
-      // Find next two available away players
-      const awayDoublesTeam: string[] = [];
-      for (const player of awayPlayers) {
-        if (!player.selected && awayDoublesTeam.length < 2) {
-          player.selected = true;
-          awayDoublesTeam.push(player.id);
-          selectedAwayPlayers.add(player.id);
-        }
+      // If we have valid players for both sides, create the flight
+      if (homeFlight.length === needPerTeam && awayFlight.length === needPerTeam) {
+        // Simulate the flight
+        const { sets, homePlayerWon } = generateFlightResult(
+          type, position, level, 
+          homeFlight, awayFlight,
+          homeLadder, awayLadder,
+          homeTeam, awayTeam,
+          allPlayers, schools
+        );
+        
+        // Add the flight to the match
+        flights.push({
+          id: crypto.randomUUID(),
+          type,
+          position,
+          level,
+          homePlayers: homeFlight,
+          awayPlayers: awayFlight,
+          sets,
+          homePlayerWon
+        });
       }
-      awayFlightPlayers = awayDoublesTeam;
     }
+  });
+  
+  // Count flight wins for each team
+  const homeFlightWins = flights.filter(f => f.homePlayerWon).length;
+  const awayFlightWins = flights.filter(f => !f.homePlayerWon).length;
+  
+  // Check for tie (4-4 in high school tennis)
+  const isTie = homeFlightWins === awayFlightWins;
+  
+  // For playoff matches, simulate tiebreaker rounds if needed
+  let tiebreakRound = null;
+  
+  if (isTie && !isLeagueMatch) {
+    // Playoff match with 4-4 tie needs tiebreaker
+    tiebreakRound = {
+      isComplete: true,
+      flights: [
+        // 1st singles tiebreaker (10-point)
+        {
+          type: 'singles' as const,
+          position: 1,
+          level: 'varsity' as const,
+          homePlayers: [homePlayers[0]?.id].filter(Boolean),
+          awayPlayers: [awayPlayers[0]?.id].filter(Boolean),
+          homePlayerWon: Math.random() < 0.55 // Slight home advantage
+        },
+        // 2nd singles tiebreaker
+        {
+          type: 'singles' as const,
+          position: 2,
+          level: 'varsity' as const,
+          homePlayers: [homePlayers[1]?.id].filter(Boolean), 
+          awayPlayers: [awayPlayers[1]?.id].filter(Boolean),
+          homePlayerWon: Math.random() < 0.52 // Slight home advantage
+        },
+        // 1st doubles tiebreaker
+        {
+          type: 'doubles' as const,
+          position: 1,
+          level: 'varsity' as const,
+          homePlayers: [homePlayers[2]?.id, homePlayers[3]?.id].filter(Boolean),
+          awayPlayers: [awayPlayers[2]?.id, awayPlayers[3]?.id].filter(Boolean),
+          homePlayerWon: Math.random() < 0.53 // Slight home advantage
+        }
+      ]
+    };
     
-    // Generate flight result with enhanced realism
-    const result = generateFlightResult(
-      flight.type,
-      flight.position,
-      flight.level,
-      homeFlightPlayers,
-      awayFlightPlayers,
-      homeLadder,
-      awayLadder,
-      homeTeam,
-      awayTeam,
-      allPlayers,
-      schools
-    );
+    // Count tiebreaker wins
+    const homeTiebreakerWins = tiebreakRound.flights.filter(f => f.homePlayerWon).length;
+    const awayTiebreakerWins = tiebreakRound.flights.filter(f => !f.homePlayerWon).length;
     
-    flights.push({
-      id: flightId,
-      matchId: '', // Will be set later
-      type: flight.type,
-      position: flight.position,
-      level: flight.level,
-      homePlayers: homeFlightPlayers,
-      awayPlayers: awayFlightPlayers,
-      sets: result.sets,
-      homePlayerWon: result.homePlayerWon
-    });
+    // Set match winner based on tiebreaker results
+    const homeTeamWon = homeTiebreakerWins > awayTiebreakerWins;
+    
+    // Create the match object with tiebreaker
+    return {
+      id: crypto.randomUUID(),
+      date,
+      homeTeamId,
+      awayTeamId,
+      flights,
+      isComplete: true,
+      isLeagueMatch,
+      isTie: false, // Not a tie since tiebreaker resolved it
+      homeTeamWon,
+      homeTeamScore: homeFlightWins,
+      awayTeamScore: awayFlightWins,
+      tiebreakRound
+    };
   }
   
-  // Calculate overall match result
-  let homeWins = 0;
-  let awayWins = 0;
-  
-  flights.forEach(flight => {
-    if (flight.homePlayerWon) homeWins++;
-    else awayWins++;
-  });
-  
-  const matchId = crypto.randomUUID();
-  
-  // Update flight match IDs
-  flights.forEach(flight => {
-    flight.matchId = matchId;
-  });
-  
-  const match: Match = {
-    id: matchId,
+  // Regular match or league match with tie
+  return {
+    id: crypto.randomUUID(),
     date,
     homeTeamId,
     awayTeamId,
-    isLeagueMatch,
-    isComplete: true,
-    hasJvMatches: false, // For simplicity, we're not generating JV matches in this version
-    homeTeamWon: homeWins > awayWins,
-    homeCoachApproved: true,
-    awayCoachApproved: true,
     flights,
-    homeTeamScore: homeWins,
-    awayTeamScore: awayWins
+    isComplete: true,
+    isLeagueMatch,
+    isTie,
+    homeTeamWon: homeFlightWins > awayFlightWins ? true : 
+                 awayFlightWins > homeFlightWins ? false : undefined,
+    homeTeamScore: homeFlightWins,
+    awayTeamScore: awayFlightWins
   };
-  
-  return match;
 };
 
 /**
- * Generate all matches for a season/district with enhanced realism
+ * Generate district matches for a group of teams
  */
 export const generateDistrictMatches = (
   teams: Team[],
   schools: School[],
   players: Player[],
-  teamLadders: TeamLadder[],
+  ladders: TeamLadder[],
   config: {
-    startDate: string,
-    endDate: string,
-    isLeagueMatch: boolean,
-    matchesPerTeam: number
+    startDate: string;
+    endDate: string;
+    isLeagueMatch: boolean;
+    matchesPerTeam: number;
   }
 ): Match[] => {
-  if (teams.length < 2) {
-    throw new Error('Need at least 2 teams to generate matches');
-  }
-  
   const matches: Match[] = [];
-  const doubleRoundRobin = teams.length < 8;
   
-  // Create pairings for all teams
-  const pairings: [string, string][] = []; // [homeTeamId, awayTeamId]
+  // Only generate if we have at least 2 teams
+  if (teams.length < 2) return matches;
   
-  // First round - each team plays every other team
+  // Calculate date range
+  const startDate = new Date(config.startDate);
+  const endDate = new Date(config.endDate);
+  const dayRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+  
+  // Loop through each team
   for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      // Add home and away games
-      pairings.push([teams[i].id, teams[j].id]);
-      pairings.push([teams[j].id, teams[i].id]);
-    }
-  }
-  
-  // Limit to requested number of matches per team
-  const matchesNeeded = teams.length * config.matchesPerTeam;
-  const totalMatchCount = Math.min(pairings.length, matchesNeeded);
-  
-  // Generate dates
-  const dates = generateMatchDates(
-    config.startDate,
-    config.endDate,
-    totalMatchCount,
-    doubleRoundRobin
-  );
-  
-  // Shuffle pairings to randomize schedule
-  for (let i = pairings.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pairings[i], pairings[j]] = [pairings[j], pairings[i]];
-  }
-  
-  // Create matches
-  for (let i = 0; i < totalMatchCount && i < dates.length && i < pairings.length; i++) {
-    const [homeTeamId, awayTeamId] = pairings[i];
-    const date = dates[i];
-    
-    const homeTeam = teams.find(t => t.id === homeTeamId);
-    const awayTeam = teams.find(t => t.id === awayTeamId);
-    
-    if (!homeTeam || !awayTeam) continue;
-    
+    const homeTeam = teams[i];
+    const homeLadder = ladders.find(l => l.teamId === homeTeam.id);
     const homeSchool = schools.find(s => s.id === homeTeam.schoolId);
-    const awaySchool = schools.find(s => s.id === awayTeam.schoolId);
     
-    if (!homeSchool || !awaySchool) continue;
+    if (!homeLadder || !homeSchool) continue;
     
-    const homeLadder = teamLadders.find(l => l.teamId === homeTeamId);
-    const awayLadder = teamLadders.find(l => l.teamId === awayTeamId);
-    
-    if (!homeLadder || !awayLadder) continue;
-    
-    // Simulate the match with enhanced team dynamics
-    const match = simulateMatch(
-      date,
-      homeTeamId,
-      awayTeamId,
-      homeLadder,
-      awayLadder,
-      config.isLeagueMatch,
-      homeSchool,
-      awaySchool,
-      homeTeam,
-      awayTeam,
-      players,
-      schools
-    );
-    
-    matches.push(match);
+    // Match home team against each other team
+    for (let j = 0; j < teams.length; j++) {
+      if (i === j) continue; // Skip matching against self
+      
+      const awayTeam = teams[j];
+      const awayLadder = ladders.find(l => l.teamId === awayTeam.id);
+      const awaySchool = schools.find(s => s.id === awayTeam.schoolId);
+      
+      if (!awayLadder || !awaySchool) continue;
+      
+      // For round-robin format, each team plays every other team once
+      // For double round-robin, we check if matches per team is high enough
+      const shouldPlayMatch = config.matchesPerTeam >= teams.length - 1;
+      
+      if (shouldPlayMatch) {
+        // Generate a random date within the range
+        const randomDay = Math.floor(Math.random() * dayRange);
+        const matchDate = new Date(startDate);
+        matchDate.setDate(startDate.getDate() + randomDay);
+        
+        // Generate the match
+        const match = simulateMatch(
+          matchDate.toISOString().split('T')[0],
+          homeTeam.id,
+          awayTeam.id,
+          homeLadder,
+          awayLadder,
+          config.isLeagueMatch,
+          homeSchool,
+          awaySchool,
+          homeTeam,
+          awayTeam,
+          players,
+          schools
+        );
+        
+        matches.push(match);
+      }
+    }
   }
   
   return matches;
-};
-
-/**
- * Generate all matches for a season/district
- */
-export const generateMatchDates = (
-  startDate: string,
-  endDate: string,
-  count: number,
-  doubleRoundRobin: boolean = true
-): string[] => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const daysBetween = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // Calculate max possible match days
-  // For high school tennis, matches can be scheduled 3 times per week:
-  // - Typically Monday, Wednesday, Friday for league matches
-  // - Weekend tournaments on Friday-Saturday
-  const matchesPerWeek = 3;
-  const weeksInSeason = Math.ceil(daysBetween / 7);
-  const potentialMatchDays = weeksInSeason * matchesPerWeek;
-  
-  // Check if we have enough days, accounting for a more realistic schedule
-  if (potentialMatchDays < count) {
-    console.warn(`Warning: Requested ${count} matches but only have capacity for approximately ${potentialMatchDays} based on season length.`);
-    // Continue anyway, we'll fit as many as we can
-  }
-  
-  const dates: string[] = [];
-  const usedDates = new Set<string>();
-  
-  // Set days of week for matches (typically Mon/Wed/Fri for tennis)
-  const matchDays = [1, 3, 5]; // Monday, Wednesday, Friday
-  const tournamentDays = [5, 6]; // Friday, Saturday for tournaments
-  
-  // First round
-  let currentDate = new Date(start);
-  const firstRoundCount = doubleRoundRobin ? Math.ceil(count / 2) : count;
-  
-  // Skip spring break (last week of March)
-  const springBreakStart = new Date(start.getFullYear(), 2, 24); // March 24th
-  const springBreakEnd = new Date(start.getFullYear(), 2, 31); // March 31st
-  
-  while (dates.length < firstRoundCount && currentDate <= end) {
-    // Skip spring break
-    if (currentDate >= springBreakStart && currentDate <= springBreakEnd) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      continue;
-    }
-    
-    // Check if current day is a match day
-    if (matchDays.includes(currentDate.getDay())) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-      if (!usedDates.has(dateStr)) {
-        dates.push(dateStr);
-        usedDates.add(dateStr);
-      }
-    }
-    
-    // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  
-  // If double round robin, add second round with 2-3 week gap
-  if (doubleRoundRobin && dates.length >= firstRoundCount) {
-    const secondRoundDelay = 14 + Math.floor(Math.random() * 7); // 2-3 weeks
-    const firstRoundDates = [...dates];
-    
-    for (const dateStr of firstRoundDates) {
-      if (dates.length >= count) break;
-      
-      const originalDate = new Date(dateStr);
-      const newDate = new Date(originalDate);
-      newDate.setDate(newDate.getDate() + secondRoundDelay);
-      
-      // Skip spring break
-      if (newDate >= springBreakStart && newDate <= springBreakEnd) {
-        newDate.setDate(newDate.getDate() + 7); // Skip a week
-      }
-      
-      // Ensure new date is still in season
-      if (newDate <= end) {
-        const newDateStr = newDate.toISOString().split('T')[0];
-        if (!usedDates.has(newDateStr)) {
-          dates.push(newDateStr);
-          usedDates.add(newDateStr);
-        }
-      }
-    }
-  }
-  
-  // If we still don't have enough dates, add some weekend tournament dates
-  currentDate = new Date(start);
-  let weekendCount = 0;
-  const maxTournamentWeekends = 4; // Limit to 4 tournament weekends in a season
-  
-  while (dates.length < count && currentDate <= end && weekendCount < maxTournamentWeekends) {
-    // Focus on weekends for tournaments
-    if (tournamentDays.includes(currentDate.getDay())) {
-      // Skip spring break
-      if (currentDate >= springBreakStart && currentDate <= springBreakEnd) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        continue;
-      }
-      
-      const dateStr = currentDate.toISOString().split('T')[0];
-      if (!usedDates.has(dateStr)) {
-        dates.push(dateStr);
-        usedDates.add(dateStr);
-        
-        // Count weekends (consider only Fridays to avoid double counting)
-        if (currentDate.getDay() === 5) {
-          weekendCount++;
-        }
-      }
-    }
-    
-    // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  
-  // If we STILL don't have enough dates, add more weekday matches
-  // This is less realistic but ensures we can satisfy the requested count
-  currentDate = new Date(start);
-  const additionalMatchDays = [2, 4]; // Add Tuesday and Thursday as potential match days
-  
-  while (dates.length < count && currentDate <= end) {
-    // Skip spring break
-    if (currentDate >= springBreakStart && currentDate <= springBreakEnd) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      continue;
-    }
-    
-    // Try additional weekdays
-    if (additionalMatchDays.includes(currentDate.getDay())) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-      if (!usedDates.has(dateStr)) {
-        dates.push(dateStr);
-        usedDates.add(dateStr);
-      }
-    }
-    
-    // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  
-  // Sort dates chronologically
-  return dates.sort((a, b) => a.localeCompare(b));
-};
-
-/**
- * Creates a tournament bracket based on team rankings
- */
-export const generateTournamentBracket = (
-  teamRankings: { teamId: string, rank: number }[],
-  startDate: string
-): {
-  tournamentId: string,
-  name: string,
-  startDate: string,
-  endDate: string,
-  matches: Match[]
-} => {
-  const tournamentId = crypto.randomUUID();
-  const name = "State Championship";
-  
-  // Sort teams by rank
-  const sortedTeams = [...teamRankings].sort((a, b) => a.rank - b.rank);
-  
-  // Create bracket matchups (#1 vs #16, #2 vs #15, etc.)
-  const firstRoundMatchups: [number, number][] = [
-    [0, 15], [7, 8], [3, 12], [4, 11], [5, 10], [2, 13], [6, 9], [1, 14]
-  ];
-  
-  const startDateObj = new Date(startDate);
-  const endDateObj = new Date(startDate);
-  endDateObj.setDate(endDateObj.getDate() + 2); // Tournaments typically 2-3 days
-  
-  // For now we're just creating the structure, actual matches would be simulated later
-  return {
-    tournamentId,
-    name,
-    startDate,
-    endDate: endDateObj.toISOString().split('T')[0],
-    matches: [] // These would be filled in later
-  };
 };

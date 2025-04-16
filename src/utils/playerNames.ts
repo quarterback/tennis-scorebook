@@ -1,91 +1,86 @@
 
-import { Gender } from '@/types';
-
-// First names dataset with more diverse options
-export const girlsFirstNames = [
-  "Emma", "Olivia", "Ava", "Isabella", "Sophia", "Mia", "Charlotte", "Amelia", 
-  "Harper", "Evelyn", "Abigail", "Emily", "Elizabeth", "Sofia", "Ella", "Madison", 
-  "Scarlett", "Victoria", "Aria", "Grace", "Chloe", "Camila", "Penelope", "Riley",
-  "Layla", "Lillian", "Nora", "Zoey", "Mila", "Aubrey", "Hannah", "Lily", "Addison",
-  "Eleanor", "Natalie", "Luna", "Savannah", "Brooklyn", "Leah", "Zoe", "Stella", "Hazel",
-  "Ellie", "Paisley", "Audrey", "Skylar", "Violet", "Claire", "Bella", "Aurora",
-  "Lucy", "Anna", "Samantha", "Caroline", "Genesis", "Aaliyah", "Kennedy", "Kinsley",
-  "Allison", "Maya", "Sarah", "Madelyn", "Adeline", "Alexa", "Ariana", "Elena",
-  "Gabriella", "Naomi", "Alice", "Sadie", "Hailey", "Eva", "Emilia", "Autumn",
-  "Quinn", "Nevaeh", "Piper", "Ruby", "Serenity", "Willow", "Everly", "Cora",
-  "Kaylee", "Lydia", "Aubree", "Arianna", "Eliana", "Peyton", "Melanie", "Gianna",
-  "Isabelle", "Julia", "Valentina", "Nova", "Clara", "Vivian", "Reagan", "Mackenzie",
-  "Mei", "Yuna", "Hana", "Sakura", "Jin", "Soo-jin", "Eun", "Jia", "Ling", "Yuki",
-  "Astrid", "Freya", "Ingrid", "Mathilde", "Greta", "Katarina", "Isolde", "Annika",
-  "Nia", "Amara", "Adanna", "Kesi",
-  "Aisha", "Lakshmi", "Fatima", "Zara"
+// Common first names by gender
+const boysFirstNames = [
+  'Aiden', 'Jackson', 'Lucas', 'Liam', 'Noah', 
+  'Ethan', 'Mason', 'Logan', 'Jacob', 'Michael',
+  'Matthew', 'Daniel', 'Oliver', 'Henry', 'James',
+  'Benjamin', 'Alexander', 'William', 'Elijah', 'Samuel',
+  'David', 'Joseph', 'Anthony', 'Andrew', 'Jack',
+  'Ryan', 'Nathan', 'Joshua', 'Christian', 'Owen',
+  'Dylan', 'Isaac', 'Gabriel', 'Caleb', 'Luke',
+  'Tyler', 'Aaron', 'John', 'Jonathan', 'Connor',
+  'Nicholas', 'Eli', 'Justin', 'Brandon', 'Adam',
+  'Thomas', 'Zachary', 'Alex', 'Isaiah', 'Austin',
+  'Kevin', 'Jason', 'Sean', 'Dominic', 'Ian',
+  'Max', 'Xavier', 'Evan', 'Carlos', 'Santiago',
+  'Marcus', 'Brian', 'Mateo', 'Juan', 'Miguel',
+  'Diego', 'Luis', 'Kai', 'Jayden', 'Omar',
+  'Kyle', 'Seth', 'Ricardo', 'Jorge', 'Alejandro'
 ];
 
-export const boysFirstNames = [
-  "Liam", "Noah", "William", "James", "Oliver", "Benjamin", "Elijah", "Lucas",
-  "Mason", "Logan", "Alexander", "Ethan", "Jacob", "Michael", "Daniel", "Henry",
-  "Jackson", "Sebastian", "Aiden", "Matthew", "Samuel", "David", "Joseph", "Carter",
-  "Owen", "Wyatt", "John", "Jack", "Luke", "Jayden", "Dylan", "Grayson", "Levi",
-  "Isaac", "Gabriel", "Julian", "Mateo", "Anthony", "Jaxon", "Lincoln", "Joshua",
-  "Christopher", "Andrew", "Theodore", "Caleb", "Ryan", "Asher", "Nathan", "Thomas",
-  "Leo", "Isaiah", "Charles", "Josiah", "Hudson", "Christian", "Hunter", "Connor",
-  "Eli", "Ezra", "Aaron", "Landon", "Adrian", "Jonathan", "Nolan", "Jeremiah",
-  "Easton", "Elias", "Colton", "Cameron", "Carson", "Robert", "Angel", "Maverick",
-  "Nicholas", "Dominic", "Jace", "Ian", "Austin", "Adam", "Santiago", "Jordan",
-  "Cooper", "Brayden", "Roman", "Evan", "Ezekiel", "Xavier", "Jose", "Jaxson",
-  "Axel", "Everett", "Kayden", "Miles", "Sawyer", "Jason", "Maxwell", "Juan",
-  "Kai", "Hiroshi", "Jin", "Ming", "Tao", "Ryu", "Kenji", "Jian", "Sung", "Wei",
-  "Magnus", "Henrik", "Lars", "Sven", "Bjorn", "Klaus", "Nikolai", "Matthias",
-  "Kofi", "Kwame", "Sekou", "Abeo",
-  "Hassan", "Raj", "Omar", "Zahir"
+const girlsFirstNames = [
+  'Emma', 'Olivia', 'Ava', 'Isabella', 'Sophia',
+  'Charlotte', 'Mia', 'Amelia', 'Harper', 'Evelyn',
+  'Abigail', 'Emily', 'Elizabeth', 'Sofia', 'Avery',
+  'Ella', 'Scarlett', 'Grace', 'Victoria', 'Riley',
+  'Aria', 'Lily', 'Aubrey', 'Zoey', 'Hannah',
+  'Lillian', 'Addison', 'Layla', 'Natalie', 'Camila',
+  'Madison', 'Chloe', 'Maya', 'Penelope', 'Madelyn',
+  'Nora', 'Hailey', 'Lucy', 'Sarah', 'Anna',
+  'Audrey', 'Savannah', 'Aaliyah', 'Gabriella', 'Claire',
+  'Sadie', 'Naomi', 'Zoe', 'Eva', 'Kennedy',
+  'Ellie', 'Skylar', 'Caroline', 'Maria', 'Stella',
+  'Kylie', 'Peyton', 'Leila', 'Nevaeh', 'Jasmine',
+  'Violet', 'Alice', 'Julia', 'Morgan', 'Cora',
+  'Kate', 'Diana', 'Leah', 'Gabriela', 'Valeria',
+  'Clara', 'Melanie', 'Tiana', 'Jane', 'Mackenzie'
 ];
 
-// Gender-neutral names (can be added to either list based on the team's gender)
-export const genderNeutralNames = [
-  "Alex", "Jordan", "Taylor", "Casey", "Riley", "Avery", "Quinn", "Skyler", 
-  "Dakota", "Rowan", "Charlie", "Finley", "Sage", "Jamie", "Drew", "Reese", 
-  "Robin", "Kendall", "Morgan", "Blake", "Cameron", "Hayden", "Emerson", "Parker"
+// Common last names
+const lastNames = [
+  'Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
+  'Miller', 'Davis', 'Garcia', 'Rodriguez', 'Wilson',
+  'Martinez', 'Anderson', 'Taylor', 'Thomas', 'Hernandez',
+  'Moore', 'Martin', 'Jackson', 'Thompson', 'White',
+  'Lopez', 'Lee', 'Gonzalez', 'Harris', 'Clark',
+  'Lewis', 'Robinson', 'Walker', 'Perez', 'Hall',
+  'Young', 'Allen', 'Sanchez', 'Wright', 'King',
+  'Scott', 'Green', 'Baker', 'Adams', 'Nelson',
+  'Hill', 'Ramirez', 'Campbell', 'Mitchell', 'Roberts',
+  'Carter', 'Phillips', 'Evans', 'Turner', 'Torres',
+  'Parker', 'Collins', 'Edwards', 'Stewart', 'Flores',
+  'Morris', 'Nguyen', 'Murphy', 'Rivera', 'Cook',
+  'Rogers', 'Morgan', 'Peterson', 'Cooper', 'Reed',
+  'Bailey', 'Bell', 'Gomez', 'Kelly', 'Howard',
+  'Ward', 'Cox', 'Diaz', 'Richardson', 'Wood',
+  'Watson', 'Brooks', 'Bennett', 'Gray', 'James',
+  'Reyes', 'Cruz', 'Hughes', 'Price', 'Myers',
+  'Long', 'Foster', 'Sanders', 'Ross', 'Morales',
+  'Powell', 'Sullivan', 'Russell', 'Ortiz', 'Jenkins',
+  'Gutierrez', 'Perry', 'Butler', 'Barnes', 'Fisher'
 ];
 
-// Last names dataset with diverse diaspora representation
-export const lastNames = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-  "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
-  "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson",
-  "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker",
-  "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
-  "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell",
-  "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker",
-  "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy",
-  "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey",
-  "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson",
-  "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza", "Ruiz", "Hughes",
-  "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross",
-  "Wang", "Li", "Zhang", "Chen", "Liu", "Huang", "Wu", "Xu", "Sun", "Zhu", 
-  "Yang", "Zhao", "Zhou", "Lu", "Kim", "Park", "Lee", "Choi", "Kang", "Nguyen",
-  "Tran", "Pham", "Hoang", "Vu", "Dang",
-  "Schmidt", "Müller", "Fischer", "Weber", "Schneider", "Meyer", "Wagner", "Becker",
-  "Hoffmann", "Schulz", "Kowalski", "Nowak", "Wójcik", "Kowalczyk", "Kamiński",
-  "Adebayo", "Okafor", "Mensah", "Osei", "Abara", "Diallo", "Afolayan",
-  "Khan", "Singh", "Gupta", "Patel", "Ali", "Kumar", "Sharma", "Hassan", "Malhotra"
+// Pacific Northwest names (Oregon/Washington specific)
+const pnwLastNames = [
+  'Chen', 'Nguyen', 'Singh', 'Patel', 'Kim',
+  'Park', 'Wu', 'Zhang', 'Wong', 'Lin',
+  'Benson', 'Powell', 'Yamamoto', 'Choi', 'Lee',
+  'Sharma', 'Ahmed', 'Gupta', 'Das', 'Kaur',
+  'Chang', 'Jensen', 'Olsen', 'Larson', 'Peterson',
+  'Stevenson', 'McAllister', 'Lindgren', 'Rasmussen', 'Sorensen'
 ];
 
 /**
- * Generate a random player name based on gender
+ * Generate a random name for a player based on gender
  */
-export const generatePlayerName = (gender: Gender): string => {
-  // Decide whether to use a gender-neutral name (20% chance)
-  const useGenderNeutral = Math.random() < 0.2;
+export const generatePlayerName = (gender: string): string => {
+  const firstNames = gender === 'Boys' ? boysFirstNames : girlsFirstNames;
   
-  let firstName;
-  if (useGenderNeutral) {
-    firstName = genderNeutralNames[Math.floor(Math.random() * genderNeutralNames.length)];
-  } else {
-    const firstNames = gender === 'Girls' ? girlsFirstNames : boysFirstNames;
-    firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-  }
+  // Combine traditional and PNW last names with PNW having higher weight
+  const combinedLastNames = [...lastNames, ...pnwLastNames, ...pnwLastNames];
   
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const lastName = combinedLastNames[Math.floor(Math.random() * combinedLastNames.length)];
   
   return `${firstName} ${lastName}`;
 };

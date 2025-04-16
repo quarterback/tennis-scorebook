@@ -107,7 +107,9 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({
                     </TableCell>
                     <TableCell className="font-medium">{team.teamName}</TableCell>
                     <TableCell className="text-center">{team.districtName}</TableCell>
-                    <TableCell className="text-center">{team.wins}-{team.losses}</TableCell>
+                    <TableCell className="text-center">
+                      {team.wins}-{team.losses}{team.ties && team.ties > 0 ? `-${team.ties}` : ''}
+                    </TableCell>
                     <TableCell className="text-center">
                       {(team.winPercentage || 0).toFixed(3)}
                     </TableCell>

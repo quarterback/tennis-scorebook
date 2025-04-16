@@ -9,7 +9,8 @@ export const useFlightWeightedScore = (matches: Match[]) => {
    * 1st Doubles = 1.0 pt
    * 2nd Singles = 0.75 pt
    * 2nd Doubles = 0.5 pt
-   * 3rd Singles = 0.4 pt
+   * 3rd Singles = 0.45 pt
+   * 3rd Doubles = 0.35 pt
    * Ties count as half a win
    */
   const calculateFlightWeightedScore = (teamId: string, config: RankingConfig): number => {
@@ -46,13 +47,14 @@ export const useFlightWeightedScore = (matches: Match[]) => {
         if (flight.type === 'singles') {
           if (flight.position === 1) flightWeight = 1.0;
           else if (flight.position === 2) flightWeight = 0.75;
-          else if (flight.position === 3) flightWeight = 0.4;
+          else if (flight.position === 3) flightWeight = 0.45;
           // Positions beyond 3rd don't contribute as much
-          else flightWeight = 0.2;
+          else flightWeight = 0.25;
         } else if (flight.type === 'doubles') {
           if (flight.position === 1) flightWeight = 1.0;
           else if (flight.position === 2) flightWeight = 0.5;
-          // Positions beyond 2nd don't contribute as much
+          else if (flight.position === 3) flightWeight = 0.35;
+          // Positions beyond 3rd don't contribute as much
           else flightWeight = 0.2;
         }
         
