@@ -54,7 +54,7 @@ Next up:
 
 ## 📬 Contribute / Watch
 
-This is a personal tool developed to fix a niche-but-infuriating problem. If you're interested in helping, reach out via GitHub or Bluesky.
+This is a personal tool developed to fix a niche-but-infuriating problem. If you're interested in helping, do let me know..but it's mostly a silly thing I'm playing around with. 
 
 > 🧠 [@quarterback.bsky.social](https://bsky.app/profile/quarterback.bsky.social)  
 > 🧪 Built for Oregon, but adaptable anywhere.
