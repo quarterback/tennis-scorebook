@@ -6,70 +6,86 @@ export const useQualificationStatus = () => {
     rankings: TeamRanking[], 
     qualificationRules: ClassificationQualifications[]
   ): TeamRanking[] => {
-    const teamsByClassAndGender: Record<string, TeamRanking[]> = {};
+    // First divide all teams by gender and classification
+    const teamsByGenderAndClass: Record<string, TeamRanking[]> = {};
     
     rankings.forEach(team => {
-      const key = `${team.classification}-${team.gender}`;
-      if (!teamsByClassAndGender[key]) {
-        teamsByClassAndGender[key] = [];
+      const key = `${team.gender}-${team.classification}`;
+      if (!teamsByGenderAndClass[key]) {
+        teamsByGenderAndClass[key] = [];
       }
-      teamsByClassAndGender[key].push(team);
+      teamsByGenderAndClass[key].push(team);
     });
     
-    Object.entries(teamsByClassAndGender).forEach(([key, teamsInClass]) => {
-      const [classification] = key.split('-');
+    // Process each gender-classification group separately
+    Object.entries(teamsByGenderAndClass).forEach(([key, teamsInGroup]) => {
+      const [gender, classification] = key.split('-');
       
-      const rules = qualificationRules.find(r => r.classification === classification) || {
-        classification,
-        totalSpots: 8,
-        automaticBids: 4,
-        atLargeBids: 4
-      };
+      // Find qualification rules for this classification
+      const rules = qualificationRules.find(r => r.classification === classification);
       
-      const topTeamByDistrict: Map<string, TeamRanking> = new Map();
+      if (!rules) return; // Skip if no rules found
+      
+      // Group teams by district
       const teamsByDistrict: Record<string, TeamRanking[]> = {};
       
-      teamsInClass.forEach(team => {
+      teamsInGroup.forEach(team => {
         if (!teamsByDistrict[team.districtName]) {
           teamsByDistrict[team.districtName] = [];
         }
         teamsByDistrict[team.districtName].push(team);
       });
       
+      // Find the top team from each district for automatic bids
+      const automaticQualifiers: TeamRanking[] = [];
+      
       Object.entries(teamsByDistrict).forEach(([district, districtTeams]) => {
+        // Sort by composite score to find district champion
         const sortedTeams = [...districtTeams].sort((a, b) => b.compositeScore - a.compositeScore);
+        
         if (sortedTeams.length > 0) {
-          topTeamByDistrict.set(district, sortedTeams[0]);
+          // The top team gets an automatic bid
+          automaticQualifiers.push(sortedTeams[0]);
         }
       });
       
-      let automaticQualifiers = Array.from(topTeamByDistrict.values());
-      automaticQualifiers.sort((a, b) => b.compositeScore - a.compositeScore);
-      automaticQualifiers = automaticQualifiers.slice(0, rules.automaticBids);
+      // Limit automatic qualifiers to the number of bids available
+      const finalAutomaticQualifiers = automaticQualifiers.slice(0, rules.automaticBids);
       
-      automaticQualifiers.forEach((team, index) => {
-        const teamInRankings = teamsInClass.find(t => t.teamId === team.teamId);
+      // Mark automatic qualifiers
+      finalAutomaticQualifiers.forEach((team, index) => {
+        const teamInRankings = teamsInGroup.find(t => t.teamId === team.teamId);
         if (teamInRankings) {
           teamInRankings.qualificationStatus = 'automatic';
           teamInRankings.qualificationSeed = index + 1;
         }
       });
       
-      const eligibleForAtLarge = teamsInClass.filter(team => 
-        !automaticQualifiers.some(aq => aq.teamId === team.teamId)
+      // Find teams that should get at-large bids (teams not already qualified)
+      const eligibleForAtLarge = teamsInGroup.filter(team => 
+        !finalAutomaticQualifiers.some(aq => aq.teamId === team.teamId)
       );
       
+      // Sort by composite score for at-large bids
       const sortedForAtLarge = [...eligibleForAtLarge].sort((a, b) => 
         b.compositeScore - a.compositeScore
       );
       
+      // Assign at-large bids
       const atLargeQualifiers = sortedForAtLarge.slice(0, rules.atLargeBids);
       
       atLargeQualifiers.forEach((team, index) => {
-        const teamInRankings = teamsInClass.find(t => t.teamId === team.teamId);
+        const teamInRankings = teamsInGroup.find(t => t.teamId === team.teamId);
         if (teamInRankings) {
           teamInRankings.qualificationStatus = 'at-large';
-          teamInRankings.qualificationSeed = automaticQualifiers.length + index + 1;
+          teamInRankings.qualificationSeed = finalAutomaticQualifiers.length + index + 1;
+        }
+      });
+      
+      // Mark all other teams as non-qualifiers
+      teamsInGroup.forEach(team => {
+        if (!team.qualificationStatus) {
+          team.qualificationStatus = 'none';
         }
       });
     });

@@ -1,22 +1,30 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Rocket, Terminal, Code, ListOrdered, FileText } from 'lucide-react';
+import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Gender, Classification } from '@/types';
 
 // Simulator components
 import SimulationControls from '@/components/simulation/SimulationControls';
+import PostSeasonSimulator from '@/components/tournaments/PostSeasonSimulator';
 
 const SimulatorPage: React.FC = () => {
   const { toast } = useToast();
   const [simulationResults, setSimulationResults] = useState<{
-    teams?: { name: string; classification: string; record: string; apr: number }[];
+    teams?: { id: string; name: string; classification: string; record: string; apr: number }[];
     matches?: { date: string; homeTeam: string; awayTeam: string; score: string }[];
-    rankings?: { name: string; classification: string; record: string; apr: number }[];
+    rankings?: { id: string; name: string; classification: string; record: string; apr: number }[];
   }>({});
+  
+  // State for tournament simulation
+  const [tournamentGender, setTournamentGender] = useState<Gender>('Boys');
+  const [tournamentClassification, setTournamentClassification] = useState<Classification>('6A');
   
   const openDocumentation = () => {
     window.open('https://github.com/quarterback/tennis-scorebook/tree/main/simulator', '_blank');
@@ -54,7 +62,7 @@ const SimulatorPage: React.FC = () => {
       </div>
       
       <Tabs defaultValue="ui" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-md grid-cols-4">
           <TabsTrigger value="ui">Web Interface</TabsTrigger>
           <TabsTrigger value="cli">Command Line</TabsTrigger>
           <TabsTrigger value="results" className="relative">
@@ -65,6 +73,10 @@ const SimulatorPage: React.FC = () => {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
               </span>
             ) : null}
+          </TabsTrigger>
+          <TabsTrigger value="playoffs" className="flex items-center gap-1">
+            <Trophy className="h-3 w-3" />
+            Playoffs
           </TabsTrigger>
         </TabsList>
         
@@ -199,7 +211,7 @@ const SimulatorPage: React.FC = () => {
                       </thead>
                       <tbody>
                         {simulationResults.rankings?.map((team, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
+                          <tr key={team.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
                             <td className="p-2">{index + 1}</td>
                             <td className="p-2 font-medium">{team.name}</td>
                             <td className="p-2">{team.classification}</td>
@@ -278,6 +290,61 @@ const SimulatorPage: React.FC = () => {
               </p>
             </div>
           )}
+        </TabsContent>
+        
+        <TabsContent value="playoffs" className="space-y-6">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Post-Season Tournament Simulator
+              </CardTitle>
+              <CardDescription>
+                Simulate state tournament brackets and playoff matches
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gender-select">Gender</Label>
+                  <Select 
+                    value={tournamentGender}
+                    onValueChange={(value: Gender) => setTournamentGender(value)}
+                  >
+                    <SelectTrigger id="gender-select">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Boys">Boys</SelectItem>
+                      <SelectItem value="Girls">Girls</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="classification-select">Classification</Label>
+                  <Select 
+                    value={tournamentClassification}
+                    onValueChange={(value: Classification) => setTournamentClassification(value)}
+                  >
+                    <SelectTrigger id="classification-select">
+                      <SelectValue placeholder="Select classification" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6A">6A</SelectItem>
+                      <SelectItem value="5A">5A</SelectItem>
+                      <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <PostSeasonSimulator 
+            gender={tournamentGender} 
+            classification={tournamentClassification} 
+          />
         </TabsContent>
       </Tabs>
     </div>
