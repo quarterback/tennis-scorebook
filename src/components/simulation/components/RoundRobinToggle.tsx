@@ -15,7 +15,7 @@ const RoundRobinToggle: React.FC<RoundRobinToggleProps> = ({
   disabled = false
 }) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center space-x-2">
       <Switch
         id="double-round"
         checked={doubleRoundRobin}
@@ -23,7 +23,7 @@ const RoundRobinToggle: React.FC<RoundRobinToggleProps> = ({
         disabled={disabled}
       />
       <Label htmlFor="double-round" className="cursor-pointer">
-        Double Round-Robin for Small Districts
+        Double Round Robin: {doubleRoundRobin ? 'Yes' : 'No'}
       </Label>
     </div>
   );

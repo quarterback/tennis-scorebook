@@ -1,7 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { PlayerSkillTier } from '@/types';
 import { Team, School, District, Match, Player } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Rocket, Users, Calendar, CalendarDays } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+
+// Import UI components for the new design
+import DateRangePicker from './components/DateRangePicker';
+import RoundRobinToggle from './components/RoundRobinToggle';
 
 interface SimulationControlsProps {
   onSimulationComplete?: (results: any) => void;
@@ -21,21 +31,37 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
     deleteAllPlayers
   } = useData();
   
-  const [startDate, setStartDate] = useState('2024-09-01');
-  const [endDate, setEndDate] = useState('2025-05-31');
+  const { toast } = useToast();
+  
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() + 1);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date(selectedYear, 8, 1)); // September 1st
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date(selectedYear + 1, 4, 31)); // May 31st
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(true);
   const [generatingMatches, setGeneratingMatches] = useState(false);
   const [isGeneratingPlayers, setIsGeneratingPlayers] = useState(false);
   
-  useEffect(() => {
-    const today = new Date();
-    const nextYear = today.getFullYear() + 1;
-    
-    setStartDate(`${today.getFullYear()}-09-01`);
-    setEndDate(`${nextYear}-05-31`);
-  }, []);
+  const handleStartDateChange = (date: Date | undefined) => {
+    setStartDate(date);
+  };
+  
+  const handleEndDateChange = (date: Date | undefined) => {
+    setEndDate(date);
+  };
+  
+  const handleDoubleRoundRobinChange = (value: boolean) => {
+    setDoubleRoundRobin(value);
+  };
   
   const handleGenerateMatches = () => {
+    if (!startDate || !endDate) {
+      toast({
+        title: "Date Selection Required",
+        description: "Please select both start and end dates for the season.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setGeneratingMatches(true);
     
     // Clear existing matches first
@@ -53,8 +79,8 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           players,
           [], // Empty ladders array as it's not actually used in the simulation logic
           {
-            startDate,
-            endDate,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
             doubleRoundRobin: doubleRoundRobin
           }
         );
@@ -64,12 +90,23 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           addMatch(match);
         });
         
+        toast({
+          title: "Match Generation Complete",
+          description: `Generated ${matches.length} matches successfully`,
+          variant: "success"
+        });
+        
         console.log(`Generated ${matches.length} matches successfully`);
         
         // Call onSimulationComplete with matches
         onSimulationComplete(matches);
       } catch (error) {
         console.error('Error generating matches:', error);
+        toast({
+          title: "Error Generating Matches",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
       } finally {
         setGeneratingMatches(false);
       }
@@ -101,9 +138,20 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           addPlayer(player);
         });
         
+        toast({
+          title: "Player Generation Complete",
+          description: `Generated ${generatedPlayers.length} players successfully`,
+          variant: "success"
+        });
+        
         console.log(`Generated ${generatedPlayers.length} players successfully`);
       } catch (error) {
         console.error('Error generating players:', error);
+        toast({
+          title: "Error Generating Players",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
       } finally {
         setIsGeneratingPlayers(false);
       }
@@ -125,67 +173,82 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
       if (playersNeeded > 0) {
         for (let i = 0; i < playersNeeded; i++) {
           addPlayer({
+            id: crypto.randomUUID(),
             name: `${team.gender === 'Boys' ? 'Player' : 'Player'} ${Math.floor(Math.random() * 100)}`,
             grade: Math.floor(Math.random() * 4) + 9,
             teamId: team.id,
             seasons: [currentSeason.id],
             skillTier: 'developmental' as PlayerSkillTier,
-            gender: team.gender // Add gender field to fix the TS error
+            gender: team.gender
           });
         }
       }
     });
+    
+    toast({
+      title: "Players Added",
+      description: "Added players to all teams that needed them",
+      variant: "success"
+    });
   };
 
   return (
-    <div className="simulation-controls">
-      <h2>Simulation Controls</h2>
-      
-      <div className="date-range">
-        <label>
-          Start Date:
-          <input
-            type="date"
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
-          />
-        </label>
+    <Card className="border-blue-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl">Simulation Controls</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          selectedYear={selectedYear}
+          onStartDateChange={handleStartDateChange}
+          onEndDateChange={handleEndDateChange}
+          disabled={generatingMatches || isGeneratingPlayers}
+        />
         
-        <label>
-          End Date:
-          <input
-            type="date"
-            value={endDate}
-            onChange={e => setEndDate(e.target.value)}
+        <Separator className="my-4" />
+        
+        <div className="space-y-4">
+          <RoundRobinToggle
+            doubleRoundRobin={doubleRoundRobin}
+            onDoubleRoundRobinChange={handleDoubleRoundRobinChange}
+            disabled={generatingMatches}
           />
-        </label>
-      </div>
-      
-      <div className="round-robin-select">
-        <label>
-          Double Round Robin:
-          <select 
-            value={doubleRoundRobin ? "true" : "false"}
-            onChange={e => setDoubleRoundRobin(e.target.value === "true")}
-          >
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </label>
-      </div>
-      
-      <button onClick={handleGenerateMatches} disabled={generatingMatches}>
-        {generatingMatches ? 'Generating Matches...' : 'Generate Matches'}
-      </button>
-      
-      <button onClick={handleGeneratePlayers} disabled={isGeneratingPlayers}>
-        {isGeneratingPlayers ? 'Generating Players...' : 'Generate Players'}
-      </button>
-      
-      <button onClick={handleAddPlayersToAllTeams}>
-        Add Players to All Teams
-      </button>
-    </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="default" 
+              onClick={handleGenerateMatches} 
+              disabled={generatingMatches || !startDate || !endDate}
+              className="flex items-center gap-2"
+            >
+              <CalendarDays className="h-4 w-4" />
+              {generatingMatches ? 'Generating Matches...' : 'Generate Matches'}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleGeneratePlayers} 
+              disabled={isGeneratingPlayers}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              {isGeneratingPlayers ? 'Generating Players...' : 'Generate Players'}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleAddPlayersToAllTeams}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Add Players to All Teams
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -39,7 +39,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               disabled={disabled}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {startDate ? format(startDate, 'MMM d, yyyy') : 'Select date'}
+              {startDate ? format(startDate, 'MM/dd/yyyy') : 'Select date'}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -50,13 +50,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 onStartDateChange(date);
                 setStartDateOpen(false);
               }}
-              defaultMonth={new Date(selectedYear, 2, 1)} // Default to March of selected year
+              defaultMonth={new Date(selectedYear, 8, 1)} // Default to September
               disabled={(date) => 
-                date > (endDate || new Date(`${selectedYear}-12-31`)) || 
-                date < new Date(`${selectedYear}-01-01`)
+                (endDate && date > endDate) || 
+                date < new Date(selectedYear - 1, 0, 1) ||
+                date > new Date(selectedYear + 1, 11, 31)
               }
               initialFocus
-              className="pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
@@ -72,7 +72,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               disabled={disabled}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {endDate ? format(endDate, 'MMM d, yyyy') : 'Select date'}
+              {endDate ? format(endDate, 'MM/dd/yyyy') : 'Select date'}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -83,13 +83,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 onEndDateChange(date);
                 setEndDateOpen(false);
               }}
-              defaultMonth={new Date(selectedYear, 4, 1)} // Default to May of selected year
+              defaultMonth={new Date(selectedYear + 1, 4, 1)} // Default to May of next year
               disabled={(date) => 
-                date < (startDate || new Date(`${selectedYear}-01-01`)) || 
-                date > new Date(`${selectedYear}-12-31`)
+                (startDate && date < startDate) || 
+                date < new Date(selectedYear, 0, 1) || 
+                date > new Date(selectedYear + 2, 11, 31)
               }
               initialFocus
-              className="pointer-events-auto"
             />
           </PopoverContent>
         </Popover>

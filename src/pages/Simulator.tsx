@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy, Filter, Users } from 'lucide-react';
@@ -52,10 +51,10 @@ const SimulatorPage: React.FC = () => {
       matches: results.matches?.map((match: any) => {
         // Extract classification from team names if not provided
         const classification = match.classification || 
-          (match.homeTeam.includes('6A') ? '6A' : 
-           match.homeTeam.includes('5A') ? '5A' : 
-           match.homeTeam.includes('4A') ? '4A/3A/2A/1A' : 
-           match.homeTeam.includes('3A') ? '4A/3A/2A/1A' : '4A/3A/2A/1A');
+          (match.homeTeam?.includes('6A') ? '6A' : 
+           match.homeTeam?.includes('5A') ? '5A' : 
+           match.homeTeam?.includes('4A') ? '4A/3A/2A/1A' : 
+           match.homeTeam?.includes('3A') ? '4A/3A/2A/1A' : '4A/3A/2A/1A');
         
         return {
           ...match,
