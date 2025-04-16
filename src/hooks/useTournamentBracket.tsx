@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useData } from '@/context/DataContext';
 import { TeamRanking, QualifiedTeam, ClassificationQualifications } from '@/types/ranking';
@@ -37,7 +36,6 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     winner?: 'team1' | 'team2';
   }[]>([]);
 
-  // Get qualification rules for the selected classification
   const getQualificationRules = useCallback((): ClassificationQualifications => {
     return qualificationRules.find(rule => rule.classification === classification) || {
       classification,
@@ -47,30 +45,27 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     };
   }, [classification, qualificationRules]);
 
-  // Generate qualified teams based on rankings
   const generateQualifiedTeams = useCallback(() => {
-    // Get rankings specific to this gender and classification
     const rankings = getRankingsByGenderAndClassification(gender, classification);
     
-    // Get qualified teams (those marked as automatic or at-large)
     const qualified = rankings.filter(
       team => team.qualificationStatus === 'automatic' || team.qualificationStatus === 'at-large'
     );
     
-    // Sort by seed (which is already set based on APR in the qualification process)
     const sortedQualified = qualified.sort((a, b) => 
       (a.qualificationSeed || 999) - (b.qualificationSeed || 999)
     );
     
-    // Convert to QualifiedTeam format
-    const qualifiedTeamsResult = sortedQualified.map(team => ({
+    const qualifiedTeamsResult: QualifiedTeam[] = sortedQualified.map(team => ({
+      team: team,
+      seed: team.qualificationSeed || 999,
+      qualificationType: team.qualificationStatus as "automatic" | "at-large",
+      
       teamId: team.teamId,
       teamName: team.teamName,
       schoolName: team.schoolName,
-      gender: team.gender as Gender,
       districtName: team.districtName,
-      qualificationType: team.qualificationStatus as "automatic" | "at-large",
-      seed: team.qualificationSeed || 999,
+      gender: team.gender as Gender,
       compositeScore: team.compositeScore
     }));
     
@@ -78,22 +73,17 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     return qualifiedTeamsResult;
   }, [gender, classification, getRankingsByGenderAndClassification]);
 
-  // Generate bracket based on qualified teams
   const generateBracket = useCallback((qualifiedTeams: QualifiedTeam[]) => {
     const rules = getQualificationRules();
     const totalTeams = qualifiedTeams.length;
     
-    // If no teams, return empty bracket
     if (totalTeams === 0) return { rounds: [] };
     
-    // Calculate number of rounds needed
     const roundCount = Math.ceil(Math.log2(totalTeams));
     const rounds = [];
     
-    // Generate first round with matchups
     const firstRoundMatches = [];
     
-    // Create matchups using standard tournament seeding (1 vs 16, 2 vs 15, etc.)
     for (let i = 0; i < totalTeams / 2; i++) {
       const topSeedIndex = i;
       const bottomSeedIndex = totalTeams - i - 1;
@@ -104,15 +94,15 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       firstRoundMatches.push({
         id: `match-round1-${i}`,
         team1: {
-          id: topSeed.teamId,
-          name: topSeed.teamName,
-          school: topSeed.schoolName,
+          id: topSeed.team.teamId,
+          name: topSeed.teamName || topSeed.team.teamName,
+          school: topSeed.schoolName || topSeed.team.schoolName,
           seed: topSeed.seed
         },
         team2: {
-          id: bottomSeed.teamId,
-          name: bottomSeed.teamName,
-          school: bottomSeed.schoolName,
+          id: bottomSeed.team.teamId,
+          name: bottomSeed.teamName || bottomSeed.team.teamName,
+          school: bottomSeed.schoolName || bottomSeed.team.schoolName,
           seed: bottomSeed.seed
         },
         roundIndex: 0,
@@ -128,7 +118,6 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       matches: firstRoundMatches
     });
     
-    // Generate subsequent rounds with placeholders
     for (let i = 1; i < roundCount; i++) {
       const matchesInRound = Math.pow(2, roundCount - i - 1);
       const matches = [];
@@ -153,42 +142,33 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     }
     
     setBracket({ rounds });
-    // Clear any previous tiebreakers
     setPlayoffTiebreakers([]);
     
     return { rounds };
   }, [getQualificationRules]);
 
-  // Get unique school players and assign them to positions
   const assignPlayersToPositions = useCallback((
     teamId: string,
-    positionsCount: number = 4, // Default for singles or doubles positions
+    positionsCount: number = 4,
     positionType: 'singles' | 'doubles' = 'singles'
   ) => {
     const teamPlayers = players.filter(p => p.teamId === teamId);
     
     if (teamPlayers.length === 0) {
-      // If no players found, create dummy player IDs
       return Array(positionsCount).fill('unknown');
     }
     
-    // Shuffle available players
     const shuffledPlayers = [...teamPlayers].sort(() => Math.random() - 0.5);
     
-    // For singles positions, we need one player per position
     if (positionType === 'singles') {
-      // Get first positionsCount players, or repeat if not enough
       const result: string[] = [];
       for (let i = 0; i < positionsCount; i++) {
         const playerIndex = i % shuffledPlayers.length;
         result.push(shuffledPlayers[playerIndex].id);
       }
       return result;
-    } 
-    // For doubles, we need pairs of players for each position
-    else {
+    } else {
       const result: string[][] = [];
-      // Each doubles position needs 2 players
       const totalPlayersNeeded = positionsCount * 2;
       
       for (let i = 0; i < positionsCount; i++) {
@@ -203,7 +183,6 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     }
   }, [players]);
 
-  // Simulate a full flight between two teams
   const simulateFlightMatch = useCallback((
     homeTeamId: string, 
     awayTeamId: string, 
@@ -212,33 +191,29 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     homePlayerIds: string[],
     awayPlayerIds: string[]
   ) => {
-    // Basic simulation - home team slightly favored
     const homeWinProbability = Math.random() < 0.55 ? true : false;
     
-    // Generate flight score (simplified)
     const sets: { homeScore: number; awayScore: number }[] = [];
     
-    for (let i = 0; i < 2; i++) { // Best of 3 sets
-      const homeScore = Math.floor(Math.random() * 4) + 3; // 3-6
+    for (let i = 0; i < 2; i++) {
+      const homeScore = Math.floor(Math.random() * 4) + 3;
       const awayScore = homeWinProbability ? 
-        Math.max(0, homeScore - Math.floor(Math.random() * 4) - 1) : // Home team likely wins
-        Math.min(6, homeScore + Math.floor(Math.random() * 4) + 1);  // Away team likely wins
+        Math.max(0, homeScore - Math.floor(Math.random() * 4) - 1) : 
+        Math.min(6, homeScore + Math.floor(Math.random() * 4) + 1);
       
       sets.push({ homeScore, awayScore });
     }
     
-    // Add third set if needed
     if ((sets[0].homeScore > sets[0].awayScore && sets[1].awayScore > sets[1].homeScore) ||
-        (sets[0].awayScore > sets[0].homeScore && sets[1].homeScore > sets[1].awayScore)) {
-      const homeScore = Math.floor(Math.random() * 4) + 3; // 3-6
+        (sets[0].awayScore > sets[0].homeScore && sets[1].homeScore > sets[1].homeScore)) {
+      const homeScore = Math.floor(Math.random() * 4) + 3;
       const awayScore = homeWinProbability ? 
-        Math.max(0, homeScore - Math.floor(Math.random() * 4) - 1) : // Home team likely wins
-        Math.min(6, homeScore + Math.floor(Math.random() * 4) + 1);  // Away team likely wins
+        Math.max(0, homeScore - Math.floor(Math.random() * 4) - 1) : 
+        Math.min(6, homeScore + Math.floor(Math.random() * 4) + 1);
       
       sets.push({ homeScore, awayScore });
     }
     
-    // Count sets won
     const homeSetsWon = sets.filter(set => set.homeScore > set.awayScore).length;
     const awaySetsWon = sets.filter(set => set.awayScore > set.homeScore).length;
     
@@ -254,14 +229,12 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     };
   }, []);
 
-  // Generate detailed match for the tournament
   const generateDetailedMatch = useCallback((
     homeTeamId: string,
     awayTeamId: string,
     date: string,
     isPlayoff: boolean = true
   ): Match => {
-    // Get team rosters
     const homeTeam = teams.find(t => t.id === homeTeamId);
     const awayTeam = teams.find(t => t.id === awayTeamId);
     
@@ -269,17 +242,14 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       throw new Error("Teams not found");
     }
     
-    // Assign players to positions - each player plays only one position per match
     const homeSinglesIds = assignPlayersToPositions(homeTeamId, 4, 'singles');
     const awaySinglesIds = assignPlayersToPositions(awayTeamId, 4, 'singles');
     
     const homeDoublesIds = assignPlayersToPositions(homeTeamId, 4, 'doubles') as string[][];
     const awayDoublesIds = assignPlayersToPositions(awayTeamId, 4, 'doubles') as string[][];
     
-    // Simple roster selection - just use the first players we find
     const flights: Flight[] = [];
     
-    // Generate singles flights (1-4)
     for (let i = 0; i < 4; i++) {
       const homePlayer = [homeSinglesIds[i] || 'unknown'];
       const awayPlayer = [awaySinglesIds[i] || 'unknown'];
@@ -300,7 +270,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       
       flights.push({
         id: uuidv4(),
-        matchId: uuidv4(), // Will be updated later
+        matchId: uuidv4(),
         type: 'singles',
         level: 'varsity',
         position: i + 1,
@@ -313,9 +283,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       });
     }
     
-    // Generate doubles flights (1-4)
     for (let i = 0; i < 4; i++) {
-      // Use doubles assignments
       const homePlayerIds = homeDoublesIds[i] || ['unknown', 'unknown'];
       const awayPlayerIds = awayDoublesIds[i] || ['unknown', 'unknown'];
       
@@ -335,7 +303,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       
       flights.push({
         id: uuidv4(),
-        matchId: uuidv4(), // Will be updated later
+        matchId: uuidv4(),
         type: 'doubles',
         level: 'varsity',
         position: i + 1,
@@ -348,14 +316,11 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       });
     }
     
-    // Count home wins vs away wins
     const homeWins = flights.filter(f => f.homePlayerWon).length;
     const awayWins = flights.filter(f => !f.homePlayerWon).length;
     
-    // Get the school names for the location
     const homeSchool = schools.find(s => s.id === homeTeam.schoolId);
     
-    // Create match object
     const matchId = uuidv4();
     const match: Match = {
       id: matchId,
@@ -372,24 +337,21 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       awayTeamScore: awayWins,
       flights: flights.map(flight => ({
         ...flight,
-        matchId // Update all flights with the correct match ID
+        matchId
       }))
     };
     
     return match;
   }, [teams, schools, assignPlayersToPositions, simulateFlightMatch]);
 
-  // Handle playoff tiebreaker setup
   const setupPlayoffTiebreaker = useCallback((
     matchId: string,
     team1Id: string,
     team2Id: string
   ) => {
-    // Get team rosters
     const team1Players = players.filter(p => p.teamId === team1Id);
     const team2Players = players.filter(p => p.teamId === team2Id);
     
-    // Default to the top players for each position (can be changed by user)
     const tiebreaker = {
       matchId,
       singles1PlayerId: team1Players[0]?.id,
@@ -403,13 +365,11 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     return tiebreaker;
   }, [players]);
 
-  // Simulate a playoff tiebreaker
   const simulatePlayoffTiebreaker = useCallback((
     matchId: string,
     team1Id: string,
     team2Id: string
   ): 'team1' | 'team2' => {
-    // Find the tiebreaker setup for this match
     const tiebreaker = playoffTiebreakers.find(t => t.matchId === matchId);
     
     if (!tiebreaker) {
@@ -417,12 +377,9 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       return simulatePlayoffTiebreaker(matchId, team1Id, team2Id);
     }
     
-    // Simulate the tiebreaker matches (2 singles, 1 doubles)
-    // For simplicity, team1 wins 60% of the time
     const team1Wins = Math.random() < 0.6 ? 2 : 1;
     const winnerValue = team1Wins >= 2 ? 'team1' as const : 'team2' as const;
     
-    // Update the tiebreaker result
     const updatedTiebreakers = playoffTiebreakers.map(t => {
       if (t.matchId === matchId) {
         return {
@@ -439,11 +396,9 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     return winnerValue;
   }, [playoffTiebreakers, setupPlayoffTiebreaker]);
 
-  // Handle winner selection and update bracket
   const handleWinnerSelect = useCallback((matchId: string, winner: 'team1' | 'team2') => {
     const updatedBracket = { ...bracket };
     
-    // Find the match in the bracket
     let matchFound = false;
     let winningTeam;
     let losingTeam;
@@ -455,11 +410,9 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       
       for (let j = 0; j < roundMatches.length; j++) {
         if (roundMatches[j].id === matchId) {
-          // Update the winner
           updatedBracket.rounds[i].matches[j].winner = winner;
           updatedBracket.rounds[i].matches[j].completed = true;
           
-          // Simulate a detailed match and generate score
           const team1Id = updatedBracket.rounds[i].matches[j].team1.id;
           const team2Id = updatedBracket.rounds[i].matches[j].team2.id;
           
@@ -470,18 +423,14 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
               new Date().toISOString().split('T')[0]
             );
             
-            // Store match details
             updatedBracket.rounds[i].matches[j].matchDetails = simulatedMatch;
             
-            // Add the match to the database
             addMatch(simulatedMatch);
             
-            // Update the score display
             updatedBracket.rounds[i].matches[j].score = 
               `${simulatedMatch.homeTeamScore}-${simulatedMatch.awayTeamScore}`;
           }
           
-          // Store the winning team info
           winningTeam = winner === 'team1' 
             ? updatedBracket.rounds[i].matches[j].team1 
             : updatedBracket.rounds[i].matches[j].team2;
@@ -500,15 +449,12 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       if (matchFound) break;
     }
     
-    // If match is found and it's not the final round, update the next round
     if (matchFound && roundIndex < updatedBracket.rounds.length - 1 && winningTeam) {
       const nextRoundIndex = roundIndex + 1;
       const nextMatchIndex = Math.floor(matchIndex / 2);
       
-      // Determine if this winner goes into team1 or team2 slot
       const isTeam1Slot = matchIndex % 2 === 0;
       
-      // Update the appropriate slot in the next round
       if (isTeam1Slot) {
         updatedBracket.rounds[nextRoundIndex].matches[nextMatchIndex].team1 = winningTeam;
       } else {
@@ -519,19 +465,13 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     setBracket(updatedBracket);
   }, [bracket, generateDetailedMatch, addMatch]);
 
-  // Simulate a tournament tiebreaker
   const simulateTiebreaker = useCallback((matchId: string) => {
-    // Find the match in the bracket
     for (let i = 0; i < bracket.rounds.length; i++) {
       for (let j = 0; j < bracket.rounds[i].matches.length; j++) {
         const match = bracket.rounds[i].matches[j];
         if (match.id === matchId) {
-          // Make sure we have valid teams
           if (match.team1.id && match.team2.id) {
-            // Simulate the tiebreaker
             const winner = simulatePlayoffTiebreaker(matchId, match.team1.id, match.team2.id);
-            
-            // Update the bracket with the winner
             handleWinnerSelect(matchId, winner);
             return winner;
           }
@@ -541,30 +481,21 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     return null;
   }, [bracket, simulatePlayoffTiebreaker, handleWinnerSelect]);
 
-  // Auto-generate bracket with qualified teams
   const autoGenerateBracket = useCallback(() => {
     const teams = generateQualifiedTeams();
     return generateBracket(teams);
   }, [generateQualifiedTeams, generateBracket]);
 
-  // Simulate entire round automatically
   const simulateRound = useCallback((roundIndex: number) => {
     const round = bracket.rounds[roundIndex];
     if (!round) return;
     
-    // Simulate all matches in this round
     round.matches.forEach(match => {
-      // Only simulate if both teams are assigned and match isn't completed
       if (match.team1.id && match.team2.id && !match.completed) {
-        // Random winner (60% chance higher seed wins)
         const higherSeedWins = Math.random() < 0.6;
-        
-        // Determine if team1 is higher seed
         const team1IsHigherSeed = match.team1.seed < match.team2.seed;
-        
-        // Set winner based on seeding and random chance
         const winner = (team1IsHigherSeed && higherSeedWins) || 
-                    (!team1IsHigherSeed && !higherSeedWins) ? 'team1' : 'team2';
+                      (!team1IsHigherSeed && !higherSeedWins) ? 'team1' : 'team2';
                     
         handleWinnerSelect(match.id, winner);
       }

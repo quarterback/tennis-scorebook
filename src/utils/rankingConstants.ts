@@ -46,6 +46,10 @@ export const getDefaultConfig = (): RankingConfig => {
     minimumMatches: APR_CONSTANTS.MIN_MATCHES,
     cutoffDate: cutoffDate.toISOString().split('T')[0],
     weights: {
+      winPercentage: 0.5,
+      opponentStrength: 0.3,
+      leagueStrength: 0.1,
+      headToHead: 0.1,
       singles1: FLIGHT_WEIGHTS.singles1,
       singles2: FLIGHT_WEIGHTS.singles2,
       doubles1: FLIGHT_WEIGHTS.doubles1,

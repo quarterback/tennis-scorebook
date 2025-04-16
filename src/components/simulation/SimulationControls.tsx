@@ -1,9 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { PlayerSkillTier } from '@/types';
 
-const SimulationControls = () => {
+interface SimulationControlsProps {
+  onSimulationComplete: (results: any) => void;
+}
+
+const SimulationControls: React.FC<SimulationControlsProps> = ({ onSimulationComplete }) => {
   const {
     teams,
     players,

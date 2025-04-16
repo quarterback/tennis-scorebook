@@ -1,3 +1,4 @@
+
 import { TeamLadder, PlayerLadderPosition } from "@/types/ranking";
 import { Player } from "@/types";
 
@@ -24,6 +25,7 @@ export const generateTeamLadder = (
     return {
       playerId: rankedPlayer.player.id,
       rank: index + 1, // 1-based ranking (1 is best)
+      ladderPoints: 100 - (index * 10), // Add ladder points
       previousRanks: [index + 1] // Initially only one ranking in history
     };
   });

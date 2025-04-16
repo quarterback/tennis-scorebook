@@ -97,6 +97,7 @@ export const useRankingsBase = (
         teamId: team.id,
         teamName: `${school.name} ${team.gender}`,
         schoolName: school.name,
+        schoolId: school.id,
         gender: team.gender,
         classification: school.classification,
         districtName: district.name,
@@ -115,7 +116,8 @@ export const useRankingsBase = (
         qualifiedForRanking: teamMatches.length >= config.minimumMatches,
         winPercentage,
         leagueWinPercentage,
-        apr: 0 // Will be calculated in calculateTeamAprs
+        apr: 0, // Will be calculated in calculateTeamAprs
+        classificationRank: 0 // Will be updated later
       };
     });
 
