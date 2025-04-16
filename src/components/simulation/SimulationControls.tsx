@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { PlayerSkillTier } from '@/types';
+import { Team, School, District, Match, Player } from '@/types';
 
 interface SimulationControlsProps {
-  onSimulationComplete: (results: any) => void;
+  onSimulationComplete?: (results: any) => void;
 }
 
-const SimulationControls: React.FC<SimulationControlsProps> = ({ onSimulationComplete }) => {
+const SimulationControls: React.FC<SimulationControlsProps> = ({ 
+  onSimulationComplete = () => {} 
+}) => {
   const {
     teams,
     players,
@@ -62,6 +65,9 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({ onSimulationCom
         });
         
         console.log(`Generated ${matches.length} matches successfully`);
+        
+        // Call onSimulationComplete with matches
+        onSimulationComplete(matches);
       } catch (error) {
         console.error('Error generating matches:', error);
       } finally {
