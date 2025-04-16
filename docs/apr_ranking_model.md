@@ -7,6 +7,7 @@ This document outlines the custom **Adjusted Playoff Ranking (APR)** system desi
 
 ---
 
+
 ## 🧷 Summary
 
 This APR model:
@@ -22,7 +23,7 @@ This APR model:
 ## 🧮 Formula
 
 ```txt
-APR = WS10 × OSI
+APR = [(1S × 1.00) + (1D × 1.00) + (2S × 0.75) + (2D × 0.50) + (3S × 0.40)] × (Avg(WS10 of all opponents with ≥ 6 matches) ÷ Median statewide WS10)
 ```
 
 Where:
