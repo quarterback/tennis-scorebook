@@ -21,7 +21,8 @@ export const useStandingsCalculator = (
         } 
         // Otherwise, include ALL teams that are in 4A/3A/2A/1A classification
         else {
-          return team.gender === gender && school.classification === '4A/3A/2A/1A';
+          return team.gender === gender && 
+                 ['4A', '3A', '2A', '1A'].includes(school.classification);
         }
       }
       
@@ -51,6 +52,8 @@ export const useStandingsCalculator = (
       
       // League matches (only matches within the same district/league)
       const leagueMatches = teamMatches.filter(m => {
+        if (!m.isLeagueMatch) return false;
+        
         // Check if both teams are from the same district/league
         const otherTeamId = m.homeTeamId === team.id ? m.awayTeamId : m.homeTeamId;
         const otherTeam = teams.find(t => t.id === otherTeamId);
@@ -59,7 +62,7 @@ export const useStandingsCalculator = (
         const otherSchool = schools.find(s => s.id === otherTeam.schoolId);
         if (!otherSchool) return false;
         
-        return otherSchool.districtId === school.districtId && m.isLeagueMatch;
+        return otherSchool.districtId === school.districtId;
       });
       
       const leagueWins = leagueMatches.filter(m => 
@@ -69,6 +72,10 @@ export const useStandingsCalculator = (
       const leagueLosses = leagueMatches.filter(m => 
         (m.homeTeamId === team.id && !m.homeTeamWon) || (m.awayTeamId === team.id && m.homeTeamWon)
       ).length;
+      
+      // Calculate winning percentages
+      const overallWinPct = overallWins / Math.max(1, overallWins + overallLosses);
+      const leagueWinPct = leagueWins / Math.max(1, leagueWins + leagueLosses);
       
       return {
         teamId: team.id,
@@ -80,22 +87,38 @@ export const useStandingsCalculator = (
         overallWins,
         overallLosses,
         leagueWins,
-        leagueLosses
+        leagueLosses,
+        overallWinPct,
+        leagueWinPct
       };
     });
     
-    // Sort by league record first (wins), then overall record
+    // Sort by league record first (wins percentage), then overall record
     return standings.sort((a, b) => {
+      // First tiebreaker: League win percentage
+      if (a.leagueWinPct !== b.leagueWinPct) {
+        return b.leagueWinPct - a.leagueWinPct;
+      }
+      
+      // Second tiebreaker: Head-to-head results (would require additional lookup)
+      
+      // Third tiebreaker: Overall win percentage
+      if (a.overallWinPct !== b.overallWinPct) {
+        return b.overallWinPct - a.overallWinPct;
+      }
+      
+      // Fourth tiebreaker: League wins
       if (a.leagueWins !== b.leagueWins) {
         return b.leagueWins - a.leagueWins;
       }
-      if (a.leagueLosses !== b.leagueLosses) {
-        return a.leagueLosses - b.leagueLosses;
-      }
+      
+      // Fifth tiebreaker: Overall wins
       if (a.overallWins !== b.overallWins) {
         return b.overallWins - a.overallWins;
       }
-      return a.overallLosses - b.overallLosses;
+      
+      // If still tied, sort alphabetically by school name
+      return a.schoolName.localeCompare(b.schoolName);
     });
   };
 
@@ -121,9 +144,131 @@ export const useStandingsCalculator = (
       qualifierLimit = 8;
     }
     
-    // Return top N teams
-    return allTeams.slice(0, qualifierLimit);
+    // First determine automatic qualifiers from each district
+    const districtQualifiers: TeamStanding[] = [];
+    const teamsByDistrict: Record<string, TeamStanding[]> = {};
+    
+    // Group teams by district
+    allTeams.forEach(team => {
+      if (!teamsByDistrict[team.districtName]) {
+        teamsByDistrict[team.districtName] = [];
+      }
+      teamsByDistrict[team.districtName].push(team);
+    });
+    
+    // Get top team from each district as automatic qualifier
+    Object.values(teamsByDistrict).forEach(districtTeams => {
+      if (districtTeams.length > 0) {
+        districtQualifiers.push(districtTeams[0]);
+      }
+    });
+    
+    // Get at-large bids from remaining teams
+    const atLargeCandidates = allTeams.filter(team => 
+      !districtQualifiers.some(qualifier => qualifier.teamId === team.teamId)
+    );
+    
+    // Sort by overall record
+    const sortedAtLarge = [...atLargeCandidates].sort((a, b) => {
+      if (a.overallWinPct !== b.overallWinPct) {
+        return b.overallWinPct - a.overallWinPct;
+      }
+      return b.overallWins - a.overallWins;
+    });
+    
+    // Combine automatic qualifiers with at-large bids up to the limit
+    const atLargeCount = qualifierLimit - districtQualifiers.length;
+    const atLargeBids = sortedAtLarge.slice(0, Math.max(0, atLargeCount));
+    
+    const allQualifiers = [...districtQualifiers, ...atLargeBids];
+    
+    // Final sort by overall record for seeding
+    return allQualifiers.sort((a, b) => {
+      if (a.overallWinPct !== b.overallWinPct) {
+        return b.overallWinPct - a.overallWinPct;
+      }
+      return b.overallWins - a.overallWins;
+    }).slice(0, qualifierLimit);
   };
 
-  return { getStandings, getQualifyingTeams, getStateQualifiers };
+  // Get playoff projections based on current standings
+  const getPlayoffProjections = (gender: Gender, classification: Classification): {
+    automaticQualifiers: TeamStanding[];
+    atLargeBids: TeamStanding[];
+    firstFourOut: TeamStanding[];
+  } => {
+    // Get all teams in classification
+    const allTeams = getStandings(gender, classification);
+    
+    // Group by district and get automatic qualifiers
+    const teamsByDistrict: Record<string, TeamStanding[]> = {};
+    allTeams.forEach(team => {
+      if (!teamsByDistrict[team.districtName]) {
+        teamsByDistrict[team.districtName] = [];
+      }
+      teamsByDistrict[team.districtName].push(team);
+    });
+    
+    const automaticQualifiers: TeamStanding[] = [];
+    
+    // Get top team from each district
+    Object.values(teamsByDistrict).forEach(districtTeams => {
+      if (districtTeams.length > 0) {
+        automaticQualifiers.push(districtTeams[0]);
+      }
+    });
+    
+    // Set at-large bid count based on classification
+    let atLargeBidCount = 0;
+    let totalSpots = 0;
+    
+    if (classification === '6A') {
+      totalSpots = 16;
+      atLargeBidCount = totalSpots - automaticQualifiers.length;
+    } else if (classification === '5A') {
+      totalSpots = 12;
+      atLargeBidCount = totalSpots - automaticQualifiers.length;
+    } else {
+      totalSpots = 8;
+      atLargeBidCount = totalSpots - automaticQualifiers.length;
+    }
+    
+    // Get remaining teams for at-large consideration
+    const atLargeCandidates = allTeams.filter(team => 
+      !automaticQualifiers.some(qualifier => qualifier.teamId === team.teamId)
+    );
+    
+    // Sort by criteria
+    const sortedAtLarge = [...atLargeCandidates].sort((a, b) => {
+      // First by league win percentage
+      if (a.leagueWinPct !== b.leagueWinPct) {
+        return b.leagueWinPct - a.leagueWinPct;
+      }
+      
+      // Then by overall win percentage
+      if (a.overallWinPct !== b.overallWinPct) {
+        return b.overallWinPct - a.overallWinPct;
+      }
+      
+      // Then by total wins
+      return b.overallWins - a.overallWins;
+    });
+    
+    // Get at-large bids and first four out
+    const atLargeBids = sortedAtLarge.slice(0, atLargeBidCount);
+    const firstFourOut = sortedAtLarge.slice(atLargeBidCount, atLargeBidCount + 4);
+    
+    return {
+      automaticQualifiers,
+      atLargeBids,
+      firstFourOut
+    };
+  };
+
+  return { 
+    getStandings, 
+    getQualifyingTeams, 
+    getStateQualifiers,
+    getPlayoffProjections
+  };
 };

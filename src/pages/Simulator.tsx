@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy, Filter } from 'lucide-react';
+import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy, Filter, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Gender, Classification } from '@/types';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 // Simulator components
 import SimulationControls from '@/components/simulation/SimulationControls';
@@ -17,17 +18,18 @@ import PostSeasonSimulator from '@/components/tournaments/PostSeasonSimulator';
 const SimulatorPage: React.FC = () => {
   const { toast } = useToast();
   const [simulationResults, setSimulationResults] = useState<{
-    teams?: { id: string; name: string; classification: string; record: string; apr: number }[];
-    matches?: { date: string; homeTeam: string; awayTeam: string; score: string }[];
-    rankings?: { id: string; name: string; classification: string; record: string; apr: number }[];
+    teams?: { id: string; name: string; classification: string; gender: string; record: string; apr: number }[];
+    matches?: { date: string; homeTeam: string; awayTeam: string; score: string; gender: string }[];
+    rankings?: { id: string; name: string; classification: string; gender: string; record: string; apr: number }[];
   }>({});
   
   // State for tournament simulation
   const [tournamentGender, setTournamentGender] = useState<Gender>('Boys');
   const [tournamentClassification, setTournamentClassification] = useState<Classification>('6A');
   
-  // State for filtering results by classification
+  // State for filtering results
   const [selectedClassification, setSelectedClassification] = useState<string>('all');
+  const [selectedGender, setSelectedGender] = useState<string>('all');
   
   const openDocumentation = () => {
     window.open('https://github.com/quarterback/tennis-scorebook/tree/main/simulator', '_blank');
@@ -54,11 +56,24 @@ const SimulatorPage: React.FC = () => {
     ? ['all', ...new Set(simulationResults.rankings.map(team => team.classification))]
     : ['all'];
   
-  // Filter rankings by selected classification
+  // Get unique genders from rankings results
+  const availableGenders = simulationResults.rankings
+    ? ['all', ...new Set(simulationResults.rankings.map(team => team.gender))]
+    : ['all'];
+  
+  // Filter rankings by selected classification and gender
   const filteredRankings = simulationResults.rankings
-    ? selectedClassification === 'all' 
-      ? simulationResults.rankings 
-      : simulationResults.rankings.filter(team => team.classification === selectedClassification)
+    ? simulationResults.rankings.filter(team => 
+        (selectedClassification === 'all' || team.classification === selectedClassification) &&
+        (selectedGender === 'all' || team.gender === selectedGender)
+      )
+    : [];
+  
+  // Filter matches by selected gender
+  const filteredMatches = simulationResults.matches
+    ? simulationResults.matches.filter(match => 
+        selectedGender === 'all' || match.gender === selectedGender
+      )
     : [];
   
   return (
@@ -210,29 +225,53 @@ const SimulatorPage: React.FC = () => {
                       APR Rankings
                     </div>
                     
-                    {/* Classification filter */}
-                    <div className="flex items-center space-x-2">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <Select 
-                        value={selectedClassification} 
-                        onValueChange={setSelectedClassification}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Filter by classification" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableClassifications.map(classification => (
-                            <SelectItem key={classification} value={classification}>
-                              {classification === 'all' ? 'All Classifications' : classification}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {/* Filters Section */}
+                    <div className="flex items-center space-x-4">
+                      {/* Gender Filter */}
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <Select 
+                          value={selectedGender} 
+                          onValueChange={setSelectedGender}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableGenders.map(gender => (
+                              <SelectItem key={gender} value={gender}>
+                                {gender === 'all' ? 'All Genders' : gender}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Classification Filter */}
+                      <div className="flex items-center space-x-2">
+                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        <Select 
+                          value={selectedClassification} 
+                          onValueChange={setSelectedClassification}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Classification" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableClassifications.map(classification => (
+                              <SelectItem key={classification} value={classification}>
+                                {classification === 'all' ? 'All Classifications' : classification}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </CardTitle>
                   <CardDescription>
                     Teams ranked by their APR (Adjusted Playoff Ranking) scores
                     {selectedClassification !== 'all' && ` - ${selectedClassification} Classification`}
+                    {selectedGender !== 'all' && ` - ${selectedGender}`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -243,6 +282,7 @@ const SimulatorPage: React.FC = () => {
                           <th className="text-left p-2">Rank</th>
                           <th className="text-left p-2">Team</th>
                           <th className="text-left p-2">Classification</th>
+                          <th className="text-left p-2">Gender</th>
                           <th className="text-left p-2">Record</th>
                           <th className="text-right p-2">APR</th>
                         </tr>
@@ -253,6 +293,7 @@ const SimulatorPage: React.FC = () => {
                             <td className="p-2">{index + 1}</td>
                             <td className="p-2 font-medium">{team.name}</td>
                             <td className="p-2">{team.classification}</td>
+                            <td className="p-2">{team.gender}</td>
                             <td className="p-2">{team.record}</td>
                             <td className="p-2 text-right font-mono">{team.apr.toFixed(2)}</td>
                           </tr>
@@ -265,12 +306,36 @@ const SimulatorPage: React.FC = () => {
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-green-500" />
-                    Match Results
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-green-500" />
+                      Match Results
+                    </div>
+                    
+                    {/* Gender Filter for Matches */}
+                    {availableGenders.length > 1 && (
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <RadioGroup 
+                          value={selectedGender} 
+                          onValueChange={setSelectedGender}
+                          className="flex space-x-4"
+                        >
+                          {availableGenders.map(gender => (
+                            <div key={gender} className="flex items-center space-x-2">
+                              <RadioGroupItem value={gender} id={`gender-${gender}`} />
+                              <Label htmlFor={`gender-${gender}`}>
+                                {gender === 'all' ? 'All Genders' : gender}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+                    )}
                   </CardTitle>
                   <CardDescription>
                     Results from all simulated matches
+                    {selectedGender !== 'all' && ` - ${selectedGender}`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -282,15 +347,17 @@ const SimulatorPage: React.FC = () => {
                           <th className="text-left p-2">Home Team</th>
                           <th className="text-left p-2">Away Team</th>
                           <th className="text-left p-2">Score</th>
+                          <th className="text-left p-2">Gender</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {simulationResults.matches?.map((match, index) => (
+                        {filteredMatches.map((match, index) => (
                           <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
                             <td className="p-2">{match.date}</td>
                             <td className="p-2 font-medium">{match.homeTeam}</td>
                             <td className="p-2">{match.awayTeam}</td>
                             <td className="p-2 font-mono">{match.score}</td>
+                            <td className="p-2">{match.gender}</td>
                           </tr>
                         ))}
                       </tbody>

@@ -8,6 +8,7 @@ import { useSimulationProgress } from './useSimulationProgress';
 import { useTeamVerification } from './useTeamVerification';
 import { usePlayerGeneration } from './usePlayerGeneration';
 import { useMatchGeneration } from './useMatchGeneration';
+import { useStandingsCalculator } from './useStandingsCalculator';
 
 export const useSimulatedData = () => {
   const { 
@@ -84,6 +85,9 @@ export const useSimulatedData = () => {
       // Allow UI to update
       await new Promise(resolve => setTimeout(resolve, 50));
       
+      // Create a standings calculator instance for results
+      const standingsCalculator = useStandingsCalculator(teams, schools, matches, districts);
+      
       // Prepare the results object to return
       const results = {
         teams: teams.map(team => {
@@ -102,12 +106,18 @@ export const useSimulatedData = () => {
             (m.awayTeamId === team.id && m.homeTeamWon)
           ).length;
           
+          // Calculate simulated APR based on wins, losses and district strength
+          const aprBase = (wins / Math.max(1, wins + losses)) * 100;
+          const districtBonus = district?.name ? (district.name.length % 5) * 2 : 0;
+          const randomFactor = Math.random() * 10;
+          
           return {
             id: team.id,
             name: `${school?.name || 'Unknown'} ${team.gender}`,
-            classification: district?.classification || 'Unknown',
+            classification: school?.classification || 'Unknown',
+            gender: team.gender,
             record: `${wins}-${losses}`,
-            apr: Math.random() * 100  // Placeholder for APR score
+            apr: aprBase + districtBonus + randomFactor
           };
         }),
         matches: matches.map(match => {
@@ -120,14 +130,29 @@ export const useSimulatedData = () => {
             date: match.date,
             homeTeam: homeSchool?.name || 'Unknown',
             awayTeam: awaySchool?.name || 'Unknown',
-            score: `${match.homeTeamScore}-${match.awayTeamScore}`
+            score: `${match.homeTeamScore}-${match.awayTeamScore}`,
+            gender: homeTeam?.gender || 'Unknown'
           };
         }),
         rankings: [] // Will be filled by sorting teams by APR
       };
       
-      // Sort teams by APR to create rankings
-      results.rankings = [...results.teams].sort((a, b) => b.apr - a.apr);
+      // Sort teams by APR within each gender and classification group
+      const teamsByGenderAndClass: Record<string, typeof results.teams> = {};
+      
+      results.teams.forEach(team => {
+        const key = `${team.gender}-${team.classification}`;
+        if (!teamsByGenderAndClass[key]) {
+          teamsByGenderAndClass[key] = [];
+        }
+        teamsByGenderAndClass[key].push(team);
+      });
+      
+      // Sort each group and add to rankings
+      Object.values(teamsByGenderAndClass).forEach(groupTeams => {
+        const sortedTeams = [...groupTeams].sort((a, b) => b.apr - a.apr);
+        results.rankings.push(...sortedTeams);
+      });
       
       completeProgress(players.length, matches.length);
       return results;
