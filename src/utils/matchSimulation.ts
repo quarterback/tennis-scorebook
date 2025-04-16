@@ -1,4 +1,3 @@
-
 import { Match, Flight, Team, School, Player } from '@/types';
 import type { Set } from '@/types'; // Type-only import to avoid conflict with global Set
 import { TeamLadder } from '@/types/ranking';
@@ -322,6 +321,9 @@ export const simulateMatch = (
   const homeArchetype = determineTeamArchetype(homeTeamId);
   const awayArchetype = determineTeamArchetype(awayTeamId);
   
+  // Generate a match ID first
+  const matchId = crypto.randomUUID();
+  
   // Create flights from line-up
   const flights: Flight[] = [];
   
@@ -405,9 +407,10 @@ export const simulateMatch = (
           allPlayers, schools
         );
         
-        // Add the flight to the match
+        // Add the flight to the match with the matchId
         flights.push({
           id: crypto.randomUUID(),
+          matchId: matchId, // Add the matchId here
           type,
           position,
           level,
@@ -474,7 +477,7 @@ export const simulateMatch = (
     
     // Create the match object with tiebreaker
     return {
-      id: crypto.randomUUID(),
+      id: matchId, // Use the same matchId we created earlier
       date,
       homeTeamId,
       awayTeamId,
@@ -491,7 +494,7 @@ export const simulateMatch = (
   
   // Regular match or league match with tie
   return {
-    id: crypto.randomUUID(),
+    id: matchId, // Use the same matchId we created earlier
     date,
     homeTeamId,
     awayTeamId,
