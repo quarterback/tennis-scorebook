@@ -1,16 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Rocket, Terminal, Code } from 'lucide-react';
+import { Rocket, Terminal, Code, ListOrdered, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Simulator components
 import SimulationControls from '@/components/simulation/SimulationControls';
 
 const SimulatorPage: React.FC = () => {
   const { toast } = useToast();
+  const [simulationResults, setSimulationResults] = useState<{
+    teams?: { name: string; classification: string; record: string; apr: number }[];
+    matches?: { date: string; homeTeam: string; awayTeam: string; score: string }[];
+    rankings?: { name: string; classification: string; record: string; apr: number }[];
+  }>({});
   
   const openDocumentation = () => {
     window.open('https://github.com/quarterback/tennis-scorebook/tree/main/simulator', '_blank');
@@ -22,6 +28,14 @@ const SimulatorPage: React.FC = () => {
       description: `Run this in your terminal: ${command}`,
     });
     navigator.clipboard.writeText(command);
+  };
+  
+  const handleSimulationComplete = (results: any) => {
+    setSimulationResults(results);
+    toast({
+      title: "Simulation Complete",
+      description: `Generated ${results.teams?.length || 0} teams and ${results.matches?.length || 0} matches.`,
+    });
   };
   
   return (
@@ -40,13 +54,22 @@ const SimulatorPage: React.FC = () => {
       </div>
       
       <Tabs defaultValue="ui" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="ui">Web Interface</TabsTrigger>
           <TabsTrigger value="cli">Command Line</TabsTrigger>
+          <TabsTrigger value="results" className="relative">
+            Results
+            {simulationResults.teams?.length ? (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+            ) : null}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="ui" className="space-y-6">
-          <SimulationControls />
+          <SimulationControls onSimulationComplete={handleSimulationComplete} />
           
           <Card>
             <CardHeader>
@@ -147,6 +170,114 @@ const SimulatorPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="results" className="space-y-6">
+          {simulationResults.teams?.length ? (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ListOrdered className="h-5 w-5 text-blue-500" />
+                    APR Rankings
+                  </CardTitle>
+                  <CardDescription>
+                    Teams ranked by their APR (Adjusted Playoff Ranking) scores
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px]">
+                    <table className="w-full">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="text-left p-2">Rank</th>
+                          <th className="text-left p-2">Team</th>
+                          <th className="text-left p-2">Classification</th>
+                          <th className="text-left p-2">Record</th>
+                          <th className="text-right p-2">APR</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {simulationResults.rankings?.map((team, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
+                            <td className="p-2">{index + 1}</td>
+                            <td className="p-2 font-medium">{team.name}</td>
+                            <td className="p-2">{team.classification}</td>
+                            <td className="p-2">{team.record}</td>
+                            <td className="p-2 text-right font-mono">{team.apr.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-green-500" />
+                    Match Results
+                  </CardTitle>
+                  <CardDescription>
+                    Results from all simulated matches
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px]">
+                    <table className="w-full">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="text-left p-2">Date</th>
+                          <th className="text-left p-2">Home Team</th>
+                          <th className="text-left p-2">Away Team</th>
+                          <th className="text-left p-2">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {simulationResults.matches?.map((match, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
+                            <td className="p-2">{match.date}</td>
+                            <td className="p-2 font-medium">{match.homeTeam}</td>
+                            <td className="p-2">{match.awayTeam}</td>
+                            <td className="p-2 font-mono">{match.score}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => {
+                    // Export results as JSON
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(simulationResults));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "simulation_results.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                  }}
+                >
+                  <FileText className="h-4 w-4" />
+                  Export Results
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <Rocket className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+              <h3 className="text-lg font-medium text-gray-900">No simulation results yet</h3>
+              <p className="text-gray-500 mt-2 max-w-md mx-auto">
+                Run a simulation using the Web Interface or Command Line tab to see results here.
+              </p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
