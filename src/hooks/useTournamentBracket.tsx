@@ -166,7 +166,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     const homeWinProbability = Math.random() < 0.55 ? true : false;
     
     // Generate flight score (simplified)
-    const sets = [];
+    const sets: { homeScore: number; awayScore: number }[] = [];
     
     for (let i = 0; i < 2; i++) { // Best of 3 sets
       const homeScore = Math.floor(Math.random() * 4) + 3; // 3-6
@@ -359,7 +359,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     matchId: string,
     team1Id: string,
     team2Id: string
-  ) => {
+  ): 'team1' | 'team2' => {
     // Find the tiebreaker setup for this match
     const tiebreaker = playoffTiebreakers.find(t => t.matchId === matchId);
     
