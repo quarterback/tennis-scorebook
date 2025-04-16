@@ -1,3 +1,4 @@
+
 export type Gender = 'Boys' | 'Girls';
 export type PlayerSkillTier = 'elite' | 'competitive' | 'developmental';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
@@ -92,7 +93,7 @@ export interface Set {
   };
 }
 
-// Extend TeamStanding to include qualification information
+// Extend TeamStanding to include qualification information and winning percentages
 export interface TeamStanding {
   teamId: string;
   teamName: string;
@@ -104,6 +105,8 @@ export interface TeamStanding {
   overallLosses: number;
   leagueWins: number;
   leagueLosses: number;
+  overallWinPct: number; // Added property
+  leagueWinPct: number;  // Added property
   qualificationStatus?: 'automatic' | 'at-large' | 'none';
   qualificationSeed?: number;
 }
