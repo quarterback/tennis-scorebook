@@ -1,73 +1,62 @@
-# Welcome to your Lovable project
+# 🟢 Tennis Scorebook
 
-## Project info
+A modern ranking and scorekeeping system for high school tennis, built to replace the limitations of our existing very bad tennis online scorebook and provide a transparent, flexible model for evaluating team performance in real time modeled for tennis!
 
-**URL**: https://lovable.dev/projects/11702ca7-047b-42b7-9d29-059d1cf51598
+---
 
-## How can I edit this code?
+## 🎯 Purpose
 
-There are several ways of editing your application.
+This project began as an experiment to address long-standing frustrations with the current lack of intelligent, explainable tennis rankings in Oregon high school tennis. It now includes:
 
-**Use Lovable**
+- A fully defined ranking algorithm designed specifically for dual match play
+- A team tennis results entry and standings engine
+- A real-time APR (Adjusted Playoff Ranking) calculator based on match quality and opponent strength
+- A roadmap toward a full replacement of our current system
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/11702ca7-047b-42b7-9d29-059d1cf51598) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📊 Features
 
-**Use your preferred IDE**
+- 🔢 **Custom APR Ranking System**
+  - Based on 3 components: Flight-Weighted Score (FWS), Opponent Strength Index (OSI), and WS10 (best 10-match average)
+  - Weights meaningful positions (1S, 1D, 2S, 2D, 3S)
+  - Cross-classification neutral — no unfair boosts or penalties
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- 📒 **Match Data System**
+  - Dual match input with full lineup cards
+  - Tie support (4–4 matches count as 0.5 wins/losses)
+  - Tournaments and doubleheaders supported
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- 🧠 **AI-Accelerated Simulation Tools**
+  - Realistic match generation for testing and visualization
+  - League-wide season modeling
+  - APR and OSI auto-calculation from results
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🛠️ Tech Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Python (ranking engine + simulation)
+- GitHub-hosted static site for display (WIP)
+- Designed to integrate with future data entry UI or spreadsheet uploads
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 📍 Status
 
-**Edit a file directly in GitHub**
+Currently in testing. Simulated data is being used to validate the formula and outputs across classifications and leagues.  
+Next up:
+- Standings UI
+- Editable match viewer
+- CSV import/export for coaches
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 📬 Contribute / Watch
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+This is a personal tool developed to fix a niche-but-infuriating problem. If you're interested in helping, reach out via GitHub or Bluesky.
 
-## What technologies are used for this project?
+> 🧠 [@quarterback.bsky.social](https://bsky.app/profile/quarterback.bsky.social)  
+> 🧪 Built for Oregon, but adaptable anywhere.
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/11702ca7-047b-42b7-9d29-059d1cf51598) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
