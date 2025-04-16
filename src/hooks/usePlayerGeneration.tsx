@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Player, Team, School } from '@/types';
 import { generatePlayerName, generatePlayerGrade, assignPlayerSkillTier } from '@/utils/playerSimulation';
-import { TeamLadder } from '@/types/ranking';
+import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
 import { determineTeamArchetype, determineTeamSize } from '@/utils/playerGeneration';
 
 export const usePlayerGeneration = () => {
@@ -56,7 +56,7 @@ export const usePlayerGeneration = () => {
       const teamPlayers: Player[] = [];
       
       for (let i = 0; i < rosterSize; i++) {
-        const playerName = generatePlayerName(team.gender === 'Girls' ? 'female' : 'male');
+        const playerNameResult = generatePlayerName(team.gender === 'Girls' ? 'female' : 'male');
         const playerGrade = generatePlayerGrade();
         
         // Calculate player skill tier based on team archetype
@@ -111,8 +111,8 @@ export const usePlayerGeneration = () => {
         
         const player: Player = {
           id: crypto.randomUUID(),
-          firstName: playerName.firstName,
-          lastName: playerName.lastName,
+          firstName: playerNameResult.firstName,
+          lastName: playerNameResult.lastName,
           teamId: team.id,
           gender: team.gender,
           grade: playerGrade,
@@ -134,10 +134,12 @@ export const usePlayerGeneration = () => {
         id: crypto.randomUUID(),
         teamId: team.id,
         seasonId: seasonId,
+        lastUpdated: new Date().toISOString(),
         rankings: sortedPlayers.map((player, index) => ({
           playerId: player.id,
           rank: index + 1, // 1-based ranking
-          ladderPoints: Math.round((10 - (index / sortedPlayers.length) * 10) * 10) // 0-100 scale
+          ladderPoints: Math.round((10 - (index / sortedPlayers.length) * 10) * 10), // 0-100 scale
+          previousRanks: [] // Initialize with empty array for previous ranks
         }))
       };
       

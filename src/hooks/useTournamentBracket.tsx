@@ -57,7 +57,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       team => team.qualificationStatus === 'automatic' || team.qualificationStatus === 'at-large'
     );
     
-    // Sort by seed
+    // Sort by seed (which is already set based on APR in the qualification process)
     const sortedQualified = qualified.sort((a, b) => 
       (a.qualificationSeed || 999) - (b.qualificationSeed || 999)
     );
@@ -92,9 +92,14 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     
     // Generate first round with matchups
     const firstRoundMatches = [];
+    
+    // Create matchups using standard tournament seeding (1 vs 16, 2 vs 15, etc.)
     for (let i = 0; i < totalTeams / 2; i++) {
-      const topSeed = qualifiedTeams[i];
-      const bottomSeed = qualifiedTeams[totalTeams - i - 1]; // Match highest vs lowest seed
+      const topSeedIndex = i;
+      const bottomSeedIndex = totalTeams - i - 1;
+      
+      const topSeed = qualifiedTeams[topSeedIndex];
+      const bottomSeed = qualifiedTeams[bottomSeedIndex];
       
       firstRoundMatches.push({
         id: `match-round1-${i}`,

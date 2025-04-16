@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy, Filter, Users } from 'lucide-react';
@@ -27,7 +28,6 @@ const SimulatorPage: React.FC = () => {
       score: string; 
       gender: string;
       classification?: string;
-      conference?: string;
     }[];
     rankings?: { id: string; name: string; classification: string; gender: string; record: string; apr: number }[];
   }>({});
@@ -39,23 +39,14 @@ const SimulatorPage: React.FC = () => {
   // State for filtering results
   const [selectedClassification, setSelectedClassification] = useState<string>('all');
   const [selectedGender, setSelectedGender] = useState<string>('all');
-  const [selectedConference, setSelectedConference] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   const openDocumentation = () => {
     window.open('https://github.com/quarterback/tennis-scorebook/tree/main/simulator', '_blank');
   };
   
-  const handleRunCommand = (command: string) => {
-    toast({
-      title: "Command copied to clipboard",
-      description: `Run this in your terminal: ${command}`,
-    });
-    navigator.clipboard.writeText(command);
-  };
-  
   const handleSimulationComplete = (results: any) => {
-    // Add conference and classification if not already in the results
+    // Add classification if not already in the results
     const enhancedResults = {
       ...results,
       matches: results.matches?.map((match: any) => {
@@ -66,18 +57,9 @@ const SimulatorPage: React.FC = () => {
            match.homeTeam.includes('4A') ? '4A/3A/2A/1A' : 
            match.homeTeam.includes('3A') ? '4A/3A/2A/1A' : '4A/3A/2A/1A');
         
-        // Extract or assign conference based on team names
-        const conference = match.conference || 
-          (match.homeTeam.includes('Metro') ? 'Metro' :
-           match.homeTeam.includes('Three Rivers') ? 'Three Rivers' :
-           match.homeTeam.includes('Mt. Hood') ? 'Mt. Hood' :
-           match.homeTeam.includes('Pacific') ? 'Pacific' :
-           match.homeTeam.includes('Southwest') ? 'Southwest' : 'Other');
-        
         return {
           ...match,
-          classification,
-          conference
+          classification
         };
       })
     };
@@ -98,11 +80,6 @@ const SimulatorPage: React.FC = () => {
   const availableGenders = simulationResults.rankings
     ? ['all', ...new Set(simulationResults.rankings.map(team => team.gender))]
     : ['all'];
-    
-  // Get unique conferences from match results
-  const availableConferences = simulationResults.matches
-    ? ['all', ...new Set(simulationResults.matches.map(match => match.conference || 'Other'))]
-    : ['all'];
   
   // Filter rankings by selected classification and gender
   const filteredRankings = simulationResults.rankings
@@ -112,12 +89,11 @@ const SimulatorPage: React.FC = () => {
       )
     : [];
   
-  // Filter matches by selected gender, classification, conference, and search query
+  // Filter matches by selected gender, classification, and search query
   const filteredMatches = simulationResults.matches
     ? simulationResults.matches.filter(match => 
         (selectedGender === 'all' || match.gender === selectedGender) &&
         (selectedClassification === 'all' || match.classification === selectedClassification) &&
-        (selectedConference === 'all' || match.conference === selectedConference) &&
         (searchQuery === '' || 
          match.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
          match.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -140,7 +116,7 @@ const SimulatorPage: React.FC = () => {
       </div>
       
       <Tabs defaultValue="ui" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-4">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="ui">Web Interface</TabsTrigger>
           <TabsTrigger value="results" className="relative">
             Results
@@ -186,13 +162,13 @@ const SimulatorPage: React.FC = () => {
                 <div className="border rounded p-4">
                   <h3 className="font-semibold mb-2">Match Simulation</h3>
                   <p className="text-sm text-muted-foreground">
-                    Simulates individual flights with realistic score outcomes based on player skills
+                    Simulates individual flights with realistic scoring and outcomes
                   </p>
                 </div>
                 <div className="border rounded p-4">
-                  <h3 className="font-semibold mb-2">APR Calculation</h3>
+                  <h3 className="font-semibold mb-2">Rankings</h3>
                   <p className="text-sm text-muted-foreground">
-                    Calculates team rankings using the Weighted Score and Opponent Strength Index
+                    Calculates rankings using the Adjusted Power Rating formula
                   </p>
                 </div>
               </div>
@@ -201,295 +177,258 @@ const SimulatorPage: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="results" className="space-y-6">
-          {simulationResults.teams?.length ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <ListOrdered className="h-5 w-5 text-blue-500" />
-                      APR Rankings
-                    </div>
-                    
-                    {/* Filters Section */}
-                    <div className="flex items-center space-x-4">
-                      {/* Gender Filter */}
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <Select 
-                          value={selectedGender} 
-                          onValueChange={setSelectedGender}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableGenders.map(gender => (
-                              <SelectItem key={gender} value={gender}>
-                                {gender === 'all' ? 'All Genders' : gender}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Classification Filter */}
-                      <div className="flex items-center space-x-2">
-                        <Filter className="h-4 w-4 text-muted-foreground" />
-                        <Select 
-                          value={selectedClassification} 
-                          onValueChange={setSelectedClassification}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Classification" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableClassifications.map(classification => (
-                              <SelectItem key={classification} value={classification}>
-                                {classification === 'all' ? 'All Classifications' : classification}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </CardTitle>
-                  <CardDescription>
-                    Teams ranked by their APR (Adjusted Playoff Ranking) scores
-                    {selectedClassification !== 'all' && ` - ${selectedClassification} Classification`}
-                    {selectedGender !== 'all' && ` - ${selectedGender}`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px]">
-                    <table className="w-full">
-                      <thead className="bg-muted sticky top-0">
-                        <tr>
-                          <th className="text-left p-2">Rank</th>
-                          <th className="text-left p-2">Team</th>
-                          <th className="text-left p-2">Record</th>
-                          <th className="text-right p-2">APR</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredRankings.map((team, index) => (
-                          <tr key={team.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
-                            <td className="p-2">{index + 1}</td>
-                            <td className="p-2 font-medium">{team.name}</td>
-                            <td className="p-2">{team.record}</td>
-                            <td className="p-2 text-right font-mono">{team.apr.toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-green-500" />
-                      Match Results
-                    </div>
-                    
-                    {/* Enhanced Filters for Matches */}
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="icon" className="mr-2">
-                        <Filter className="h-4 w-4" />
-                      </Button>
-                      <Select 
-                        value={selectedGender} 
-                        onValueChange={setSelectedGender}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableGenders.map(gender => (
-                            <SelectItem key={gender} value={gender}>
-                              {gender === 'all' ? 'All Genders' : gender}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Select 
-                        value={selectedClassification} 
-                        onValueChange={setSelectedClassification}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Classification" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableClassifications.map(classification => (
-                            <SelectItem key={classification} value={classification}>
-                              {classification === 'all' ? 'All Classifications' : classification}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Select 
-                        value={selectedConference} 
-                        onValueChange={setSelectedConference}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Conference" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableConferences.map(conference => (
-                            <SelectItem key={conference} value={conference}>
-                              {conference === 'all' ? 'All Conferences' : conference}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardTitle>
-                  <CardDescription>
-                    Results from all simulated matches
-                    {selectedGender !== 'all' && ` - ${selectedGender}`}
-                    {selectedClassification !== 'all' && ` - ${selectedClassification}`}
-                    {selectedConference !== 'all' && ` - ${selectedConference} Conference`}
-                  </CardDescription>
-                  
-                  {/* Search input */}
-                  <div className="relative mt-2 flex w-full max-w-sm items-center">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Search teams..."
-                      className="pl-8"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px]">
-                    <table className="w-full">
-                      <thead className="bg-muted sticky top-0">
-                        <tr>
-                          <th className="text-left p-2">Date</th>
-                          <th className="text-left p-2">Home Team</th>
-                          <th className="text-left p-2">Away Team</th>
-                          <th className="text-left p-2">Score</th>
-                          <th className="text-left p-2">Gender</th>
-                          <th className="text-left p-2">Class</th>
-                          <th className="text-left p-2">Conference</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredMatches.map((match, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
-                            <td className="p-2">{match.date}</td>
-                            <td className="p-2 font-medium">{match.homeTeam}</td>
-                            <td className="p-2">{match.awayTeam}</td>
-                            <td className="p-2 font-mono">{match.score}</td>
-                            <td className="p-2">{match.gender}</td>
-                            <td className="p-2">{match.classification}</td>
-                            <td className="p-2">{match.conference}</td>
-                          </tr>
-                        ))}
-                        {filteredMatches.length === 0 && (
-                          <tr>
-                            <td colSpan={7} className="text-center py-4 text-muted-foreground">
-                              No matches found with the current filters
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-              
-              <div className="flex justify-end">
-                <Button 
-                  variant="outline" 
-                  className="gap-2"
-                  onClick={() => {
-                    // Export results as JSON
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(simulationResults));
-                    const downloadAnchorNode = document.createElement('a');
-                    downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute("download", "simulation_results.json");
-                    document.body.appendChild(downloadAnchorNode);
-                    downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
-                  }}
-                >
-                  <FileText className="h-4 w-4" />
-                  Export Results
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <Rocket className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-              <h3 className="text-lg font-medium text-gray-900">No simulation results yet</h3>
-              <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                Run a simulation using the Web Interface or Command Line tab to see results here.
-              </p>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="playoffs" className="space-y-6">
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                Post-Season Tournament Simulator
+                <ListOrdered className="h-5 w-5 text-blue-500" />
+                APR Rankings
               </CardTitle>
               <CardDescription>
-                Simulate state tournament brackets and playoff matches
+                Simulated power rankings with adjustments based on multiple factors
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gender-select">Gender</Label>
-                  <Select 
-                    value={tournamentGender}
-                    onValueChange={(value: Gender) => setTournamentGender(value)}
-                  >
-                    <SelectTrigger id="gender-select">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Boys">Boys</SelectItem>
-                      <SelectItem value="Girls">Girls</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                  <div>
+                    <Label htmlFor="classification-filter">Classification</Label>
+                    <Select 
+                      value={selectedClassification} 
+                      onValueChange={setSelectedClassification}
+                    >
+                      <SelectTrigger id="classification-filter" className="w-[180px]">
+                        <SelectValue placeholder="All Classifications" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableClassifications.map(c => (
+                          <SelectItem key={c} value={c}>
+                            {c === 'all' ? 'All Classifications' : c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="gender-filter">Gender</Label>
+                    <Select 
+                      value={selectedGender} 
+                      onValueChange={setSelectedGender}
+                    >
+                      <SelectTrigger id="gender-filter" className="w-[180px]">
+                        <SelectValue placeholder="All Genders" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableGenders.map(g => (
+                          <SelectItem key={g} value={g}>
+                            {g === 'all' ? 'All Genders' : g}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="classification-select">Classification</Label>
-                  <Select 
-                    value={tournamentClassification}
-                    onValueChange={(value: Classification) => setTournamentClassification(value)}
-                  >
-                    <SelectTrigger id="classification-select">
-                      <SelectValue placeholder="Select classification" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="6A">6A</SelectItem>
-                      <SelectItem value="5A">5A</SelectItem>
-                      <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
-                    </SelectContent>
-                  </Select>
+              
+                <div className="border rounded-md overflow-hidden">
+                  <div className="bg-gray-100 p-3 grid grid-cols-12 gap-2 text-sm font-medium">
+                    <div className="col-span-1">Rank</div>
+                    <div className="col-span-4">Team</div>
+                    <div className="col-span-2">Classification</div>
+                    <div className="col-span-2">Record</div>
+                    <div className="col-span-3">APR</div>
+                  </div>
+                  
+                  <ScrollArea className="h-[400px]">
+                    {filteredRankings.length > 0 ? (
+                      filteredRankings.map((team, idx) => (
+                        <div 
+                          key={team.id}
+                          className="p-3 grid grid-cols-12 gap-2 text-sm border-b last:border-0 hover:bg-gray-50"
+                        >
+                          <div className="col-span-1 font-medium">{idx + 1}</div>
+                          <div className="col-span-4">{team.name}</div>
+                          <div className="col-span-2">{team.classification}</div>
+                          <div className="col-span-2">{team.record}</div>
+                          <div className="col-span-3">
+                            <div className="flex items-center gap-2">
+                              <div className="font-semibold">{team.apr.toFixed(1)}</div>
+                              <div className="w-full max-w-24 bg-gray-200 rounded-full h-2.5">
+                                <div 
+                                  className="bg-blue-600 h-2.5 rounded-full" 
+                                  style={{ width: `${(team.apr / 100) * 100}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No rankings generated yet. Run a simulation to see results.
+                      </div>
+                    )}
+                  </ScrollArea>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <PostSeasonSimulator 
-            gender={tournamentGender} 
-            classification={tournamentClassification} 
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-500" />
+                Match Results
+              </CardTitle>
+              <CardDescription>
+                All match results from the simulation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-4 items-end">
+                  <div className="grow">
+                    <Label htmlFor="search-matches">Search Matches</Label>
+                    <div className="flex items-center border rounded-md pl-3 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                      <Search className="h-4 w-4 text-gray-400" />
+                      <Input 
+                        id="search-matches"
+                        placeholder="Search by team name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="border-0 focus-visible:ring-0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="classification-filter-matches">Classification</Label>
+                    <Select 
+                      value={selectedClassification} 
+                      onValueChange={setSelectedClassification}
+                    >
+                      <SelectTrigger id="classification-filter-matches" className="w-[180px]">
+                        <SelectValue placeholder="All Classifications" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableClassifications.map(c => (
+                          <SelectItem key={c} value={c}>
+                            {c === 'all' ? 'All Classifications' : c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="gender-filter-matches">Gender</Label>
+                    <Select 
+                      value={selectedGender} 
+                      onValueChange={setSelectedGender}
+                    >
+                      <SelectTrigger id="gender-filter-matches" className="w-[180px]">
+                        <SelectValue placeholder="All Genders" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableGenders.map(g => (
+                          <SelectItem key={g} value={g}>
+                            {g === 'all' ? 'All Genders' : g}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="border rounded-md overflow-hidden">
+                  <div className="bg-gray-100 p-3 grid grid-cols-12 gap-2 text-sm font-medium">
+                    <div className="col-span-2">Date</div>
+                    <div className="col-span-4">Home Team</div>
+                    <div className="col-span-4">Away Team</div>
+                    <div className="col-span-2">Score</div>
+                  </div>
+                  
+                  <ScrollArea className="h-[400px]">
+                    {filteredMatches.length > 0 ? (
+                      filteredMatches.map((match, idx) => (
+                        <div 
+                          key={idx}
+                          className="p-3 grid grid-cols-12 gap-2 text-sm border-b last:border-0 hover:bg-gray-50"
+                        >
+                          <div className="col-span-2">{match.date}</div>
+                          <div className="col-span-4">{match.homeTeam}</div>
+                          <div className="col-span-4">{match.awayTeam}</div>
+                          <div className="col-span-2 font-medium">{match.score}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No matches generated yet. Run a simulation to see results.
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="playoffs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                State Tournament Simulator
+              </CardTitle>
+              <CardDescription>
+                Simulate brackets based on qualification rules
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <Label className="mb-2 block">Select Gender</Label>
+                    <RadioGroup 
+                      value={tournamentGender} 
+                      onValueChange={(value) => setTournamentGender(value as Gender)}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Boys" id="boys" />
+                        <Label htmlFor="boys">Boys</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Girls" id="girls" />
+                        <Label htmlFor="girls">Girls</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div>
+                    <Label className="mb-2 block">Select Classification</Label>
+                    <Select 
+                      value={tournamentClassification} 
+                      onValueChange={(value) => setTournamentClassification(value as Classification)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6A">6A</SelectItem>
+                        <SelectItem value="5A">5A</SelectItem>
+                        <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <PostSeasonSimulator 
+                  gender={tournamentGender} 
+                  classification={tournamentClassification} 
+                />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

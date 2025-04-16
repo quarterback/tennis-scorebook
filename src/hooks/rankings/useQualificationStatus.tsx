@@ -36,12 +36,25 @@ export const useQualificationStatus = () => {
         teamsByDistrict[team.districtName].push(team);
       });
       
-      // Find the top team from each district for automatic bids
+      // Find the top team from each district based on win percentage for automatic bids
       const automaticQualifiers: TeamRanking[] = [];
       
       Object.entries(teamsByDistrict).forEach(([district, districtTeams]) => {
-        // Sort by composite score to find district champion
-        const sortedTeams = [...districtTeams].sort((a, b) => b.compositeScore - a.compositeScore);
+        // Sort by league win percentage to find district champion
+        const sortedTeams = [...districtTeams].sort((a, b) => {
+          // Primary: League win percentage
+          if (a.leagueWinPercentage !== b.leagueWinPercentage) {
+            return (b.leagueWinPercentage || 0) - (a.leagueWinPercentage || 0);
+          }
+          
+          // Secondary: Overall win percentage
+          if (a.winPercentage !== b.winPercentage) {
+            return (b.winPercentage || 0) - (a.winPercentage || 0);
+          }
+          
+          // Tertiary: Composite score (APR)
+          return b.compositeScore - a.compositeScore;
+        });
         
         if (sortedTeams.length > 0) {
           // The top team gets an automatic bid
@@ -51,6 +64,9 @@ export const useQualificationStatus = () => {
       
       // Limit automatic qualifiers to the number of bids available
       const finalAutomaticQualifiers = automaticQualifiers.slice(0, rules.automaticBids);
+      
+      // Sort automatic qualifiers by APR for seeding
+      finalAutomaticQualifiers.sort((a, b) => b.compositeScore - a.compositeScore);
       
       // Mark automatic qualifiers
       finalAutomaticQualifiers.forEach((team, index) => {
@@ -66,7 +82,7 @@ export const useQualificationStatus = () => {
         !finalAutomaticQualifiers.some(aq => aq.teamId === team.teamId)
       );
       
-      // Sort by composite score for at-large bids
+      // Sort by APR (composite score) for at-large bids
       const sortedForAtLarge = [...eligibleForAtLarge].sort((a, b) => 
         b.compositeScore - a.compositeScore
       );
@@ -78,6 +94,7 @@ export const useQualificationStatus = () => {
         const teamInRankings = teamsInGroup.find(t => t.teamId === team.teamId);
         if (teamInRankings) {
           teamInRankings.qualificationStatus = 'at-large';
+          // Seed at-large teams after automatic qualifiers
           teamInRankings.qualificationSeed = finalAutomaticQualifiers.length + index + 1;
         }
       });
