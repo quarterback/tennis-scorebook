@@ -1,7 +1,7 @@
 
 // If this file doesn't exist yet, we'll create it
 
-import { Team, Match, School, Player, District } from './index';
+import { Team, Match, School, Player, District, Gender, Classification } from './index';
 
 export interface TeamLadder {
   teamId: string;
@@ -13,7 +13,7 @@ export interface TeamLadder {
 export interface PlayerLadderPosition {
   playerId: string;
   rank: number;
-  ladderPoints: number; // Adding this property that was missing
+  ladderPoints: number;
   previousRanks: number[];
 }
 
@@ -27,12 +27,16 @@ export interface RankingConfig {
   cutoffDate: string;
   includeAllMatches?: boolean;
   includeNonLeagueMatches?: boolean;
-  minimumMatches?: number; // Adding this property
+  minimumMatches?: number;
   weights?: {
     winPercentage: number;
     opponentStrength: number;
     leagueStrength: number;
     headToHead: number;
+    singles1?: number;
+    singles2?: number;
+    doubles1?: number;
+    doubles2?: number;
   };
 }
 
@@ -42,7 +46,7 @@ export type TeamArchetype = 'dominant' | 'strong' | 'mid-tier' | 'weak';
 // Team strategy types
 export type TeamStrategy = 'balanced' | 'singles-focused' | 'doubles-focused';
 
-// Add TeamRanking interface
+// Updated TeamRanking interface with all required properties
 export interface TeamRanking {
   teamId: string;
   teamName: string;
@@ -58,16 +62,37 @@ export interface TeamRanking {
   classificationRank: number;
   qualificationStatus?: 'automatic' | 'at-large' | 'none';
   qualificationSeed?: number;
+  
+  // Add missing properties referenced in components
+  wins?: number;
+  losses?: number;
+  ties?: number;
+  leagueWins?: number;
+  leagueLosses?: number;
+  leagueTies?: number;
+  matchesPlayed?: number;
+  leagueMatchesPlayed?: number;
+  qualifiedForRanking?: boolean;
+  flightWeightedScore?: number;
+  leagueStrengthCoefficient?: number;
+  opponentStrengthIndex?: number;
 }
 
-// Add the QualifiedTeam interface
+// Updated QualifiedTeam interface
 export interface QualifiedTeam {
   team: TeamRanking;
   seed: number;
   qualificationType: 'automatic' | 'at-large';
+  
+  // For backward compatibility with code that directly accesses these properties
+  teamId?: string;
+  teamName?: string;
+  schoolName?: string;
+  districtName?: string;
+  gender?: Gender;
+  compositeScore?: number;
 }
 
-// Add the ClassificationQualifications interface
 export interface ClassificationQualifications {
   classification: string;
   totalSpots: number;
@@ -75,9 +100,18 @@ export interface ClassificationQualifications {
   atLargeBids: number;
 }
 
-// Add the HistoricalData interface
 export interface HistoricalData {
   teams?: number;
   totalComposite?: number;
   avgLSC?: number;
+  
+  // Add missing properties referenced in the hooks
+  leagues?: Array<{
+    leagueId: string;
+    firstPlaceFinishes: number;
+    secondPlaceFinishes: number;
+    yearRange: string;
+    totalPoints: number;
+  }>;
+  topSchools?: string[];
 }
