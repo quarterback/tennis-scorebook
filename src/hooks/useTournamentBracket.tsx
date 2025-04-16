@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useData } from '@/context/DataContext';
-import { TeamRanking, QualifiedTeam, ClassificationQualifications, TournamentMatchup } from '@/types/ranking';
-import { Gender, Classification, TeamStanding, Match, Flight } from '@/types';
+import { TeamRanking, QualifiedTeam, ClassificationQualifications } from '@/types/ranking';
+import { Gender, Classification, TeamStanding, Match, Flight, Set } from '@/types';
 import { useRankingCalculator } from '@/hooks/rankings/useRankingCalculator';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -240,16 +240,23 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
         awayPlayer
       );
       
+      const sets: Set[] = flight.sets.map(s => ({
+        homeScore: s.homeScore,
+        awayScore: s.awayScore
+      }));
+      
       flights.push({
+        id: uuidv4(),
+        matchId: uuidv4(), // Will be updated later
         type: 'singles',
         level: 'varsity',
         position: i + 1,
         homePlayers: flight.homePlayers,
         awayPlayers: flight.awayPlayers,
         homePlayerWon: flight.homeWon,
-        homeScore: flight.sets.map(s => s.homeScore),
-        awayScore: flight.sets.map(s => s.awayScore),
-        completed: true
+        sets: sets,
+        retired: false,
+        defaulted: false
       });
     }
     
@@ -271,16 +278,23 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
         awayPlayerIds
       );
       
+      const sets: Set[] = flight.sets.map(s => ({
+        homeScore: s.homeScore,
+        awayScore: s.awayScore
+      }));
+      
       flights.push({
+        id: uuidv4(),
+        matchId: uuidv4(), // Will be updated later
         type: 'doubles',
         level: 'varsity',
         position: i + 1,
         homePlayers: flight.homePlayers,
         awayPlayers: flight.awayPlayers,
         homePlayerWon: flight.homeWon,
-        homeScore: flight.sets.map(s => s.homeScore),
-        awayScore: flight.sets.map(s => s.awayScore),
-        completed: true
+        sets: sets,
+        retired: false,
+        defaulted: false
       });
     }
     
@@ -288,9 +302,14 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     const homeWins = flights.filter(f => f.homePlayerWon).length;
     const awayWins = flights.filter(f => !f.homePlayerWon).length;
     
+    // Get the school names for the location
+    const homeSchool = schools.find(s => s.id === homeTeam.schoolId);
+    const homeSchoolName = homeSchool ? homeSchool.name : "Unknown School";
+    
     // Create match object
+    const matchId = uuidv4();
     const match: Match = {
-      id: uuidv4(),
+      id: matchId,
       date: date,
       homeTeamId,
       awayTeamId,
@@ -302,14 +321,14 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       awayCoachApproved: true,
       homeTeamScore: homeWins,
       awayTeamScore: awayWins,
-      flights,
-      location: `${homeTeam.name} Courts`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      flights: flights.map(flight => ({
+        ...flight,
+        matchId // Update all flights with the correct match ID
+      }))
     };
     
     return match;
-  }, [teams, players, simulateFlightMatch]);
+  }, [teams, schools, players, simulateFlightMatch]);
 
   // Handle playoff tiebreaker setup
   const setupPlayoffTiebreaker = useCallback((
@@ -326,7 +345,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
       matchId,
       singles1PlayerId: team1Players[0]?.id,
       singles2PlayerId: team1Players[1]?.id,
-      doubles1Players: [team1Players[2]?.id, team1Players[3]?.id].filter(Boolean),
+      doubles1Players: [team1Players[2]?.id, team1Players[3]?.id].filter(Boolean) as string[],
       tiebreakersCompleted: false
     };
     
@@ -352,6 +371,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     // Simulate the tiebreaker matches (2 singles, 1 doubles)
     // For simplicity, team1 wins 60% of the time
     const team1Wins = Math.random() < 0.6 ? 2 : 1;
+    const winnerValue = team1Wins >= 2 ? 'team1' as const : 'team2' as const;
     
     // Update the tiebreaker result
     const updatedTiebreakers = playoffTiebreakers.map(t => {
@@ -359,7 +379,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
         return {
           ...t,
           tiebreakersCompleted: true,
-          winner: team1Wins >= 2 ? 'team1' : 'team2'
+          winner: winnerValue
         };
       }
       return t;
@@ -367,7 +387,7 @@ export const useTournamentBracket = (gender: Gender, classification: Classificat
     
     setPlayoffTiebreakers(updatedTiebreakers);
     
-    return team1Wins >= 2 ? 'team1' : 'team2';
+    return winnerValue;
   }, [playoffTiebreakers, setupPlayoffTiebreaker]);
 
   // Handle winner selection and update bracket

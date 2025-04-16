@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trophy, Calendar, Users, Info, PlayCircle, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,8 +51,8 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
           if (home === away) {
             tiedMatches.push({
               id: match.id,
-              team1Name: match.team1.school,
-              team2Name: match.team2.school
+              team1Name: match.team1.name,
+              team2Name: match.team2.name
             });
           }
         }
@@ -161,7 +161,10 @@ const PostSeasonSimulator: React.FC<PostSeasonSimulatorProps> = ({ gender, class
                 </TabsList>
                 
                 <TabsContent value="bracket" className="p-4 bg-white rounded-md">
-                  <BracketDisplay bracket={bracket} onWinnerSelect={handleWinnerSelect} />
+                  <BracketDisplay 
+                    bracket={bracket} 
+                    onWinnerSelect={handleWinnerSelect} 
+                  />
                 </TabsContent>
                 
                 <TabsContent value="simulation" className="space-y-6">
