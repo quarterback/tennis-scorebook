@@ -34,7 +34,8 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     name: '',
     grade: 9,
     teamId: '',
-    seasons: []
+    seasons: [],
+    gender: 'Boys'
   });
   
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -43,7 +44,8 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     name: '',
     grade: 9,
     teamId: '',
-    seasons: []
+    seasons: [],
+    gender: 'Boys'
   });
   
   const filteredSchools = user?.role === 'coach' && user.schoolId

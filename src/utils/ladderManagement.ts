@@ -1,6 +1,5 @@
-
-import { Player } from '@/types';
-import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
+import { TeamLadder, PlayerLadderPosition } from "@/types/ranking";
+import { Player } from "@/types";
 
 /**
  * Create an initial ladder ranking for a team based on their roster
@@ -75,3 +74,30 @@ export const updateTeamLadder = (ladder: TeamLadder): TeamLadder => {
     lastUpdated: new Date().toISOString()
   };
 };
+
+export function createLadderForTeam(teamId: string, players: Player[], seasonId: string): TeamLadder {
+  // Sort players by skill rating (if available) or default to alphabetical
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (a.skillRating && b.skillRating) {
+      return b.skillRating - a.skillRating;
+    }
+    return a.name.localeCompare(b.name);
+  });
+  
+  // Create initial ladder positions
+  const rankings: PlayerLadderPosition[] = sortedPlayers.map((player, index) => {
+    return {
+      playerId: player.id,
+      rank: index + 1,
+      ladderPoints: 100 - (index * 10), // Add ladderPoints property
+      previousRanks: []
+    };
+  });
+  
+  return {
+    teamId,
+    seasonId,
+    lastUpdated: new Date().toISOString(),
+    rankings
+  };
+}

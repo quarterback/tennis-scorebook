@@ -1,32 +1,32 @@
+
 import React, { useState, useEffect } from 'react';
-import {
-  Typography,
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Box
-} from '@mui/material';
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { Container } from '@/components/ui/container';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useData } from '@/context/DataContext';
-import { Team, Player, School } from '@/types';
-import { useTeams } from '@/context/TeamsContext';
-import { useSeasons } from '@/context/SeasonsContext';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import TeamsContainer from '@/components/teams/TeamsContainer';
 
 const Teams = () => {
   const { teams, players, schools, addPlayer, deleteTeam, deletePlayer } = useData();
-  const { selectedTeamId, setSelectedTeamId } = useTeams();
-  const { currentSeason } = useSeasons();
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -34,13 +34,12 @@ const Teams = () => {
   const [isDeleteTeamDialogOpen, setIsDeleteTeamDialogOpen] = useState(false);
   const [isDeletePlayerDialogOpen, setIsDeletePlayerDialogOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [newPlayerData, setNewPlayerData] = useState<Player | null>(null);
 
   useEffect(() => {
     if (teams.length > 0) {
       setSelectedTeamId(teams[0].id);
     }
-  }, [teams, setSelectedTeamId]);
+  }, [teams]);
 
   const filteredTeams = selectedSchool
     ? teams.filter(team => {
@@ -49,8 +48,8 @@ const Teams = () => {
     })
     : teams;
 
-  const handleSchoolChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSchool(event.target.value);
+  const handleSchoolChange = (value: string) => {
+    setSelectedSchool(value);
   };
 
   const handleTeamSelect = (teamId: string) => {
@@ -65,16 +64,7 @@ const Teams = () => {
     setIsAddPlayerDialogOpen(false);
   };
 
-  const handleNewPlayerNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNewPlayerName(event.target.value);
-  };
-
-  const handleNewPlayerGradeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setNewPlayerGrade(event.target.value);
-  };
-
   const handleAddPlayer = () => {
-    // Add gender field to the player creation
     const selectedTeam = teams.find(t => t.id === selectedTeamId);
     if (!selectedTeam) return;
     
@@ -82,7 +72,7 @@ const Teams = () => {
       name: newPlayerName,
       grade: Number(newPlayerGrade),
       teamId: selectedTeamId,
-      seasons: [currentSeason?.id || ''],
+      seasons: [],
       gender: selectedTeam.gender // Add gender field to fix the TS error
     });
     
@@ -127,199 +117,13 @@ const Teams = () => {
 
   const selectedTeamPlayers = players.filter(player => player.teamId === selectedTeamId);
 
-  const columns: GridColDef[] = [
-    { field: 'name', headerName: 'Name', width: 200 },
-    { field: 'grade', headerName: 'Grade', width: 100 },
-    {
-      field: 'teamName',
-      headerName: 'Team',
-      width: 200,
-      valueGetter: (params: GridValueGetterParams) => {
-        const team = teams.find(team => team.id === params.row.teamId);
-        if (!team) return 'Unknown Team';
-        const school = schools.find(school => school.id === team.schoolId);
-        return `${school?.name || 'Unknown'} ${team.gender}`;
-      },
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 150,
-      renderCell: (params) => (
-        <Button
-          variant="outlined"
-          color="secondary"
-          onClick={() => handleDeletePlayerDialogOpen(params.row.id)}
-        >
-          Delete
-        </Button>
-      ),
-    },
-  ];
-
-  const schoolOptions = [...new Set(schools.map(school => school.name))];
-
   return (
-    <Container maxWidth="lg">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Teams
-      </Typography>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Select a School:
-              </Typography>
-              <FormControl fullWidth>
-                <InputLabel id="school-select-label">School</InputLabel>
-                <Select
-                  labelId="school-select-label"
-                  id="school-select"
-                  value={selectedSchool}
-                  label="School"
-                  onChange={handleSchoolChange}
-                >
-                  <MenuItem value="">All Schools</MenuItem>
-                  {schools.map((school) => (
-                    <MenuItem key={school.id} value={school.id}>{school.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <Typography variant="h6" gutterBottom style={{ marginTop: '20px' }}>
-                Teams:
-              </Typography>
-              {filteredTeams.map(team => (
-                <Button
-                  key={team.id}
-                  variant={team.id === selectedTeamId ? 'contained' : 'outlined'}
-                  color="primary"
-                  fullWidth
-                  style={{ marginBottom: '10px' }}
-                  onClick={() => handleTeamSelect(team.id)}
-                >
-                  {schools.find(school => school.id === team.schoolId)?.name} - {team.gender}
-                </Button>
-              ))}
-              <Button
-                variant="contained"
-                color="secondary"
-                fullWidth
-                onClick={handleDeleteTeamDialogOpen}
-              >
-                Delete Team
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Players on Selected Team:
-              </Typography>
-              <div style={{ height: 400, width: '100%' }}>
-                <DataGrid
-                  rows={selectedTeamPlayers}
-                  columns={columns}
-                  getRowId={(row) => row.id}
-                  disableSelectionOnClick
-                />
-              </div>
-              <Button
-                variant="contained"
-                color="primary"
-                style={{ marginTop: '20px' }}
-                onClick={handleAddPlayerDialogOpen}
-              >
-                Add New Player
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Add Player Dialog */}
-      <Dialog open={isAddPlayerDialogOpen} onClose={handleAddPlayerDialogClose}>
-        <DialogTitle>Add New Player</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="name"
-            label="Player Name"
-            type="text"
-            fullWidth
-            value={newPlayerName}
-            onChange={handleNewPlayerNameChange}
-          />
-          <FormControl fullWidth margin="dense">
-            <InputLabel id="grade-select-label">Grade</InputLabel>
-            <Select
-              labelId="grade-select-label"
-              id="grade-select"
-              value={newPlayerGrade}
-              label="Grade"
-              onChange={handleNewPlayerGradeChange}
-            >
-              <MenuItem value="9">9</MenuItem>
-              <MenuItem value="10">10</MenuItem>
-              <MenuItem value="11">11</MenuItem>
-              <MenuItem value="12">12</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleAddPlayerDialogClose}>Cancel</Button>
-          <Button onClick={handleAddPlayer}>Add Player</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Team Dialog */}
-      <Dialog
-        open={isDeleteTeamDialogOpen}
-        onClose={handleDeleteTeamDialogClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"Delete Team?"}</DialogTitle>
-        <DialogContent>
-          <Typography id="alert-dialog-description">
-            Are you sure you want to delete this team? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteTeamDialogClose}>Cancel</Button>
-          <Button onClick={handleDeleteTeam} autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Player Dialog */}
-      <Dialog
-        open={isDeletePlayerDialogOpen}
-        onClose={handleDeletePlayerDialogClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"Delete Player?"}</DialogTitle>
-        <DialogContent>
-          <Typography id="alert-dialog-description">
-            Are you sure you want to delete this player? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeletePlayerDialogClose}>Cancel</Button>
-          <Button onClick={handleDeletePlayer} autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Teams</h1>
+      
+      {/* Use the TeamsContainer component to manage teams */}
+      <TeamsContainer filter={{}} />
+    </div>
   );
 };
 
