@@ -2,16 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { PlayerSkillTier } from '@/types';
-import { Team, School, District, Match, Player } from '@/types';
+import { Team, School, District, Match, Player, Season } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Rocket, Users, Calendar, CalendarDays } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
-// Import UI components for the new design
+// Import UI components
 import DateRangePicker from './components/DateRangePicker';
 import RoundRobinToggle from './components/RoundRobinToggle';
+import SeasonSelector from './components/SeasonSelector';
+
+// Import seasons data
+import { extendedSeasonsList } from './constants/seasons';
 
 interface SimulationControlsProps {
   onSimulationComplete?: (results: any) => void;
@@ -33,12 +37,23 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
   
   const { toast } = useToast();
   
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedSeasonId, setSelectedSeasonId] = useState(extendedSeasonsList[3].id); // Default to current season
   const [startDate, setStartDate] = useState<Date | undefined>(new Date(selectedYear, 8, 1)); // September 1st
   const [endDate, setEndDate] = useState<Date | undefined>(new Date(selectedYear + 1, 4, 31)); // May 31st
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(true);
   const [generatingMatches, setGeneratingMatches] = useState(false);
   const [isGeneratingPlayers, setIsGeneratingPlayers] = useState(false);
+  
+  // Update dates when season changes
+  useEffect(() => {
+    const selectedSeason = extendedSeasonsList.find(s => s.id === selectedSeasonId);
+    if (selectedSeason) {
+      setSelectedYear(selectedSeason.year);
+      setStartDate(new Date(selectedSeason.year, 2, 1)); // March 1st
+      setEndDate(new Date(selectedSeason.year, 4, 31)); // May 31st
+    }
+  }, [selectedSeasonId]);
   
   const handleStartDateChange = (date: Date | undefined) => {
     setStartDate(date);
@@ -93,13 +108,28 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         toast({
           title: "Match Generation Complete",
           description: `Generated ${matches.length} matches successfully`,
-          variant: "success"
+          variant: "default" // Changed from "success" to "default"
         });
         
         console.log(`Generated ${matches.length} matches successfully`);
         
         // Call onSimulationComplete with matches
-        onSimulationComplete(matches);
+        onSimulationComplete({
+          matches: matches.map(match => {
+            const homeTeam = teams.find(t => t.id === match.homeTeamId);
+            const awayTeam = teams.find(t => t.id === match.awayTeamId);
+            const homeSchool = schools.find(s => s.id === homeTeam?.schoolId);
+            const awaySchool = schools.find(s => s.id === awayTeam?.schoolId);
+            
+            return {
+              date: match.date,
+              homeTeam: homeSchool?.name || 'Unknown',
+              awayTeam: awaySchool?.name || 'Unknown',
+              score: match.isTie ? "4-4" : `${match.homeTeamScore}-${match.awayTeamScore}`,
+              gender: homeTeam?.gender || 'Unknown'
+            };
+          })
+        });
       } catch (error) {
         console.error('Error generating matches:', error);
         toast({
@@ -119,10 +149,10 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
     // Clear existing players first
     deleteAllPlayers();
     
-    const currentSeason = {
+    const selectedSeason = extendedSeasonsList.find(s => s.id === selectedSeasonId) || {
       id: crypto.randomUUID(),
       year: new Date().getFullYear(),
-      name: `Fall ${new Date().getFullYear()}`,
+      name: `Spring ${new Date().getFullYear()}`,
       isCurrent: true
     };
     
@@ -131,7 +161,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
       const { generatePlayerData } = usePlayerGeneration();
       
       try {
-        const { players: generatedPlayers } = generatePlayerData(teams, schools, currentSeason.id);
+        const { players: generatedPlayers } = generatePlayerData(teams, schools, selectedSeason.id);
         
         // Add all generated players to the state
         generatedPlayers.forEach(player => {
@@ -141,7 +171,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         toast({
           title: "Player Generation Complete",
           description: `Generated ${generatedPlayers.length} players successfully`,
-          variant: "success"
+          variant: "default" // Changed from "success" to "default"
         });
         
         console.log(`Generated ${generatedPlayers.length} players successfully`);
@@ -159,10 +189,10 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
   };
   
   const handleAddPlayersToAllTeams = () => {
-    const currentSeason = {
+    const currentSeason = extendedSeasonsList.find(s => s.id === selectedSeasonId) || {
       id: crypto.randomUUID(),
       year: new Date().getFullYear(),
-      name: `Fall ${new Date().getFullYear()}`,
+      name: `Spring ${new Date().getFullYear()}`,
       isCurrent: true
     };
     
@@ -172,15 +202,15 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
       
       if (playersNeeded > 0) {
         for (let i = 0; i < playersNeeded; i++) {
-          addPlayer({
-            id: crypto.randomUUID(),
+          const newPlayer: Omit<Player, "id"> = {
             name: `${team.gender === 'Boys' ? 'Player' : 'Player'} ${Math.floor(Math.random() * 100)}`,
             grade: Math.floor(Math.random() * 4) + 9,
             teamId: team.id,
             seasons: [currentSeason.id],
             skillTier: 'developmental' as PlayerSkillTier,
             gender: team.gender
-          });
+          };
+          addPlayer(newPlayer);
         }
       }
     });
@@ -188,7 +218,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
     toast({
       title: "Players Added",
       description: "Added players to all teams that needed them",
-      variant: "success"
+      variant: "default" // Changed from "success" to "default"
     });
   };
 
@@ -198,6 +228,13 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         <CardTitle className="text-xl">Simulation Controls</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <SeasonSelector
+          seasons={extendedSeasonsList}
+          selectedSeasonId={selectedSeasonId}
+          setSelectedSeasonId={setSelectedSeasonId}
+          disabled={generatingMatches || isGeneratingPlayers}
+        />
+        
         <DateRangePicker
           startDate={startDate}
           endDate={endDate}
