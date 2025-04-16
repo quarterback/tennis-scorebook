@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Rocket, Terminal, Code, ListOrdered, FileText, Trophy, Filter, Users } from 'lucide-react';
@@ -10,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Gender, Classification } from '@/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 // Simulator components
 import SimulationControls from '@/components/simulation/SimulationControls';
@@ -19,7 +20,15 @@ const SimulatorPage: React.FC = () => {
   const { toast } = useToast();
   const [simulationResults, setSimulationResults] = useState<{
     teams?: { id: string; name: string; classification: string; gender: string; record: string; apr: number }[];
-    matches?: { date: string; homeTeam: string; awayTeam: string; score: string; gender: string }[];
+    matches?: { 
+      date: string; 
+      homeTeam: string; 
+      awayTeam: string; 
+      score: string; 
+      gender: string;
+      classification?: string;
+      conference?: string;
+    }[];
     rankings?: { id: string; name: string; classification: string; gender: string; record: string; apr: number }[];
   }>({});
   
@@ -30,6 +39,8 @@ const SimulatorPage: React.FC = () => {
   // State for filtering results
   const [selectedClassification, setSelectedClassification] = useState<string>('all');
   const [selectedGender, setSelectedGender] = useState<string>('all');
+  const [selectedConference, setSelectedConference] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
   const openDocumentation = () => {
     window.open('https://github.com/quarterback/tennis-scorebook/tree/main/simulator', '_blank');
@@ -44,10 +55,37 @@ const SimulatorPage: React.FC = () => {
   };
   
   const handleSimulationComplete = (results: any) => {
-    setSimulationResults(results);
+    // Add conference and classification if not already in the results
+    const enhancedResults = {
+      ...results,
+      matches: results.matches?.map((match: any) => {
+        // Extract classification from team names if not provided
+        const classification = match.classification || 
+          (match.homeTeam.includes('6A') ? '6A' : 
+           match.homeTeam.includes('5A') ? '5A' : 
+           match.homeTeam.includes('4A') ? '4A/3A/2A/1A' : 
+           match.homeTeam.includes('3A') ? '4A/3A/2A/1A' : '4A/3A/2A/1A');
+        
+        // Extract or assign conference based on team names
+        const conference = match.conference || 
+          (match.homeTeam.includes('Metro') ? 'Metro' :
+           match.homeTeam.includes('Three Rivers') ? 'Three Rivers' :
+           match.homeTeam.includes('Mt. Hood') ? 'Mt. Hood' :
+           match.homeTeam.includes('Pacific') ? 'Pacific' :
+           match.homeTeam.includes('Southwest') ? 'Southwest' : 'Other');
+        
+        return {
+          ...match,
+          classification,
+          conference
+        };
+      })
+    };
+    
+    setSimulationResults(enhancedResults);
     toast({
       title: "Simulation Complete",
-      description: `Generated ${results.teams?.length || 0} teams and ${results.matches?.length || 0} matches.`,
+      description: `Generated ${enhancedResults.teams?.length || 0} teams and ${enhancedResults.matches?.length || 0} matches.`,
     });
   };
   
@@ -60,6 +98,11 @@ const SimulatorPage: React.FC = () => {
   const availableGenders = simulationResults.rankings
     ? ['all', ...new Set(simulationResults.rankings.map(team => team.gender))]
     : ['all'];
+    
+  // Get unique conferences from match results
+  const availableConferences = simulationResults.matches
+    ? ['all', ...new Set(simulationResults.matches.map(match => match.conference || 'Other'))]
+    : ['all'];
   
   // Filter rankings by selected classification and gender
   const filteredRankings = simulationResults.rankings
@@ -69,10 +112,15 @@ const SimulatorPage: React.FC = () => {
       )
     : [];
   
-  // Filter matches by selected gender
+  // Filter matches by selected gender, classification, conference, and search query
   const filteredMatches = simulationResults.matches
     ? simulationResults.matches.filter(match => 
-        selectedGender === 'all' || match.gender === selectedGender
+        (selectedGender === 'all' || match.gender === selectedGender) &&
+        (selectedClassification === 'all' || match.classification === selectedClassification) &&
+        (selectedConference === 'all' || match.conference === selectedConference) &&
+        (searchQuery === '' || 
+         match.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         match.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : [];
   
@@ -312,31 +360,78 @@ const SimulatorPage: React.FC = () => {
                       Match Results
                     </div>
                     
-                    {/* Gender Filter for Matches */}
-                    {availableGenders.length > 1 && (
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <RadioGroup 
-                          value={selectedGender} 
-                          onValueChange={setSelectedGender}
-                          className="flex space-x-4"
-                        >
+                    {/* Enhanced Filters for Matches */}
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="icon" className="mr-2">
+                        <Filter className="h-4 w-4" />
+                      </Button>
+                      <Select 
+                        value={selectedGender} 
+                        onValueChange={setSelectedGender}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Gender" />
+                        </SelectTrigger>
+                        <SelectContent>
                           {availableGenders.map(gender => (
-                            <div key={gender} className="flex items-center space-x-2">
-                              <RadioGroupItem value={gender} id={`gender-${gender}`} />
-                              <Label htmlFor={`gender-${gender}`}>
-                                {gender === 'all' ? 'All Genders' : gender}
-                              </Label>
-                            </div>
+                            <SelectItem key={gender} value={gender}>
+                              {gender === 'all' ? 'All Genders' : gender}
+                            </SelectItem>
                           ))}
-                        </RadioGroup>
-                      </div>
-                    )}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select 
+                        value={selectedClassification} 
+                        onValueChange={setSelectedClassification}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Classification" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableClassifications.map(classification => (
+                            <SelectItem key={classification} value={classification}>
+                              {classification === 'all' ? 'All Classifications' : classification}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select 
+                        value={selectedConference} 
+                        onValueChange={setSelectedConference}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Conference" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableConferences.map(conference => (
+                            <SelectItem key={conference} value={conference}>
+                              {conference === 'all' ? 'All Conferences' : conference}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </CardTitle>
                   <CardDescription>
                     Results from all simulated matches
                     {selectedGender !== 'all' && ` - ${selectedGender}`}
+                    {selectedClassification !== 'all' && ` - ${selectedClassification}`}
+                    {selectedConference !== 'all' && ` - ${selectedConference} Conference`}
                   </CardDescription>
+                  
+                  {/* Search input */}
+                  <div className="relative mt-2 flex w-full max-w-sm items-center">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search teams..."
+                      className="pl-8"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[400px]">
@@ -348,6 +443,8 @@ const SimulatorPage: React.FC = () => {
                           <th className="text-left p-2">Away Team</th>
                           <th className="text-left p-2">Score</th>
                           <th className="text-left p-2">Gender</th>
+                          <th className="text-left p-2">Class</th>
+                          <th className="text-left p-2">Conference</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -358,8 +455,17 @@ const SimulatorPage: React.FC = () => {
                             <td className="p-2">{match.awayTeam}</td>
                             <td className="p-2 font-mono">{match.score}</td>
                             <td className="p-2">{match.gender}</td>
+                            <td className="p-2">{match.classification}</td>
+                            <td className="p-2">{match.conference}</td>
                           </tr>
                         ))}
+                        {filteredMatches.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="text-center py-4 text-muted-foreground">
+                              No matches found with the current filters
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </ScrollArea>

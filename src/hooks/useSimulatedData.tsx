@@ -125,16 +125,19 @@ export const useSimulatedData = () => {
           const awayTeam = teams.find(t => t.id === match.awayTeamId);
           const homeSchool = schools.find(s => s.id === homeTeam?.schoolId);
           const awaySchool = schools.find(s => s.id === awayTeam?.schoolId);
+          const homeDistrict = districts.find(d => d.id === homeSchool?.districtId);
           
           return {
             date: match.date,
             homeTeam: homeSchool?.name || 'Unknown',
             awayTeam: awaySchool?.name || 'Unknown',
             score: `${match.homeTeamScore}-${match.awayTeamScore}`,
-            gender: homeTeam?.gender || 'Unknown'
+            gender: homeTeam?.gender || 'Unknown',
+            classification: homeSchool?.classification || 'Unknown',
+            conference: homeDistrict?.name || 'Unknown'
           };
         }),
-        rankings: [] // Will be filled by sorting teams by APR
+        rankings: [] // Will be filled by sorting teams by APR within each gender and classification group
       };
       
       // Sort teams by APR within each gender and classification group
