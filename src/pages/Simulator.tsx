@@ -329,8 +329,7 @@ const SimulatorPage: React.FC = () => {
                         <tr>
                           <th className="text-left p-2">Rank</th>
                           <th className="text-left p-2">Team</th>
-                          <th className="text-left p-2">Classification</th>
-                          <th className="text-left p-2">Gender</th>
+                          <th className="text-left p-2">Conference</th>
                           <th className="text-left p-2">Record</th>
                           <th className="text-right p-2">APR</th>
                         </tr>
@@ -340,8 +339,13 @@ const SimulatorPage: React.FC = () => {
                           <tr key={team.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
                             <td className="p-2">{index + 1}</td>
                             <td className="p-2 font-medium">{team.name}</td>
-                            <td className="p-2">{team.classification}</td>
-                            <td className="p-2">{team.gender}</td>
+                            <td className="p-2">
+                              {team.name.includes('Metro') ? 'Metro' :
+                               team.name.includes('Three Rivers') ? 'Three Rivers' :
+                               team.name.includes('Mt. Hood') ? 'Mt. Hood' :
+                               team.name.includes('Pacific') ? 'Pacific' :
+                               team.name.includes('Southwest') ? 'Southwest' : 'Other'}
+                            </td>
                             <td className="p-2">{team.record}</td>
                             <td className="p-2 text-right font-mono">{team.apr.toFixed(2)}</td>
                           </tr>

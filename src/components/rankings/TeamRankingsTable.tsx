@@ -77,7 +77,7 @@ export const TeamRankingsTable: React.FC<TeamRankingsTableProps> = ({
                 <TableRow>
                   <TableHead className="w-[80px]">Rank</TableHead>
                   <TableHead>Team</TableHead>
-                  <TableHead className="text-center">League</TableHead>
+                  <TableHead className="text-center">Conference</TableHead>
                   <TableHead className="text-center">Record</TableHead>
                   <TableHead className="text-center">Win %</TableHead>
                   <TableHead className="text-center">Matches</TableHead>

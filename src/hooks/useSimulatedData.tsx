@@ -115,6 +115,7 @@ export const useSimulatedData = () => {
             id: team.id,
             name: `${school?.name || 'Unknown'} ${team.gender}`,
             classification: school?.classification || 'Unknown',
+            conference: district?.name || 'Unknown',
             gender: team.gender,
             record: `${wins}-${losses}`,
             apr: aprBase + districtBonus + randomFactor
