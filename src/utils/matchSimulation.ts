@@ -1,6 +1,7 @@
 // Let's update the utility to reduce ties and to handle the correct types
 
-import { Team, School, Match, Player, Flight, Set, TeamLadder } from '@/types';
+import { Team, School, Match, Player, Flight, Set } from '@/types';
+import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
 
 /**
  * Generate a match between two teams

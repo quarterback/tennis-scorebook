@@ -1,4 +1,3 @@
-
 export type Gender = 'Boys' | 'Girls';
 export type PlayerSkillTier = 'elite' | 'competitive' | 'developmental';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
@@ -37,13 +36,16 @@ export interface Team {
 export interface Player {
   id: string;
   name: string;
-  grade: number; // 9, 10, 11, 12
   teamId: string;
+  gender: Gender;
+  grade: number; // 9, 10, 11, 12
   seasonId: string; // The current season ID
-  status: PlayerStatus;
-  seasons: string[];
   skillTier?: PlayerSkillTier; // Optional to maintain compatibility with existing data
+  skillRating?: number; // Player's skill rating on a scale of 1-10
+  singles_preference?: number; // Preference for singles (0-1, higher means prefers singles)
   previousTeams?: string[]; // Array of previous team IDs
+  status?: PlayerStatus;
+  seasons?: string[];
 }
 
 export interface User {
@@ -106,7 +108,6 @@ export interface Set {
   };
 }
 
-// Extended TeamStanding to include qualification information and winning percentages
 export interface TeamStanding {
   teamId: string;
   teamName: string;

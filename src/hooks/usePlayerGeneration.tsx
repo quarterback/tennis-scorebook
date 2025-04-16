@@ -109,10 +109,14 @@ export const usePlayerGeneration = () => {
           ? 0.6 + (Math.random() * 0.4) // 0.6-1.0 for elite
           : 0.2 + (Math.random() * 0.8); // 0.2-1.0 for others
         
+        // Extract first and last name from the generated name string
+        const nameParts = playerNameResult.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+        
         const player: Player = {
           id: crypto.randomUUID(),
-          firstName: playerNameResult.firstName,
-          lastName: playerNameResult.lastName,
+          name: playerNameResult,
           teamId: team.id,
           gender: team.gender,
           grade: playerGrade,
@@ -126,12 +130,13 @@ export const usePlayerGeneration = () => {
       }
       
       // Sort players by skill for ladder creation
-      const sortedPlayers = [...teamPlayers].sort((a, b) => b.skillRating - a.skillRating);
+      const sortedPlayers = [...teamPlayers].sort((a, b) => 
+        (b.skillRating ?? 0) - (a.skillRating ?? 0)
+      );
       players.push(...sortedPlayers);
       
       // Create ladder for this team
       const ladder: TeamLadder = {
-        id: crypto.randomUUID(),
         teamId: team.id,
         seasonId: seasonId,
         lastUpdated: new Date().toISOString(),
