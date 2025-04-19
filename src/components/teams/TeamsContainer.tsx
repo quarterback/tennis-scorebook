@@ -40,9 +40,6 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     gender: 'Boys'
   });
   
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [newPlayerGrade, setNewPlayerGrade] = useState('9');
-  
   // Filter schools based on user role and selected classification
   const filteredSchools = user?.role === 'coach' && user.schoolId
     ? schools.filter(school => school.id === user.schoolId)
@@ -53,21 +50,28 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     : filteredSchools;
   
   useEffect(() => {
-    // Log for debugging
-    console.log("Teams in container:", teams.length);
-    console.log("Schools:", classificationFilteredSchools.length);
+    // Debug logs
+    console.log("TeamsContainer mounted");
+    console.log("Total teams in system:", teams.length);
+    console.log("Total schools:", schools.length);
+    console.log("Filtered schools:", classificationFilteredSchools.length);
     
     if (classificationFilteredSchools.length > 0 && !selectedSchoolId) {
       setSelectedSchoolId(classificationFilteredSchools[0].id);
       setTeamFormData(prev => ({ ...prev, schoolId: classificationFilteredSchools[0].id }));
     }
-  }, [classificationFilteredSchools, selectedSchoolId, teams]);
+  }, [classificationFilteredSchools, selectedSchoolId, teams, schools]);
   
-  // Filter teams by selected school
-  const schoolTeams = teams.filter(team => 
-    team.schoolId === selectedSchoolId && (!filter.classification || 
-    schools.find(s => s.id === team.schoolId)?.classification === filter.classification)
-  );
+  // Filter teams by selected school - ensure this filter works properly
+  const schoolTeams = selectedSchoolId ? teams.filter(team => team.schoolId === selectedSchoolId) : [];
+  
+  // Debug logging for team filtering
+  useEffect(() => {
+    if (selectedSchoolId) {
+      console.log(`Teams for school ${selectedSchoolId}:`, schoolTeams.length);
+      console.log("School teams:", schoolTeams);
+    }
+  }, [selectedSchoolId, schoolTeams]);
   
   const selectedSchool = schools.find(s => s.id === selectedSchoolId);
   
@@ -97,15 +101,18 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     if (!selectedTeam) return;
     
     addPlayer({
-      name: newPlayerName,
-      grade: Number(newPlayerGrade),
+      name: playerFormData.name,
+      grade: playerFormData.grade,
       teamId: selectedTeamId,
       seasons: [currentSeason?.id || ''],
       gender: selectedTeam.gender
     });
     
-    setNewPlayerName('');
-    setNewPlayerGrade('9');
+    setPlayerFormData(prev => ({
+      ...prev,
+      name: '',
+      grade: 9
+    }));
     setIsAddPlayerDialogOpen(false);
   };
   
@@ -128,6 +135,7 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
   };
 
   const handleSchoolChange = (schoolId: string) => {
+    console.log("School changed to:", schoolId);
     setSelectedSchoolId(schoolId);
     setSelectedTeamId(null);
     setTeamFormData(prev => ({ ...prev, schoolId }));
@@ -147,7 +155,7 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
           <div className="flex justify-between items-center mt-2 px-2">
             <div className="font-medium">Teams</div>
             
-            {canEditTeam(selectedSchoolId as string) && (
+            {selectedSchoolId && canEditTeam(selectedSchoolId) && (
               <Dialog open={isAddTeamDialogOpen} onOpenChange={setIsAddTeamDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center">
