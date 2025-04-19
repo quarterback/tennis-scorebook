@@ -22,7 +22,7 @@ interface SimulationControlsProps {
 const SimulationControls: React.FC<SimulationControlsProps> = ({ 
   onSimulationComplete = () => {} 
 }) => {
-  const { schools, teams, players, deleteAllMatches, deleteAllPlayers } = useData();
+  const { schools, teams, players, deleteAllMatches, deleteAllPlayers, createTeamsForAllSchools } = useData();
   const { toast } = useToast();
   
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -121,13 +121,30 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
     }
   };
 
+  const handleTeamsSetup = async () => {
+    try {
+      createTeamsForAllSchools();
+      toast({
+        title: "Teams Created",
+        description: "Teams have been created for all schools that were missing them."
+      });
+    } catch (error) {
+      console.error("Error creating teams:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create teams. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Card className="border-blue-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">Simulation Controls</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex justify-end">
+        <div className="flex justify-between">
           <Button 
             variant="destructive" 
             size="sm"
@@ -137,6 +154,15 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           >
             <Trash2 className="h-4 w-4" />
             {isErasingData ? 'Erasing...' : 'Erase All Data'}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTeamsSetup}
+            disabled={generatingMatches || isGeneratingPlayers}
+          >
+            Create Missing Teams
           </Button>
         </div>
 

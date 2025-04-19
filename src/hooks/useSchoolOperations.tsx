@@ -165,6 +165,32 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
     }
   }, [schools]);
   
+  const createTeamsForSchool = (schoolId: string) => {
+    const genders: Gender[] = ['Boys', 'Girls'];
+    genders.forEach(gender => {
+      addTeam({
+        schoolId: schoolId,
+        gender: gender,
+        players: [],
+        coaches: []
+      });
+    });
+  };
+
+  const createTeamsForAllSchools = () => {
+    schools.forEach(school => {
+      // Only create teams if the school doesn't have any
+      if (!school.teams || school.teams.length === 0) {
+        createTeamsForSchool(school.id);
+      }
+    });
+    
+    toast({
+      title: 'Teams Created',
+      description: 'Teams have been created for all schools that were missing them.'
+    });
+  };
+
   const addSchool = (school: Omit<School, 'id'>) => {
     const newSchool: School = {
       ...school,
@@ -172,16 +198,8 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
       teams: []
     };
 
-    // Create both boys and girls teams
-    const genders: Gender[] = ['Boys', 'Girls'];
-    genders.forEach(gender => {
-      addTeam({
-        schoolId: newSchool.id,
-        gender: gender,
-        players: [],
-        coaches: []
-      });
-    });
+    // Create both boys and girls teams for new school
+    createTeamsForSchool(newSchool.id);
     
     setSchools(prevSchools => {
       const updatedSchools = [...prevSchools, newSchool];
@@ -222,6 +240,7 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
     setSchools,
     addSchool,
     updateSchool,
-    deleteSchool
+    deleteSchool,
+    createTeamsForAllSchools
   };
 };
