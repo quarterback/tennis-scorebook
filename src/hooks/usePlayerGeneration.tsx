@@ -16,6 +16,16 @@ export const usePlayerGeneration = () => {
     schools: School[],
     seasonId: string
   ): { players: Player[], ladders: TeamLadder[] } => {
+    if (!teams || teams.length === 0) {
+      console.error("No teams provided for player generation");
+      return { players: [], ladders: [] };
+    }
+
+    if (!schools || schools.length === 0) {
+      console.error("No schools provided for player generation");
+      return { players: [], ladders: [] };
+    }
+
     const players: Player[] = [];
     const ladders: TeamLadder[] = [];
     
@@ -27,9 +37,14 @@ export const usePlayerGeneration = () => {
       return a.gender.localeCompare(b.gender);
     });
     
+    console.log(`Starting player generation for ${sortedTeams.length} teams`);
+    
     for (const team of sortedTeams) {
       const school = schools.find(s => s.id === team.schoolId);
-      if (!school) continue;
+      if (!school) {
+        console.warn(`School not found for team ${team.id}, skipping`);
+        continue;
+      }
       
       // Determine team archetype and size more deterministically based on school and classification
       const teamArchetype = determineTeamArchetype(team.id);
@@ -50,7 +65,7 @@ export const usePlayerGeneration = () => {
         teamArchetype === 'mid-tier' ? 0.3 :  // 30% competitive for mid-tier teams
         0.2;                                  // 20% competitive for weak teams
       
-      console.log(`Generated ${rosterSize} players for team: ${team.id} (${team.gender})`);
+      console.log(`Generating ${rosterSize} players for team: ${team.id} (${team.gender})`);
       
       // Generate players for this team
       const teamPlayers: Player[] = [];
@@ -147,6 +162,7 @@ export const usePlayerGeneration = () => {
       ladders.push(ladder);
     }
     
+    console.log(`Generated ${players.length} players and ${ladders.length} ladders for ${sortedTeams.length} teams`);
     return { players, ladders };
   };
   

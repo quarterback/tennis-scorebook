@@ -36,6 +36,12 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
 
     // Import needed hook dynamically to avoid circular dependencies
     setGeneratingStatus('Importing player generation utilities...');
+    
+    // Log the team data to help debug
+    console.log("Teams data before player generation:", teams);
+    console.log("Schools data before player generation:", schools);
+    
+    // Move the dynamic import and generation logic outside conditional blocks to avoid React Hook errors
     import('@/hooks/usePlayerGeneration').then(({ usePlayerGeneration }) => {
       try {
         const { generatePlayerData } = usePlayerGeneration();
@@ -47,9 +53,6 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
           name: `Spring ${new Date().getFullYear()}`,
           isCurrent: true
         };
-        
-        // Log teams before generation to help debug
-        console.log(`Generating players for ${teams.length} teams:`, teams);
         
         // Generate players for all available teams
         const { players: generatedPlayers } = generatePlayerData(teams, schools, selectedSeason.id);
@@ -77,6 +80,14 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
           variant: "destructive"
         });
       }
+    }).catch(error => {
+      console.error('Error importing player generation module:', error);
+      setGeneratingStatus('');
+      toast({
+        title: "Module Import Error",
+        description: "Failed to load player generation module",
+        variant: "destructive"
+      });
     });
   };
 
