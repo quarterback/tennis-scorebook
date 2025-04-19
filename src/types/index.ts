@@ -134,6 +134,7 @@ export interface TeamStanding {
   qualificationStatus?: string;
   qualificationSeed?: number;
   matchesPlayed?: number;
+  gender?: Gender; // Add gender to make it available for the standings calculator
 }
 
 export interface PlayerTransfer {
@@ -144,6 +145,15 @@ export interface PlayerTransfer {
   date: string;
   reason?: string;
   approved?: boolean;
+}
+
+// Adding the User interface that was missing
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'coach' | 'user';
+  schoolId?: string;
 }
 
 // Add the missing MatchFormData type

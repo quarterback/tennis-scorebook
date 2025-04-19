@@ -1,4 +1,3 @@
-
 import { Team, School, Match, District, Gender, Classification, TeamStanding } from '@/types';
 
 export const useStandingsCalculator = (
@@ -108,6 +107,7 @@ export const useStandingsCalculator = (
         leagueTies,
         winPercentage,
         leagueWinPercentage,
+        leagueStanding: 0,
         // For backward compatibility with existing code
         overallWins: wins,
         overallLosses: losses,
@@ -119,7 +119,7 @@ export const useStandingsCalculator = (
     });
     
     // Sort by league record first (wins percentage), then overall record
-    return standings.sort((a, b) => {
+    const sortedStandings = standings.sort((a, b) => {
       // First tiebreaker: League win percentage
       if (a.leagueWinPercentage !== b.leagueWinPercentage) {
         return b.leagueWinPercentage! - a.leagueWinPercentage!;
@@ -145,6 +145,13 @@ export const useStandingsCalculator = (
       // If still tied, sort alphabetically by school name
       return a.schoolName.localeCompare(b.schoolName);
     });
+    
+    // Now add the leagueStanding property based on sorted order
+    sortedStandings.forEach((team, index) => {
+      team.leagueStanding = index + 1;
+    });
+    
+    return sortedStandings;
   };
 
   // Get qualifying teams for tournaments based on standings

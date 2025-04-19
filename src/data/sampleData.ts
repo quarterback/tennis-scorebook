@@ -1,4 +1,5 @@
-import { District, School, Team, Player, Match, Season } from '@/types';
+
+import { District, School, Team, Player, Match, Season, User } from '@/types';
 import { TeamLadder } from '@/types/ranking';
 
 // Sample districts with all leagues
