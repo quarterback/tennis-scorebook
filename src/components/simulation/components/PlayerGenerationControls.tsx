@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { Users, Eraser } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useData } from '@/context/DataContext';
 import { Player, PlayerSkillTier, Season, Team } from '@/types';
@@ -25,7 +25,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
   const { teams, players, addPlayer, deleteAllPlayers, schools } = useData();
   const [generatingStatus, setGeneratingStatus] = useState<string>('');
   
-  const handleGeneratePlayers = () => {
+  const handleGeneratePlayers = async () => {
     // Check if we have teams available
     if (teams.length === 0) {
       toast({
@@ -44,57 +44,50 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
     console.log("Teams data before player generation:", teams);
     console.log("Schools data before player generation:", schools);
     
-    // Move the dynamic import and generation logic outside conditional blocks to avoid React Hook errors
-    import('@/hooks/usePlayerGeneration').then(({ usePlayerGeneration }) => {
-      try {
-        const { generatePlayerData } = usePlayerGeneration();
-        
-        setGeneratingStatus('Generating players...');
-        const selectedSeason = seasons.find(s => s.id === selectedSeasonId) || {
-          id: crypto.randomUUID(),
-          year: new Date().getFullYear(),
-          name: `Spring ${new Date().getFullYear()}`,
-          isCurrent: true
-        };
-        
-        // Generate players for all available teams
-        const { players: generatedPlayers } = generatePlayerData(teams, schools, selectedSeason.id);
-        
-        // Add all generated players to the state
-        generatedPlayers.forEach(player => {
-          addPlayer(player);
-        });
-        
-        setGeneratingStatus('');
-        setIsGeneratingPlayers(false);
-        
-        toast({
-          title: "Player Generation Complete",
-          description: `Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`,
-          variant: "default"
-        });
-        
-        console.log(`Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`);
-      } catch (error) {
-        console.error('Error generating players:', error);
-        setGeneratingStatus('');
-        setIsGeneratingPlayers(false);
-        toast({
-          title: "Error Generating Players",
-          description: error instanceof Error ? error.message : "Unknown error occurred",
-          variant: "destructive"
-        });
-      }
-    }).catch(error => {
-      console.error('Error importing player generation module:', error);
+    try {
+      // Clear existing players first
+      await deleteAllPlayers();
+      
+      // Move the dynamic import and generation logic outside conditional blocks to avoid React Hook errors
+      const { usePlayerGeneration } = await import('@/hooks/usePlayerGeneration');
+      const { generatePlayerData } = usePlayerGeneration();
+      
+      setGeneratingStatus('Generating players...');
+      const selectedSeason = seasons.find(s => s.id === selectedSeasonId) || {
+        id: crypto.randomUUID(),
+        year: new Date().getFullYear(),
+        name: `Spring ${new Date().getFullYear()}`,
+        isCurrent: true
+      };
+      
+      // Generate players for all available teams
+      const { players: generatedPlayers } = generatePlayerData(teams, schools, selectedSeason.id);
+      
+      // Add all generated players to the state
+      generatedPlayers.forEach(player => {
+        addPlayer(player);
+      });
+      
       setGeneratingStatus('');
-      setIsGeneratingPlayers(false);
+      
       toast({
-        title: "Module Import Error",
-        description: "Failed to load player generation module",
+        title: "Player Generation Complete",
+        description: `Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`,
+        variant: "default"
+      });
+      
+      console.log(`Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`);
+    } catch (error) {
+      console.error('Error generating players:', error);
+      setGeneratingStatus('');
+      toast({
+        title: "Error Generating Players",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive"
       });
-    });
+    } finally {
+      setIsGeneratingPlayers(false);
+    }
   };
 
   const handleAddPlayersToAllTeams = () => {

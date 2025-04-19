@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 // Import UI components
 import DateRangePicker from './components/DateRangePicker';
@@ -23,6 +24,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
   onSimulationComplete = () => {} 
 }) => {
   const { schools, deleteAllMatches, deleteAllPlayers } = useData();
+  const { toast } = useToast();
   
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedSeasonId, setSelectedSeasonId] = useState(extendedSeasonsList[3].id); // Default to current season
@@ -73,15 +75,29 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
     // We'll set isGeneratingPlayers to false in the component when complete
   };
 
-  const handleEraseData = () => {
+  const handleEraseData = async () => {
     setIsErasingData(true);
     try {
       // Delete all matches and players
-      deleteAllMatches();
-      deleteAllPlayers();
+      await deleteAllMatches();
+      await deleteAllPlayers();
+      
+      // Log success message
       console.log("All simulation data has been erased");
+      
+      // Show toast notification
+      toast({
+        title: "Data Erased",
+        description: "All match and player data has been successfully removed",
+        variant: "default"
+      });
     } catch (error) {
       console.error("Error erasing data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to erase data. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsErasingData(false);
     }
