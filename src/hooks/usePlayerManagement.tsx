@@ -11,7 +11,7 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [playerFormData, setPlayerFormData] = useState<Omit<Player, 'id' | 'status' | 'seasonId'>>({
     name: '',
-    grade: '9', // Changed to string to match type
+    grade: '9', // Using string type for grade
     teamId: '',
     gender: 'Boys',
     previousTeams: [],
@@ -54,7 +54,11 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
     setPlayerFormData(prev => ({
       ...prev,
       name: '',
-      grade: '9'
+      grade: '9',
+      teamId: '',
+      gender: 'Boys',
+      previousTeams: [],
+      seasons: []
     }));
     
     setIsAddPlayerDialogOpen(false);

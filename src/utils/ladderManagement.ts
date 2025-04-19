@@ -12,8 +12,12 @@ export const generateTeamLadder = (
 ): TeamLadder => {
   // Sort players by a random skill level (higher grade slightly increases chance of higher skill)
   const rankedPlayers = players.map(player => {
-    // Base skill influenced slightly by grade
-    const baseSkill = Math.random() * 0.7 + (player.grade - 9) * 0.1;
+    // Convert grade to number if it's a string
+    const numericGrade = typeof player.grade === 'string' ? parseInt(player.grade, 10) : player.grade;
+    // Base skill influenced slightly by grade (assuming grades 9-12)
+    const gradeBonus = isNaN(numericGrade) ? 0 : (numericGrade - 9) * 0.1;
+    const baseSkill = Math.random() * 0.7 + gradeBonus;
+    
     return {
       player,
       skill: baseSkill

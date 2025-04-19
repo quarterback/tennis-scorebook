@@ -24,10 +24,14 @@ const Schools = () => {
     name: string;
     classification: Classification;
     districtId: string;
+    city: string;
+    state: string;
   }>({
     name: '',
     classification: '6A',
-    districtId: ''
+    districtId: '',
+    city: '',
+    state: 'OR'
   });
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   
@@ -73,8 +77,14 @@ const Schools = () => {
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addSchool({ ...formData, teams: [] });
-    setFormData({ name: '', classification: '6A', districtId: '' });
+    addSchool({ 
+      name: formData.name, 
+      classification: formData.classification, 
+      districtId: formData.districtId,
+      city: formData.city,
+      state: formData.state
+    });
+    setFormData({ name: '', classification: '6A', districtId: '', city: '', state: 'OR' });
     setIsAddDialogOpen(false);
   };
   
@@ -85,7 +95,9 @@ const Schools = () => {
         ...editingSchool,
         name: formData.name,
         classification: formData.classification,
-        districtId: formData.districtId
+        districtId: formData.districtId,
+        city: formData.city,
+        state: formData.state
       });
     }
     setIsEditDialogOpen(false);
@@ -104,7 +116,9 @@ const Schools = () => {
     setFormData({
       name: school.name,
       classification: school.classification,
-      districtId: school.districtId
+      districtId: school.districtId,
+      city: school.city || '',
+      state: school.state || 'OR'
     });
     setIsEditDialogOpen(true);
   };

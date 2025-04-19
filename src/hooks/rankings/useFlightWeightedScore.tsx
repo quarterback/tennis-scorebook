@@ -1,5 +1,3 @@
-// Find the lines with errors and fix them - around lines 78-79 where there appears to be issues with tiebreakRound
-// This is just a partial update to fix specific errors
 
 import { Match, Flight, Team } from '@/types';
 
@@ -23,8 +21,8 @@ export const useFlightWeightedScore = (
   };
   
   const calculateFlightWinRate = (flight: Flight, teamId: string): number => {
-    const isHomeTeam = flight.homePlayers.length > 0 && teams.some(team => team.id === teamId && team.roster.some(player => flight.homePlayers.includes(player.id)));
-    const isAwayTeam = flight.awayPlayers.length > 0 && teams.some(team => team.id === teamId && team.roster.some(player => flight.awayPlayers.includes(player.id)));
+    const isHomeTeam = flight.homePlayers.length > 0 && teams.some(team => team.id === teamId && team.roster && team.roster.some(player => flight.homePlayers.includes(player.id)));
+    const isAwayTeam = flight.awayPlayers.length > 0 && teams.some(team => team.id === teamId && team.roster && team.roster.some(player => flight.awayPlayers.includes(player.id)));
     
     if (!isHomeTeam && !isAwayTeam) {
       return 0;
@@ -33,15 +31,19 @@ export const useFlightWeightedScore = (
     let homeWins = 0;
     let awayWins = 0;
     
-    for (let i = 0; i < flight.homeScore.length; i++) {
-      if (flight.homeScore[i] > flight.awayScore[i]) {
-        homeWins++;
-      } else {
-        awayWins++;
+    // Access sets and count wins
+    if (flight.sets && flight.sets.length > 0) {
+      for (const set of flight.sets) {
+        if (set.homeScore > set.awayScore) {
+          homeWins++;
+        } else {
+          awayWins++;
+        }
       }
     }
     
-    const totalSets = flight.homeScore.length;
+    const totalSets = flight.sets ? flight.sets.length : 0;
+    if (totalSets === 0) return 0;
     
     if (isHomeTeam) {
       return homeWins / totalSets;
@@ -78,13 +80,12 @@ export const useFlightWeightedScore = (
           flightWinRate = calculateFlightWinRate(flight, teamId);
         }
         
-        weightedScore += flightWinRate * flight.weight();
+        // Default weight function if not provided on the flight
+        const weightFn = flight.weight || (() => 1);
+        weightedScore += flightWinRate * weightFn();
       });
       matchesIncluded++;
     });
-    
-    // Fix the specific issue around line 78-79 where tiebreakRound is causing errors
-    // Replace this code with the corrected version:
     
     // Calculate additional points for tiebreaker matches
     let tiebreakBonus = 0;
@@ -103,7 +104,6 @@ export const useFlightWeightedScore = (
     
     // Add tiebreak bonus to weighted score
     weightedScore += tiebreakBonus;
-    
     
     return {
       flightWeightedScore: weightedScore,

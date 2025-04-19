@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect } from 'react';
+
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { School, Team, Player, Match, TeamStanding, Gender, Classification, District, Season, PlayerTransfer } from '@/types';
 
 // Sample data for demonstration
-import { sampleSchools, sampleTeams, samplePlayers, sampleMatches, sampleDistricts } from '@/data/sampleData';
+import { sampleSchools, sampleTeams, samplePlayers, sampleMatches, sampleDistricts, sampleSeasons } from '@/data/sampleData';
 
 // Import the operation hooks
 import { useSchoolOperations } from '@/hooks/useSchoolOperations';
@@ -23,6 +24,13 @@ interface DataContextType {
   seasons: Season[];
   transfers: PlayerTransfer[];
   currentSeason: Season;
+  playerTransfers?: PlayerTransfer[];
+  setPlayerTransfers?: React.Dispatch<React.SetStateAction<PlayerTransfer[]>>;
+  setPlayers?: React.Dispatch<React.SetStateAction<Player[]>>;
+  setSchools?: React.Dispatch<React.SetStateAction<School[]>>;
+  setTeams?: React.Dispatch<React.SetStateAction<Team[]>>;
+  setMatches?: React.Dispatch<React.SetStateAction<Match[]>>;
+  setDistricts?: React.Dispatch<React.SetStateAction<District[]>>;
   
   addSchool: (school: Omit<School, 'id'>) => void;
   updateSchool: (school: School) => void;
@@ -101,8 +109,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { 
     players, addPlayer, updatePlayer, deletePlayer, getPlayerById, getPlayersByTeam, loadPlayersData,
     transfers, seasons, transferPlayer, retirePlayer, progressSeasons, getCurrentSeason, getArchivedSeasons,
-    getPlayersByseason, setPlayers
-  } = usePlayersData();
+    getPlayersByseason, setPlayers, setPlayerTransfers
+  } = usePlayersData(samplePlayers);
   
   const { 
     matches, setMatches, addMatch, updateMatch, deleteMatch 
@@ -146,6 +154,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     seasons,
     transfers,
     currentSeason: getCurrentSeason(),
+    playerTransfers: transfers,
+    setPlayerTransfers,
+    setPlayers,
+    setSchools,
+    setTeams,
+    setMatches,
+    setDistricts,
     
     addSchool,
     updateSchool,

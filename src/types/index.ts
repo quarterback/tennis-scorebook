@@ -22,7 +22,7 @@ export interface School {
   city: string;
   state: string;
   classification: Classification;
-  teams?: Team[]; // Add teams property for sample data
+  teams?: Team[]; // Optional teams property
 }
 
 export interface Team {
@@ -39,18 +39,18 @@ export interface Player {
   id: string;
   name: string;
   teamId: string;
-  grade: string | number; // Allow both string and number for grade
+  grade: string; // Use string for grade to match implementations
   skillRating?: number;
   singlesPreference?: number;
   doublesPreference?: number;
   isActive?: boolean;
   gender?: Gender;
   seasonId?: string;
-  seasons?: string[];
-  previousTeams?: string[];
   status?: string;
   skillTier?: PlayerSkillTier;
   singles_preference?: number; // For backward compatibility
+  previousTeams?: string[];
+  seasons?: string[];
 }
 
 export type PlayerSkillTier = 'developmental' | 'intermediate' | 'advanced' | 'elite' | 'competitive';
@@ -76,8 +76,7 @@ export interface Match {
 }
 
 export interface EnhancedMatch extends Match {
-  homeTeamName?: string;
-  awayTeamName?: string;
+  // EnhancedMatch just extends Match with potentially additional properties
 }
 
 export interface Flight {
@@ -93,6 +92,10 @@ export interface Flight {
   retired?: boolean;
   defaulted?: boolean;
   scoreDisplay?: string; // Add scoreDisplay property for sample data
+  // For the flight weighted score function
+  weight?: () => number;
+  homeScore?: number[];
+  awayScore?: number[];
 }
 
 export interface Set {
@@ -192,5 +195,5 @@ export interface PlayerTransfer {
   date: string;
   reason?: string;
   approved: boolean;
-  seasonId?: string; // Add seasonId to support usage in hooks
+  seasonId?: string; // Optional seasonId
 }

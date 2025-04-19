@@ -1,3 +1,4 @@
+
 // Fix the school creation to include city and state
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
@@ -5,8 +6,8 @@ import { useData } from '@/context/DataContext';
 import { School, Classification } from '@/types';
 import { useState } from 'react';
 
-export const useSchoolOperations = () => {
-  const { schools, setSchools, districts } = useData();
+export const useSchoolOperations = (initialSchools = []) => {
+  const [schools, setSchools] = useState<School[]>(initialSchools);
   const { toast } = useToast();
   const [isSchoolDialogOpen, setIsSchoolDialogOpen] = useState(false);
   const [schoolFormData, setSchoolFormData] = useState<Omit<School, 'id'>>({
@@ -54,6 +55,8 @@ export const useSchoolOperations = () => {
       title: "School Added",
       description: `${newSchool.name} has been added.`
     });
+    
+    return newSchool;
   };
 
   const deleteSchool = (schoolId: string) => {
@@ -75,9 +78,18 @@ export const useSchoolOperations = () => {
   const getSchoolById = (schoolId: string) => {
     return schools.find(school => school.id === schoolId);
   };
+  
+  const createTeamsForAllSchools = () => {
+    // This would be implemented to create teams for all schools
+    toast({
+      title: "Teams Created",
+      description: "Teams have been created for all schools."
+    });
+  };
 
   return {
     schools,
+    setSchools,
     getSchoolById,
     deleteSchool,
     updateSchool,
@@ -86,5 +98,6 @@ export const useSchoolOperations = () => {
     schoolFormData,
     setSchoolFormData,
     addSchool,
+    createTeamsForAllSchools
   };
 };

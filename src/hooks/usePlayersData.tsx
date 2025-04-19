@@ -1,11 +1,20 @@
+
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useData } from '@/context/DataContext';
-import { Player, Team, School, PlayerTransfer } from '@/types';
+import { Player, Team, School, PlayerTransfer, Season } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 
-export const usePlayersData = () => {
-  const { players, setPlayers, teams, schools, currentSeason, playerTransfers, setPlayerTransfers } = useData();
+export const usePlayersData = (initialPlayers = []) => {
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [playerTransfers, setPlayerTransfers] = useState<PlayerTransfer[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([
+    {
+      id: 'season-1',
+      year: 2024,
+      name: 'Spring 2024',
+      isCurrent: true
+    }
+  ]);
   const { toast } = useToast();
   
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
@@ -26,7 +35,7 @@ export const usePlayersData = () => {
     reason: ''
   });
   
-  const getTeamName = (teamId: string) => {
+  const getTeamName = (teamId: string, teams: Team[], schools: School[]) => {
     const team = teams.find(t => t.id === teamId);
     if (!team) return 'Unknown Team';
     const school = schools.find(s => s.id === team.schoolId);
@@ -38,57 +47,26 @@ export const usePlayersData = () => {
     return player ? player.name : 'Unknown Player';
   };
   
-  const handleAddPlayer = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!playerFormData.teamId) {
-      toast({
-        title: "Error",
-        description: "Please select a team",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const selectedTeam = teams.find(t => t.id === playerFormData.teamId);
-    if (!selectedTeam) {
-      toast({
-        title: "Error",
-        description: "Selected team not found",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Create new player with current team ID
+  const addPlayer = (playerData: Omit<Player, 'id' | 'status' | 'seasonId'>) => {
+    // Create new player 
     const newPlayer: Player = {
       id: uuidv4(),
-      name: playerFormData.name,
-      grade: playerFormData.grade,
-      teamId: playerFormData.teamId,
-      gender: selectedTeam.gender,
-      previousTeams: [],
-      seasons: [currentSeason?.id || '']
+      name: playerData.name,
+      grade: playerData.grade,
+      teamId: playerData.teamId,
+      gender: playerData.gender || 'Boys',
+      previousTeams: playerData.previousTeams || [],
+      seasons: playerData.seasons || [getCurrentSeason().id]
     };
     
     setPlayers([...players, newPlayer]);
     
-    // Reset form
-    setPlayerFormData({
-      name: '',
-      grade: '9',
-      teamId: '',
-      gender: 'Boys',
-      previousTeams: [],
-      seasons: []
-    });
-    
-    setIsPlayerDialogOpen(false);
-    
     toast({
       title: "Player Added",
-      description: `${playerFormData.name} has been added to the team roster`,
+      description: `${playerData.name} has been added to the team roster`,
     });
+    
+    return newPlayer;
   };
   
   const updatePlayer = (updatedPlayer: Player) => {
@@ -96,6 +74,7 @@ export const usePlayersData = () => {
       player.id === updatedPlayer.id ? updatedPlayer : player
     );
     setPlayers(updatedPlayers);
+    return updatedPlayer;
   };
   
   const deletePlayer = (playerId: string) => {
@@ -104,6 +83,94 @@ export const usePlayersData = () => {
       title: "Player Deleted",
       description: "Player has been removed from the team.",
     });
+  };
+  
+  const getPlayerById = (playerId: string) => {
+    return players.find(player => player.id === playerId);
+  };
+  
+  const getPlayersByTeam = (teamId: string) => {
+    return players.filter(player => player.teamId === teamId);
+  };
+  
+  const loadPlayersData = (initialPlayers: Player[]) => {
+    setPlayers(initialPlayers);
+  };
+  
+  const transferPlayer = (playerId: string, toTeamId: string) => {
+    // Implementation for transferPlayer
+    const player = getPlayerById(playerId);
+    if (!player) return;
+    
+    const updatedPlayer = {
+      ...player,
+      teamId: toTeamId,
+      previousTeams: [...(player.previousTeams || []), player.teamId]
+    };
+    
+    updatePlayer(updatedPlayer);
+    
+    toast({
+      title: "Player Transferred",
+      description: `${player.name} has been transferred to a new team.`,
+    });
+  };
+  
+  const retirePlayer = (playerId: string) => {
+    // Implementation for retirePlayer
+    const player = getPlayerById(playerId);
+    if (!player) return;
+    
+    const updatedPlayer = {
+      ...player,
+      status: 'retired'
+    };
+    
+    updatePlayer(updatedPlayer as Player);
+    
+    toast({
+      title: "Player Retired",
+      description: `${player.name} has been retired.`,
+    });
+  };
+  
+  const progressSeasons = () => {
+    // Create a new season
+    const currentSeason = getCurrentSeason();
+    const newSeason: Season = {
+      id: uuidv4(),
+      year: currentSeason.year + 1,
+      name: `Spring ${currentSeason.year + 1}`,
+      isCurrent: true
+    };
+    
+    // Update current season to not be current
+    const updatedSeasons = seasons.map(season => ({
+      ...season,
+      isCurrent: false
+    }));
+    
+    // Add new season
+    setSeasons([...updatedSeasons, newSeason]);
+    
+    toast({
+      title: "Season Progressed",
+      description: `New season ${newSeason.name} has been created.`,
+    });
+    
+    return newSeason;
+  };
+  
+  const getCurrentSeason = () => {
+    return seasons.find(season => season.isCurrent) || seasons[0];
+  };
+  
+  const getArchivedSeasons = () => {
+    return seasons.filter(season => !season.isCurrent);
+  };
+  
+  const getPlayersByseason = (seasonId: string) => {
+    return players.filter(player => player.seasons?.includes(seasonId));
   };
   
   const handleInitiateTransfer = (playerId: string) => {
@@ -171,8 +238,7 @@ export const usePlayersData = () => {
       toTeamId,
       date: new Date().toISOString(),
       reason,
-      approved: false,
-      seasonId: currentSeason?.id
+      approved: false
     };
   };
   
@@ -205,7 +271,7 @@ export const usePlayersData = () => {
     setIsPlayerDialogOpen,
     playerFormData,
     setPlayerFormData,
-    handleAddPlayer,
+    handleAddPlayer: addPlayer,
     updatePlayer,
     deletePlayer,
     getTeamName,
@@ -217,6 +283,19 @@ export const usePlayersData = () => {
     handleInitiateTransfer,
     handleApproveTransfer,
     handleRejectTransfer,
-    submitTransferRequest
+    submitTransferRequest,
+    transfers: playerTransfers,
+    setPlayerTransfers,
+    seasons,
+    transferPlayer,
+    retirePlayer,
+    progressSeasons,
+    getCurrentSeason,
+    getArchivedSeasons,
+    getPlayersByseason,
+    getPlayerById,
+    getPlayersByTeam,
+    loadPlayersData,
+    addPlayer
   };
 };

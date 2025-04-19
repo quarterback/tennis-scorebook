@@ -1,4 +1,3 @@
-
 import { District, School, Team, Player, Match, User, Season } from '@/types';
 import { TeamLadder } from '@/types/ranking';
 
@@ -48,8 +47,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-1',
     city: 'Portland',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-2',
@@ -57,8 +55,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-1',
     city: 'Portland',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-3',
@@ -66,8 +63,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-1',
     city: 'Beaverton',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-4',
@@ -75,8 +71,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-2',
     city: 'Lake Oswego',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-5',
@@ -84,8 +79,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-2',
     city: 'Lake Oswego',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-6',
@@ -93,8 +87,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-2',
     city: 'West Linn',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-7',
@@ -102,8 +95,7 @@ export const sampleSchools: School[] = [
     classification: '6A',
     districtId: 'district-3',
     city: 'Portland',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-8',
@@ -111,8 +103,7 @@ export const sampleSchools: School[] = [
     classification: '5A',
     districtId: 'district-4',
     city: 'Wilsonville',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-9',
@@ -120,8 +111,7 @@ export const sampleSchools: School[] = [
     classification: '5A',
     districtId: 'district-4',
     city: 'Milwaukie',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-10',
@@ -129,8 +119,7 @@ export const sampleSchools: School[] = [
     classification: '4A/3A/2A/1A',
     districtId: 'district-6',
     city: 'Eugene',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-11',
@@ -138,8 +127,7 @@ export const sampleSchools: School[] = [
     classification: '4A/3A/2A/1A',
     districtId: 'district-6',
     city: 'Portland',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   },
   {
     id: 'school-12',
@@ -147,8 +135,7 @@ export const sampleSchools: School[] = [
     classification: '4A/3A/2A/1A',
     districtId: 'district-6',
     city: 'Portland',
-    state: 'OR',
-    teams: []
+    state: 'OR'
   }
 ];
 
@@ -171,100 +158,72 @@ export const sampleTeams: Team[] = [
   {
     id: 'team-1',
     schoolId: 'school-1',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-1']
+    gender: 'Boys'
   },
   {
     id: 'team-2',
     schoolId: 'school-1',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-1']
+    gender: 'Girls'
   },
   {
     id: 'team-3',
     schoolId: 'school-2',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-2']
+    gender: 'Boys'
   },
   {
     id: 'team-4',
     schoolId: 'school-2',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-2']
+    gender: 'Girls'
   },
   {
     id: 'team-5',
     schoolId: 'school-3',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-3']
+    gender: 'Boys'
   },
   {
     id: 'team-6',
     schoolId: 'school-3',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-3']
+    gender: 'Girls'
   },
   {
     id: 'team-7',
     schoolId: 'school-4',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-4']
+    gender: 'Boys'
   },
   {
     id: 'team-8',
     schoolId: 'school-4',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-4']
+    gender: 'Girls'
   },
   {
     id: 'team-9',
     schoolId: 'school-5',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-5']
+    gender: 'Boys'
   },
   {
     id: 'team-10',
     schoolId: 'school-5',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-5']
+    gender: 'Girls'
   },
   {
     id: 'team-11',
     schoolId: 'school-10',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-6']
+    gender: 'Boys'
   },
   {
     id: 'team-12',
     schoolId: 'school-10',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-6']
+    gender: 'Girls'
   },
   {
     id: 'team-13',
     schoolId: 'school-11',
-    gender: 'Boys',
-    players: [],
-    coaches: ['coach-7']
+    gender: 'Boys'
   },
   {
     id: 'team-14',
     schoolId: 'school-11',
-    gender: 'Girls',
-    players: [],
-    coaches: ['coach-7']
+    gender: 'Girls'
   }
 ];
 
@@ -274,7 +233,7 @@ export const samplePlayers: Player[] = [
     name: 'John Smith',
     teamId: 'team-1',
     gender: 'Boys',
-    grade: 12,
+    grade: '12',
     seasonId: 'season-1',
     skillTier: 'elite',
     skillRating: 9.5,
@@ -285,7 +244,7 @@ export const samplePlayers: Player[] = [
     name: 'Michael Johnson',
     teamId: 'team-1',
     gender: 'Boys',
-    grade: 11,
+    grade: '11',
     seasonId: 'season-1',
     skillTier: 'elite',
     skillRating: 9.2,
@@ -296,7 +255,7 @@ export const samplePlayers: Player[] = [
     name: 'David Williams',
     teamId: 'team-1',
     gender: 'Boys',
-    grade: 12,
+    grade: '12',
     seasonId: 'season-1',
     skillTier: 'competitive',
     skillRating: 7.8,
@@ -307,7 +266,7 @@ export const samplePlayers: Player[] = [
     name: 'Robert Jones',
     teamId: 'team-1',
     gender: 'Boys',
-    grade: 10,
+    grade: '10',
     seasonId: 'season-1',
     skillTier: 'competitive',
     skillRating: 7.5,
@@ -318,7 +277,7 @@ export const samplePlayers: Player[] = [
     name: 'James Brown',
     teamId: 'team-1',
     gender: 'Boys',
-    grade: 11,
+    grade: '11',
     seasonId: 'season-1',
     skillTier: 'competitive',
     skillRating: 7.2,
@@ -329,7 +288,7 @@ export const samplePlayers: Player[] = [
     name: 'Emma Davis',
     teamId: 'team-2',
     gender: 'Girls',
-    grade: 12,
+    grade: '12',
     seasonId: 'season-1',
     skillTier: 'elite',
     skillRating: 9.7,
@@ -340,7 +299,7 @@ export const samplePlayers: Player[] = [
     name: 'Olivia Miller',
     teamId: 'team-2',
     gender: 'Girls',
-    grade: 11,
+    grade: '11',
     seasonId: 'season-1',
     skillTier: 'elite',
     skillRating: 9.3,
@@ -351,7 +310,7 @@ export const samplePlayers: Player[] = [
     name: 'Sophia Wilson',
     teamId: 'team-2',
     gender: 'Girls',
-    grade: 12,
+    grade: '12',
     seasonId: 'season-1',
     skillTier: 'competitive',
     skillRating: 7.9,
@@ -362,7 +321,7 @@ export const samplePlayers: Player[] = [
     name: 'Isabella Moore',
     teamId: 'team-2',
     gender: 'Girls',
-    grade: 10,
+    grade: '10',
     seasonId: 'season-1',
     skillTier: 'competitive',
     skillRating: 7.6,
@@ -373,7 +332,7 @@ export const samplePlayers: Player[] = [
     name: 'Mia Taylor',
     teamId: 'team-2',
     gender: 'Girls',
-    grade: 11,
+    grade: '11',
     seasonId: 'season-1',
     skillTier: 'competitive',
     skillRating: 7.3,
@@ -384,7 +343,7 @@ export const samplePlayers: Player[] = [
     name: 'William Anderson',
     teamId: 'team-3',
     gender: 'Boys',
-    grade: 12,
+    grade: '12',
     seasonId: 'season-1',
     skillTier: 'elite',
     skillRating: 9.0,
@@ -395,7 +354,7 @@ export const samplePlayers: Player[] = [
     name: 'Ava Thomas',
     teamId: 'team-4',
     gender: 'Girls',
-    grade: 12,
+    grade: '12',
     seasonId: 'season-1',
     skillTier: 'elite',
     skillRating: 9.1,
