@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
@@ -10,7 +9,7 @@ import AddTeamDialog from './AddTeamDialog';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import { Team, Gender, Player, School } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TeamsContainerProps {
   filter: {
@@ -21,6 +20,7 @@ interface TeamsContainerProps {
 const TeamsContainer = ({ filter }: TeamsContainerProps) => {
   const { schools, teams, addTeam, updateTeam, deleteTeam, players, addPlayer, deletePlayer, districts, currentSeason } = useData();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const [isAddTeamDialogOpen, setIsAddTeamDialogOpen] = useState(false);
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
@@ -95,10 +95,27 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     setIsAddTeamDialogOpen(false);
   };
   
-  const handleAddPlayer = () => {
-    if (!selectedTeamId) return;
+  const handleAddPlayer = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedTeamId) {
+      toast({
+        title: "Error",
+        description: "No team selected",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const selectedTeam = teams.find(t => t.id === selectedTeamId);
-    if (!selectedTeam) return;
+    if (!selectedTeam) {
+      toast({
+        title: "Error",
+        description: "Selected team not found",
+        variant: "destructive"
+      });
+      return;
+    }
     
     addPlayer({
       name: playerFormData.name,
@@ -113,7 +130,13 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
       name: '',
       grade: 9
     }));
+    
     setIsAddPlayerDialogOpen(false);
+    
+    toast({
+      title: "Player Added",
+      description: `${playerFormData.name} has been added to the team roster`,
+    });
   };
   
   const handleDeleteTeam = (teamId: string) => {

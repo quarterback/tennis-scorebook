@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Player, PlayerTransfer, Season } from '@/types';
 
 export const usePlayersData = () => {
@@ -13,8 +12,52 @@ export const usePlayersData = () => {
     { id: 'spring-2025', name: 'Spring 2025', year: 2025, isCurrent: true }
   ]);
   
+  // Load players data from localStorage on initialization
+  useEffect(() => {
+    const savedPlayers = localStorage.getItem('players');
+    if (savedPlayers) {
+      try {
+        const parsedPlayers = JSON.parse(savedPlayers);
+        if (Array.isArray(parsedPlayers) && parsedPlayers.length > 0) {
+          setPlayers(parsedPlayers);
+        }
+      } catch (error) {
+        console.error('Error loading players from localStorage:', error);
+      }
+    }
+    
+    const savedTransfers = localStorage.getItem('transfers');
+    if (savedTransfers) {
+      try {
+        const parsedTransfers = JSON.parse(savedTransfers);
+        if (Array.isArray(parsedTransfers)) {
+          setTransfers(parsedTransfers);
+        }
+      } catch (error) {
+        console.error('Error loading transfers from localStorage:', error);
+      }
+    }
+  }, []);
+  
+  // Save players data to localStorage whenever it changes
+  useEffect(() => {
+    if (players.length > 0) {
+      localStorage.setItem('players', JSON.stringify(players));
+    }
+  }, [players]);
+  
+  // Save transfers data to localStorage whenever it changes
+  useEffect(() => {
+    if (transfers.length > 0) {
+      localStorage.setItem('transfers', JSON.stringify(transfers));
+    }
+  }, [transfers]);
+  
   const loadPlayersData = (initialPlayers: Player[]) => {
-    setPlayers(initialPlayers);
+    // Only load initial data if no data in localStorage
+    if (players.length === 0) {
+      setPlayers(initialPlayers);
+    }
   };
   
   const getCurrentSeason = (): Season => {
@@ -40,15 +83,25 @@ export const usePlayersData = () => {
       seasons: player.seasons || [currentSeason.id]
     };
     
-    setPlayers([...players, newPlayer]);
+    setPlayers(prevPlayers => [...prevPlayers, newPlayer]);
+    
+    // Save to localStorage after adding
+    const updatedPlayers = [...players, newPlayer];
+    localStorage.setItem('players', JSON.stringify(updatedPlayers));
+    
+    return newPlayer; // Return the new player for use in other functions
   };
   
   const updatePlayer = (player: Player) => {
-    setPlayers(players.map(p => p.id === player.id ? player : p));
+    const updatedPlayers = players.map(p => p.id === player.id ? player : p);
+    setPlayers(updatedPlayers);
+    localStorage.setItem('players', JSON.stringify(updatedPlayers));
   };
   
   const deletePlayer = (id: string) => {
-    setPlayers(players.filter(p => p.id !== id));
+    const updatedPlayers = players.filter(p => p.id !== id);
+    setPlayers(updatedPlayers);
+    localStorage.setItem('players', JSON.stringify(updatedPlayers));
   };
   
   const getPlayerById = (id: string): Player | undefined => {
