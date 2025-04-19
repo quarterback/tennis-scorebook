@@ -9,7 +9,106 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      districts: {
+        Row: {
+          classification: string
+          code: string
+          id: string
+          name: string
+          tournament_dates: string[] | null
+          tournament_location: string | null
+        }
+        Insert: {
+          classification: string
+          code: string
+          id?: string
+          name: string
+          tournament_dates?: string[] | null
+          tournament_location?: string | null
+        }
+        Update: {
+          classification?: string
+          code?: string
+          id?: string
+          name?: string
+          tournament_dates?: string[] | null
+          tournament_location?: string | null
+        }
+        Relationships: []
+      }
+      schools: {
+        Row: {
+          city: string
+          classification: string
+          created_at: string | null
+          district_id: string | null
+          id: string
+          name: string
+          state: string
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string
+          classification: string
+          created_at?: string | null
+          district_id?: string | null
+          id?: string
+          name: string
+          state?: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          classification?: string
+          created_at?: string | null
+          district_id?: string | null
+          id?: string
+          name?: string
+          state?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schools_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          gender: string
+          id: string
+          school_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          gender: string
+          id?: string
+          school_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          gender?: string
+          id?: string
+          school_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

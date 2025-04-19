@@ -4,6 +4,14 @@ export type Gender = 'Boys' | 'Girls';
 export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
 export type PlayerSkillTier = 'elite' | 'competitive' | 'developmental';
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'coach' | 'user';
+  schoolId?: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -41,6 +49,7 @@ export interface Team {
   schoolId: string;
   gender: Gender;
   players?: string[];
+  coaches?: string[];
   roster?: Player[];
 }
 

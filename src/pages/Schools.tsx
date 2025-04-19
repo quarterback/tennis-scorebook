@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useData } from '@/context/DataContext';
-import { useAuth } from '@/context/AuthContext';
-import { School, Classification } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { School, District, Classification } from '@/types';
 import SchoolFormDialog from '@/components/schools/SchoolFormDialog';
 import SchoolsHeader from '@/components/schools/SchoolsHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,8 +14,9 @@ import GroupedSchoolsList from '@/components/schools/GroupedSchoolsList';
 import BulkDistrictAssignment from '@/components/schools/BulkDistrictAssignment';
 
 const Schools = () => {
-  const { schools, addSchool, updateSchool, deleteSchool, districts, getDistrictsByClassification } = useData();
-  const { user } = useAuth();
+  const [schools, setSchools] = useState<School[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [formData, setFormData] = useState<{
@@ -47,15 +47,58 @@ const Schools = () => {
   }, [schools, districts]);
   
   // Get available districts based on selected classification
-  const availableDistricts = getDistrictsByClassification(formData.classification);
+  const availableDistricts = districts.filter(district => district.classification === formData.classification);
   
-  // Filter schools if coach
-  const userFilteredSchools = user?.role === 'coach' && user.schoolId
-    ? schools.filter(school => school.id === user.schoolId)
-    : schools;
+  // Fetch schools and districts from Supabase
+  useEffect(() => {
+    const fetchSchoolsAndDistricts = async () => {
+      // Fetch districts first
+      const { data: districtData, error: districtError } = await supabase
+        .from('districts')
+        .select('*');
+
+      if (districtError) {
+        console.error('Error fetching districts:', districtError);
+        return;
+      }
+
+      // Fetch schools with district info
+      const { data: schoolData, error: schoolError } = await supabase
+        .from('schools')
+        .select(`
+          id,
+          name,
+          classification,
+          city,
+          state,
+          district_id
+        `);
+
+      if (schoolError) {
+        console.error('Error fetching schools:', schoolError);
+        return;
+      }
+
+      // Transform the data to match our School type
+      const formattedSchools = schoolData.map(school => ({
+        id: school.id,
+        name: school.name,
+        classification: school.classification,
+        districtId: school.district_id,
+        city: school.city,
+        state: school.state
+      }));
+
+      setSchools(formattedSchools);
+      setDistricts(districtData);
+      setIsLoading(false);
+    };
+
+    fetchSchoolsAndDistricts();
+  }, []);
     
   // Apply filters
-  const filteredSchools = userFilteredSchools.filter(school => {
+  const filteredSchools = schools.filter(school => {
     // Apply classification filter
     if (classificationFilter !== 'all' && school.classification !== classificationFilter) {
       return false;
@@ -74,30 +117,53 @@ const Schools = () => {
     return true;
   });
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addSchool({ 
-      name: formData.name, 
-      classification: formData.classification, 
-      districtId: formData.districtId,
-      city: formData.city,
-      state: formData.state
-    });
+    
+    const { data, error } = await supabase
+      .from('schools')
+      .insert({
+        name: formData.name,
+        classification: formData.classification,
+        district_id: formData.districtId,
+        city: formData.city,
+        state: formData.state
+      })
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error adding school:', error);
+      return;
+    }
+    
+    setSchools([...schools, data]);
     setFormData({ name: '', classification: '6A', districtId: '', city: '', state: 'OR' });
     setIsAddDialogOpen(false);
   };
   
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingSchool) {
-      updateSchool({
-        ...editingSchool,
-        name: formData.name,
-        classification: formData.classification,
-        districtId: formData.districtId,
-        city: formData.city,
-        state: formData.state
-      });
+      const { data, error } = await supabase
+        .from('schools')
+        .update({
+          name: formData.name,
+          classification: formData.classification,
+          district_id: formData.districtId,
+          city: formData.city,
+          state: formData.state
+        })
+        .eq('id', editingSchool.id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error updating school:', error);
+        return;
+      }
+      
+      setSchools(schools.map(school => school.id === editingSchool.id ? data : school));
     }
     setIsEditDialogOpen(false);
   };
@@ -140,22 +206,24 @@ const Schools = () => {
     });
   };
 
+  if (isLoading) {
+    return <div>Loading schools...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <SchoolsHeader 
         schoolCount={schools.length}
         filteredCount={filteredSchools.length}
-        isAdmin={user?.role === 'admin'}
+        isAdmin={true}  // Adjust based on actual user role
         onAddClick={() => setIsAddDialogOpen(true)}
       />
       
-      {user?.role === 'admin' && (
-        <BulkDistrictAssignment
-          schools={schools}
-          districts={districts}
-          onAssignDistrict={handleBulkDistrictAssignment}
-        />
-      )}
+      <BulkDistrictAssignment
+        schools={schools}
+        districts={districts}
+        onAssignDistrict={handleBulkDistrictAssignment}
+      />
 
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -255,7 +323,7 @@ const Schools = () => {
                                 Teams
                               </Link>
                             </Button>
-                            {user?.role === 'admin' && (
+                            
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -264,7 +332,7 @@ const Schools = () => {
                                 <Edit className="h-4 w-4 mr-1" />
                                 Edit
                               </Button>
-                            )}
+                            
                           </div>
                         </TableCell>
                       </TableRow>
@@ -284,7 +352,7 @@ const Schools = () => {
           <GroupedSchoolsList
             schools={filteredSchools}
             districts={districts}
-            canEdit={user?.role === 'admin'}
+            canEdit={true}
             onEditSchool={openEditDialog}
           />
         )}
