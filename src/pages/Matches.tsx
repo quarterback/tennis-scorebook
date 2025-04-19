@@ -11,6 +11,8 @@ import { FlaskConical } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import CustomMatchTabContent from '@/components/matches/CustomMatchTabContent';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Matches = () => {
   const [showSimulation, setShowSimulation] = useState(false);
@@ -46,10 +48,30 @@ const Matches = () => {
           <AlertTitle className="text-blue-700">Match Management Tools</AlertTitle>
           <AlertDescription className="text-blue-600">
             Use the search and filter controls to find specific matches. You can filter by team name, gender, and sort by date.
+            Now you can delete any match by clicking the options menu on each match card.
           </AlertDescription>
         </Alert>
         
-        <MatchesTabs />
+        <Tabs defaultValue="upcoming">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="all">All Matches</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="upcoming">
+            <CustomMatchTabContent status="upcoming" />
+          </TabsContent>
+          
+          <TabsContent value="completed">
+            <CustomMatchTabContent status="completed" />
+          </TabsContent>
+          
+          <TabsContent value="all">
+            <CustomMatchTabContent status="all" />
+          </TabsContent>
+        </Tabs>
+        
         <MatchDialogs />
       </div>
     </MatchesProvider>

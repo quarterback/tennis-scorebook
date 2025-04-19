@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TabsContent } from '@/components/ui/tabs';
 import { Match, Team, School, Player, Classification } from '@/types';
@@ -36,16 +35,13 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
   const [districtFilter, setDistrictFilter] = useState<string>('all');
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
 
-  // Process matches: filter, sort, and apply tabValue (upcoming/completed/all)
   useEffect(() => {
     let processed = matches.filter(match => {
-      // Filter by tab value
       if (tabValue === 'upcoming') return !match.isComplete;
       if (tabValue === 'completed') return match.isComplete;
-      return true; // 'all' tab
+      return true;
     });
-    
-    // Apply search term (match team names)
+
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       processed = processed.filter(match => {
@@ -54,8 +50,7 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
         return homeTeamName.includes(term) || awayTeamName.includes(term);
       });
     }
-    
-    // Apply gender filter
+
     if (genderFilter !== 'all') {
       processed = processed.filter(match => {
         const homeTeamName = getTeamName(match.homeTeamId).toLowerCase();
@@ -63,7 +58,6 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
       });
     }
 
-    // Apply classification filter
     if (classificationFilter !== 'all') {
       processed = processed.filter(match => {
         const homeTeamName = getTeamName(match.homeTeamId).toLowerCase();
@@ -71,21 +65,19 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
       });
     }
 
-    // Apply district filter
     if (districtFilter !== 'all') {
       processed = processed.filter(match => {
         const homeTeamName = getTeamName(match.homeTeamId).toLowerCase();
         return homeTeamName.includes(`district ${districtFilter}`);
       });
     }
-    
-    // Sort by date
+
     processed = processed.sort((a, b) => {
       const dateA = new Date(a.date).getTime();
       const dateB = new Date(b.date).getTime();
       return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
-    
+
     setFilteredMatches(processed);
   }, [matches, tabValue, searchTerm, sortOrder, genderFilter, classificationFilter, districtFilter, getTeamName]);
 

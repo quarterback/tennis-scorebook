@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { School, Classification } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -99,24 +98,39 @@ const oregonDistricts = {
   }
 };
 
-export const useSchoolOperations = (initialSchools: School[]) => {
-  // Try to load from localStorage first, fall back to initialSchools
-  const getInitialSchoolsData = (): School[] => {
+export const useSchoolOperations = (initialSchools: School[] = []) => {
+  const [schools, setSchools] = useState<School[]>([]);
+  const { toast } = useToast();
+  
+  // Load schools when component mounts
+  useEffect(() => {
+    // Try to load from localStorage first
     try {
       const savedSchools = localStorage.getItem('schools');
       if (savedSchools) {
         const parsedSchools = JSON.parse(savedSchools);
         if (Array.isArray(parsedSchools) && parsedSchools.length > 0) {
           console.log(`Loaded ${parsedSchools.length} schools from localStorage`);
-          return parsedSchools;
+          setSchools(parsedSchools);
+          return;
         }
       }
     } catch (error) {
       console.error('Error loading schools from localStorage:', error);
     }
-
-    // If no schools in localStorage, create initial schools from oregonDistricts
+    
+    // If no schools in localStorage or error loading, initialize
     const newSchools: School[] = [];
+    
+    // If initialSchools is provided and has items, use it
+    if (initialSchools.length > 0) {
+      console.log(`Using ${initialSchools.length} provided initial schools`);
+      setSchools(initialSchools);
+      localStorage.setItem('schools', JSON.stringify(initialSchools));
+      return;
+    }
+    
+    // Otherwise create from oregonDistricts
     Object.entries(oregonDistricts).forEach(([districtId, district]) => {
       district.schools.forEach(schoolName => {
         newSchools.push({
@@ -130,19 +144,19 @@ export const useSchoolOperations = (initialSchools: School[]) => {
     });
     
     console.log(`Created ${newSchools.length} initial schools`);
-    return newSchools;
-  };
-
-  const [schools, setSchools] = useState<School[]>(getInitialSchoolsData());
-  const { toast } = useToast();
+    setSchools(newSchools);
+    localStorage.setItem('schools', JSON.stringify(newSchools));
+  }, [initialSchools]);
   
-  // Save to localStorage whenever schools change
+  // Save to localStorage whenever schools change (after initial load)
   useEffect(() => {
-    try {
-      localStorage.setItem('schools', JSON.stringify(schools));
-      console.log(`Saved ${schools.length} schools to localStorage`);
-    } catch (error) {
-      console.error('Error saving schools to localStorage:', error);
+    if (schools.length > 0) {
+      try {
+        localStorage.setItem('schools', JSON.stringify(schools));
+        console.log(`Saved ${schools.length} schools to localStorage`);
+      } catch (error) {
+        console.error('Error saving schools to localStorage:', error);
+      }
     }
   }, [schools]);
   
@@ -152,7 +166,10 @@ export const useSchoolOperations = (initialSchools: School[]) => {
       id: crypto.randomUUID(),
       teams: []
     };
-    setSchools(prevSchools => [...prevSchools, newSchool]);
+    setSchools(prevSchools => {
+      const updatedSchools = [...prevSchools, newSchool];
+      return updatedSchools;
+    });
     toast({
       title: 'School Added',
       description: `${newSchool.name} has been added successfully.`
@@ -160,7 +177,10 @@ export const useSchoolOperations = (initialSchools: School[]) => {
   };
   
   const updateSchool = (school: School) => {
-    setSchools(prevSchools => prevSchools.map(s => s.id === school.id ? school : s));
+    setSchools(prevSchools => {
+      const updatedSchools = prevSchools.map(s => s.id === school.id ? school : s);
+      return updatedSchools;
+    });
     toast({
       title: 'School Updated',
       description: `${school.name} has been updated successfully.`
@@ -169,7 +189,10 @@ export const useSchoolOperations = (initialSchools: School[]) => {
   
   const deleteSchool = (id: string) => {
     const school = schools.find(s => s.id === id);
-    setSchools(prevSchools => prevSchools.filter(s => s.id !== id));
+    setSchools(prevSchools => {
+      const updatedSchools = prevSchools.filter(s => s.id !== id);
+      return updatedSchools;
+    });
     toast({
       title: 'School Deleted',
       description: `${school?.name || 'School'} has been deleted successfully.`

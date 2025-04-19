@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Match, Team, School, Player, MatchFormData } from '@/types';
 import { useData } from './DataContext';
@@ -49,6 +48,7 @@ interface MatchesContextType {
   toggleFlightRetired: (flightIndex: number) => void;
   toggleFlightDefaulted: (flightIndex: number) => void;
   updateTeamScores: (homeScore: number, awayScore: number) => void;
+  deleteMatch: (matchId: string) => void;
 }
 
 const MatchesContext = createContext<MatchesContextType | null>(null);
@@ -62,7 +62,7 @@ export const useMatches = () => {
 };
 
 export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { schools, teams, players, matches, addMatch, updateMatch } = useData();
+  const { schools, teams, players, matches, addMatch, updateMatch, deleteMatch: deleteMatchFromData } = useData();
   const { user } = useAuth();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -103,7 +103,6 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const resetMatchForm = () => resetForm(today);
 
-  // Define getTeamName function before using it in enhancedMatches
   const getTeamName = (teamId: string) => {
     const team = teams.find(t => t.id === teamId);
     if (!team) return 'Unknown Team';
@@ -125,7 +124,6 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return teams.some(t => t.id === teamId && t.schoolId === user.schoolId);
   };
 
-  // Now use getTeamName in enhancedMatches
   const enhancedMatches: EnhancedMatch[] = matches.map(match => ({
     ...match,
     homeTeamName: getTeamName(match.homeTeamId),
@@ -275,6 +273,17 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return false;
   };
 
+  const deleteMatch = (matchId: string) => {
+    const match = matches.find(m => m.id === matchId);
+    if (match) {
+      deleteMatchFromData(matchId);
+      if (selectedMatch?.id === matchId) {
+        setSelectedMatch(null);
+        setIsEditDialogOpen(false);
+      }
+    }
+  };
+
   const value: MatchesContextType = {
     isAddDialogOpen,
     setIsAddDialogOpen,
@@ -313,7 +322,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     toggleApproval,
     toggleFlightRetired,
     toggleFlightDefaulted,
-    updateTeamScores
+    updateTeamScores,
+    deleteMatch
   };
 
   return <MatchesContext.Provider value={value}>{children}</MatchesContext.Provider>;

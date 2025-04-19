@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,28 +10,20 @@ import {
   MapPin,
   Trophy,
   CheckSquare,
-  XSquare,
-  MoreHorizontal,
-  Pencil,
-  Trash
+  XSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMatches } from '@/context/MatchesContext';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import MatchActions from './MatchActions';
 
-interface MatchCardProps {
+interface EnhancedMatchCardProps {
   matchId: string;
   isExpanded: boolean;
   onToggleExpand: () => void;
   showExpandButton?: boolean;
 }
 
-const MatchCard: React.FC<MatchCardProps> = ({
+const EnhancedMatchCard: React.FC<EnhancedMatchCardProps> = ({
   matchId,
   isExpanded,
   onToggleExpand,
@@ -42,10 +35,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
     setExpandedMatchId,
     getTeamName,
     approveMatch,
-    canApproveMatch,
-    openEditDialog,
-    deleteMatch,
-    canEditMatch
+    canApproveMatch
   } = useMatches();
   
   const match = filteredMatches.find(m => m.id === matchId);
@@ -118,18 +108,6 @@ const MatchCard: React.FC<MatchCardProps> = ({
     );
   };
 
-  const handleEdit = () => {
-    openEditDialog(match);
-  };
-  
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this match? This action cannot be undone.')) {
-      deleteMatch(matchId);
-    }
-  };
-
-  const canEdit = canEditMatch(match);
-
   return (
     <Card className={`mb-4 overflow-hidden transition-all ${isExpanded ? 'ring-1 ring-primary' : ''}`}>
       <CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between">
@@ -142,27 +120,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           )}
         </div>
         <div className="flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {canEdit && (
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-              )}
-              {canEdit && (
-                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                  <Trash className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <MatchActions matchId={matchId} isComplete={match.isComplete} />
           
           {showExpandButton && (
             <Button 
@@ -248,4 +206,4 @@ const MatchCard: React.FC<MatchCardProps> = ({
   );
 };
 
-export default MatchCard;
+export default EnhancedMatchCard;
