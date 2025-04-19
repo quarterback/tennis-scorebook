@@ -1,4 +1,3 @@
-
 // Adding the missing types for Flight
 
 export type Gender = 'Boys' | 'Girls';
@@ -33,6 +32,8 @@ export interface District {
   id: string;
   name: string;
   classification: Classification;
+  tournamentDates?: string[];
+  tournamentLocation?: string;
 }
 
 export interface Team {
@@ -52,6 +53,10 @@ export interface Match {
   isLeagueMatch: boolean;
   homeTeamWon?: boolean;
   isTie?: boolean;
+  homeTeamScore?: number;
+  awayTeamScore?: number;
+  homeCoachApproved?: boolean;
+  awayCoachApproved?: boolean;
   flights: Flight[];
   tiebreakRound?: number;
 }
@@ -62,22 +67,28 @@ export interface Flight {
   position: number;
   homePlayers: string[];
   awayPlayers: string[];
+  homePlayerWon?: boolean;
   sets?: Set[];
-  homeScore?: number; // Added to fix type errors
-  awayScore?: number; // Added to fix type errors
-  weight?: () => number; // Added to fix type errors
+  homeScore?: number;
+  awayScore?: number;
+  weight?: () => number;
 }
 
 export interface Set {
   homeScore: number;
   awayScore: number;
+  tiebreak?: {
+    homeScore: number;
+    awayScore: number;
+  };
 }
 
 export interface Season {
   id: string;
   name: string;
-  startDate: string;
-  endDate: string;
+  year: number;
+  startDate?: string;
+  endDate?: string;
   isCurrent: boolean;
 }
 
@@ -97,6 +108,10 @@ export interface TeamStanding {
   classification: Classification;
   districtId?: string;
   districtName?: string;
+  overallWins?: number;
+  overallLosses?: number;
+  qualificationStatus?: string;
+  qualificationSeed?: number;
 }
 
 export interface PlayerTransfer {
