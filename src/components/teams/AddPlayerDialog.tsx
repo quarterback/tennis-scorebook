@@ -37,8 +37,8 @@ const AddPlayerDialog = ({
         <div className="space-y-2">
           <Label htmlFor="player-grade">Grade</Label>
           <Select
-            value={playerFormData.grade.toString()}
-            onValueChange={(value) => setPlayerFormData({ ...playerFormData, grade: parseInt(value) })}
+            value={String(playerFormData.grade)}
+            onValueChange={(value) => setPlayerFormData({ ...playerFormData, grade: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select grade" />

@@ -11,11 +11,11 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
   const [playerFormData, setPlayerFormData] = useState<Omit<Player, 'id' | 'status' | 'seasonId'>>({
     name: '',
-    grade: 9,
+    grade: '9', // Changed to string to match type
     teamId: '',
-    seasons: [],
     gender: 'Boys',
-    previousTeams: []  // Initialize with empty array
+    previousTeams: [],
+    seasons: []
   });
 
   const handleAddPlayer = (e: React.FormEvent) => {
@@ -45,16 +45,16 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
       name: playerFormData.name,
       grade: playerFormData.grade,
       teamId: selectedTeamId,
-      seasons: [currentSeason?.id || ''],
       gender: selectedTeam.gender,
-      previousTeams: []  // Initialize with empty array
+      previousTeams: [],
+      seasons: [currentSeason?.id || '']
     });
     
     // Reset form
     setPlayerFormData(prev => ({
       ...prev,
       name: '',
-      grade: 9
+      grade: '9'
     }));
     
     setIsAddPlayerDialogOpen(false);

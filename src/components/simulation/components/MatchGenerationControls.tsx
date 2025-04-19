@@ -78,11 +78,14 @@ const MatchGenerationControls: React.FC<MatchGenerationControlsProps> = ({
             const homeSchool = schools.find(s => s.id === homeTeam?.schoolId);
             const awaySchool = schools.find(s => s.id === awayTeam?.schoolId);
             
+            // Use optional chaining to safely access isTie property
+            const isTie = match.isTie ?? false;
+            
             return {
               date: match.date,
               homeTeam: homeSchool?.name || 'Unknown',
               awayTeam: awaySchool?.name || 'Unknown',
-              score: match.isTie ? "4-4" : `${match.homeTeamScore}-${match.awayTeamScore}`,
+              score: isTie ? "4-4" : `${match.homeTeamScore}-${match.awayTeamScore}`,
               gender: homeTeam?.gender || 'Unknown'
             };
           })

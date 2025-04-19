@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Users, Eraser } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useData } from '@/context/DataContext';
-import { Player, PlayerSkillTier, Season, Team } from '@/types';
+import { Player, Season } from '@/types';
+import { PlayerSkillTier } from '@/types';
 
 interface PlayerGenerationControlsProps {
   isGeneratingPlayers: boolean;
@@ -132,7 +133,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
         
         const newPlayer: Omit<Player, "id"> = {
           name: `${firstName} ${lastName}`,
-          grade: Math.floor(Math.random() * 4) + 9, // 9-12 grade
+          grade: String(Math.floor(Math.random() * 4) + 9), // 9-12 grade as string
           teamId: team.id,
           seasonId: currentSeason.id,
           seasons: [currentSeason.id],
