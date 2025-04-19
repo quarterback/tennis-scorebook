@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { 
-  Activity, 
+  Racquet, 
   Users, 
   Award, 
   Calendar, 
@@ -76,17 +77,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="bg-tennis-blue text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Activity className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Tennis Team Manager</h1>
+            <Racquet className="h-6 w-6" />
+            <h1 className="text-xl font-bold">Tennis Matchbook</h1>
           </div>
           
           {user && (
             <div className="flex items-center gap-4">
-              <span className="hidden sm:inline">Welcome, {user.name}</span>
+              <span className="hidden sm:inline text-sm">Welcome, {user.name}</span>
               {isMobile ? (
                 <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                   <DrawerTrigger asChild>
@@ -179,7 +180,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       
       <footer className="bg-gray-100 border-t border-gray-200 py-4">
         <div className="container mx-auto text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} Tennis Team Manager. All rights reserved.
+          &copy; {new Date().getFullYear()} Tennis Matchbook. All rights reserved.
         </div>
       </footer>
     </div>

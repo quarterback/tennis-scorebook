@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity } from 'lucide-react';
+import { Racquet } from '@/components/icons/Racquet';
 import { useToast } from '@/components/ui/use-toast';
 
 const Login = () => {
@@ -40,9 +40,9 @@ const Login = () => {
       <Card className="w-[400px] shadow-xl">
         <CardHeader className="text-center">
           <div className="mx-auto h-12 w-12 rounded-full bg-tennis-blue flex items-center justify-center mb-2">
-            <Activity className="h-6 w-6 text-white" />
+            <Racquet className="h-6 w-6 text-white" />
           </div>
-          <CardTitle className="text-2xl">Tennis Team Manager</CardTitle>
+          <CardTitle className="text-2xl">Tennis Matchbook</CardTitle>
           <CardDescription>
             Sign in to your account to continue
           </CardDescription>

@@ -60,6 +60,16 @@
     @apply border-l-4 border-tennis-green;
   }
 
+  /* Card with hover effect */
+  .hover-card {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Page section container */
+  .page-section {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-6;
+  }
+
   /* Responsive Match Cards */
   .match-card {
     @apply w-full mb-4 overflow-visible;
@@ -109,6 +119,32 @@
 
   .flight-card {
     @apply p-3 bg-white rounded-md shadow-sm border border-gray-200;
+  }
+
+  /* Data display components */
+  .stat-card {
+    @apply bg-white rounded-lg shadow-sm p-4 border border-gray-100;
+  }
+  
+  .stat-value {
+    @apply text-2xl font-semibold text-tennis-blue;
+  }
+  
+  .stat-label {
+    @apply text-sm text-gray-500;
+  }
+  
+  /* Form components */
+  .form-container {
+    @apply bg-white rounded-lg shadow-sm p-6 border border-gray-200;
+  }
+  
+  .form-section {
+    @apply space-y-4 mb-6;
+  }
+  
+  .form-heading {
+    @apply text-lg font-medium mb-2 text-gray-700;
   }
 }
 

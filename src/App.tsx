@@ -16,8 +16,11 @@ import Standings from "@/pages/Standings";
 import Rankings from "@/pages/Rankings";
 import Districts from "@/pages/Districts";
 import PlayerManagement from "@/pages/PlayerManagement";
-import Simulator from "@/pages/Simulator"; // Add import for Simulator page
+import Simulator from "@/pages/Simulator";
 import NotFound from "@/pages/NotFound";
+
+// Import our custom icon
+import "@/components/icons/Racquet";
 
 const queryClient = new QueryClient();
 
@@ -111,7 +114,6 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      {/* Add the Simulator route */}
       <Route path="/simulator" element={
         <ProtectedRoute>
           <Layout>
