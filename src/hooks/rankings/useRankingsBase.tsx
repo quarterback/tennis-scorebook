@@ -28,8 +28,43 @@ export const useRankingsBase = (
     });
     
     const rankings: TeamRanking[] = teams.map(team => {
-      const school = schools.find(s => s.id === team.schoolId)!;
-      const district = districts.find(d => d.id === school.districtId)!;
+      // Find the school, and properly handle if it doesn't exist
+      const school = schools.find(s => s.id === team.schoolId);
+      
+      // Skip this team if the school doesn't exist
+      if (!school) {
+        console.warn(`School not found for team ${team.id}`);
+        return {
+          teamId: team.id,
+          teamName: `Unknown Team (${team.gender})`,
+          schoolName: "Unknown School",
+          schoolId: "",
+          gender: team.gender,
+          classification: "Unknown",
+          districtName: "Unknown District",
+          matchesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          leagueWins: 0,
+          leagueLosses: 0,
+          leagueTies: 0,
+          leagueMatchesPlayed: 0,
+          flightWeightedScore: 0,
+          leagueStrengthCoefficient: 1,
+          opponentStrengthIndex: 1,
+          compositeScore: 0,
+          qualifiedForRanking: false,
+          winPercentage: 0,
+          leagueWinPercentage: 0,
+          apr: 0,
+          classificationRank: 0
+        };
+      }
+      
+      // Get district info and handle if it doesn't exist
+      const district = districts.find(d => d.id === school.districtId);
+      const districtName = district ? district.name : "Unknown District";
       
       const teamMatches = matches.filter(
         m => (m.homeTeamId === team.id || m.awayTeamId === team.id) && m.isComplete
@@ -100,7 +135,7 @@ export const useRankingsBase = (
         schoolId: school.id,
         gender: team.gender,
         classification: school.classification,
-        districtName: district.name,
+        districtName,
         matchesPlayed: teamMatches.length,
         wins,
         losses,
@@ -119,7 +154,7 @@ export const useRankingsBase = (
         apr: 0, // Will be calculated in calculateTeamAprs
         classificationRank: 0 // Will be updated later
       };
-    });
+    }).filter(Boolean); // Filter out any undefined entries
 
     return calculateTeamAprs(rankings);
   };

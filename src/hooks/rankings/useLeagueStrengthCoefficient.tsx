@@ -1,3 +1,4 @@
+
 import { District } from '@/types';
 import { HistoricalData } from '@/types/ranking';
 
@@ -6,7 +7,10 @@ export const useLeagueStrengthCoefficient = (districts: District[], historicalDa
    * Calculate League Strength Coefficient for a district
    * Enhanced formula: LSC = Base + (Historical Success Factor)
    */
-  const calculateLeagueStrengthCoefficient = (districtId: string): number => {
+  const calculateLeagueStrengthCoefficient = (districtId: string | undefined): number => {
+    // Handle undefined districtId
+    if (!districtId) return 1.0;
+    
     // Map district ID to league ID in historical data
     const district = districts.find(d => d.id === districtId);
     if (!district) return 1.0;
@@ -15,7 +19,7 @@ export const useLeagueStrengthCoefficient = (districts: District[], historicalDa
     const leagueKey = district.name.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '');
     
     // Find the league strength data
-    const leagueData = historicalData.leagues.find(l => {
+    const leagueData = historicalData.leagues?.find(l => {
       // Try to match by district ID or constructed league key
       return l.leagueId === districtId || l.leagueId === leagueKey;
     });
