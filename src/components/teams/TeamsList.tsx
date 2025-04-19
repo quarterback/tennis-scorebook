@@ -1,14 +1,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Trash } from 'lucide-react';
-import { Team, School, Player } from '@/types';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Trash } from 'lucide-react';
+import { Team, School } from '@/types';
+import { useData } from '@/context/DataContext';
 
 interface TeamsListProps {
   teams: Team[];
-  players: Player[];
   selectedTeamId: string | null;
   selectedSchool: School | undefined;
   isAddTeamDialogOpen: boolean;
@@ -20,7 +18,6 @@ interface TeamsListProps {
 
 const TeamsList = ({
   teams,
-  players,
   selectedTeamId,
   selectedSchool,
   isAddTeamDialogOpen,
@@ -29,6 +26,7 @@ const TeamsList = ({
   handleDeleteTeam,
   onTeamSelect
 }: TeamsListProps) => {
+  const { players } = useData();
 
   // Log for debugging
   console.log("Teams in list:", teams.length);
@@ -54,7 +52,6 @@ const TeamsList = ({
               className="mx-auto flex items-center"
               onClick={() => setIsAddTeamDialogOpen(true)}
             >
-              <Plus className="h-4 w-4 mr-1" />
               Add Team
             </Button>
           </div>

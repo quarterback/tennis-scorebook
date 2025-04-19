@@ -5,7 +5,6 @@ import TeamsList from './TeamsList';
 import TeamManager from './TeamManager';
 import AddTeamDialog from './AddTeamDialog';
 import { useData } from '@/context/DataContext';
-import { Team } from '@/types';
 import { useTeamManagement } from '@/hooks/useTeamManagement';
 import { usePlayerManagement } from '@/hooks/usePlayerManagement';
 import { useSchoolFiltering } from './SchoolFiltering';
