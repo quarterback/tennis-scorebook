@@ -1,5 +1,89 @@
 
 {
-  "districts": [],
-  "teams": []
+  "districts": [
+    {"id": "6a-1", "name": "Portland Interscholastic League", "classification": "6A"},
+    {"id": "6a-2", "name": "Metro League", "classification": "6A"},
+    {"id": "6a-3", "name": "Pacific Conference", "classification": "6A"},
+    {"id": "6a-4", "name": "Mt. Hood Conference", "classification": "6A"},
+    {"id": "6a-5", "name": "Three Rivers League", "classification": "6A"},
+    {"id": "6a-6", "name": "Central Valley Conference", "classification": "6A"},
+    {"id": "6a-7", "name": "Southwest Conference", "classification": "6A"},
+    {"id": "5a-1", "name": "Northwest Oregon Conference", "classification": "5A"},
+    {"id": "5a-2", "name": "Midwestern League", "classification": "5A"},
+    {"id": "5a-3", "name": "Mid-Willamette Conference", "classification": "5A"},
+    {"id": "5a-4", "name": "Intermountain Conference", "classification": "5A"},
+    {"id": "sd-1", "name": "Special District 1", "classification": "4A/3A/2A/1A"},
+    {"id": "sd-2", "name": "Special District 2", "classification": "4A/3A/2A/1A"},
+    {"id": "sd-3", "name": "Special District 3", "classification": "4A/3A/2A/1A"},
+    {"id": "sd-4", "name": "Special District 4", "classification": "4A/3A/2A/1A"},
+    {"id": "sd-5", "name": "Special District 5", "classification": "4A/3A/2A/1A"}
+  ],
+  "teams": [
+    // 6A-1 Portland Interscholastic League
+    {"id": "benson-boys", "name": "Benson Boys", "school_name": "Benson", "classification": "6A", "district_id": "6a-1", "strength_index": 1.0},
+    {"id": "benson-girls", "name": "Benson Girls", "school_name": "Benson", "classification": "6A", "district_id": "6a-1", "strength_index": 1.0},
+    {"id": "cleveland-boys", "name": "Cleveland Boys", "school_name": "Cleveland", "classification": "6A", "district_id": "6a-1", "strength_index": 1.0},
+    {"id": "cleveland-girls", "name": "Cleveland Girls", "school_name": "Cleveland", "classification": "6A", "district_id": "6a-1", "strength_index": 1.0},
+    // ... All other PIL schools
+    // 6A-2 Metro League
+    {"id": "aloha-boys", "name": "Aloha Boys", "school_name": "Aloha", "classification": "6A", "district_id": "6a-2", "strength_index": 1.0},
+    {"id": "aloha-girls", "name": "Aloha Girls", "school_name": "Aloha", "classification": "6A", "district_id": "6a-2", "strength_index": 1.0},
+    // ... All other Metro League schools
+    // 6A-3 Pacific Conference
+    {"id": "century-boys", "name": "Century Boys", "school_name": "Century", "classification": "6A", "district_id": "6a-3", "strength_index": 1.0},
+    {"id": "century-girls", "name": "Century Girls", "school_name": "Century", "classification": "6A", "district_id": "6a-3", "strength_index": 1.0},
+    // ... All other Pacific Conference schools
+    // 6A-4 Mt. Hood Conference
+    {"id": "barlow-boys", "name": "Barlow Boys", "school_name": "Barlow", "classification": "6A", "district_id": "6a-4", "strength_index": 1.0},
+    {"id": "barlow-girls", "name": "Barlow Girls", "school_name": "Barlow", "classification": "6A", "district_id": "6a-4", "strength_index": 1.0},
+    // ... All other Mt. Hood Conference schools
+    // 6A-5 Three Rivers League
+    {"id": "lake-oswego-boys", "name": "Lake Oswego Boys", "school_name": "Lake Oswego", "classification": "6A", "district_id": "6a-5", "strength_index": 1.0},
+    {"id": "lake-oswego-girls", "name": "Lake Oswego Girls", "school_name": "Lake Oswego", "classification": "6A", "district_id": "6a-5", "strength_index": 1.0},
+    // ... All other Three Rivers League schools
+    // 6A-6 Central Valley Conference
+    {"id": "mcnary-boys", "name": "McNary Boys", "school_name": "McNary", "classification": "6A", "district_id": "6a-6", "strength_index": 1.0},
+    {"id": "mcnary-girls", "name": "McNary Girls", "school_name": "McNary", "classification": "6A", "district_id": "6a-6", "strength_index": 1.0},
+    // ... All other Central Valley Conference schools
+    // 6A-7 Southwest Conference
+    {"id": "grants-pass-boys", "name": "Grants Pass Boys", "school_name": "Grants Pass", "classification": "6A", "district_id": "6a-7", "strength_index": 1.0},
+    {"id": "grants-pass-girls", "name": "Grants Pass Girls", "school_name": "Grants Pass", "classification": "6A", "district_id": "6a-7", "strength_index": 1.0},
+    // ... All other Southwest Conference schools
+    // 5A-1 Northwest Oregon Conference
+    {"id": "canby-boys", "name": "Canby Boys", "school_name": "Canby", "classification": "5A", "district_id": "5a-1", "strength_index": 1.0},
+    {"id": "canby-girls", "name": "Canby Girls", "school_name": "Canby", "classification": "5A", "district_id": "5a-1", "strength_index": 1.0},
+    // ... All other Northwest Oregon Conference schools
+    // 5A-2 Midwestern League
+    {"id": "ashland-boys", "name": "Ashland Boys", "school_name": "Ashland", "classification": "5A", "district_id": "5a-2", "strength_index": 1.0},
+    {"id": "ashland-girls", "name": "Ashland Girls", "school_name": "Ashland", "classification": "5A", "district_id": "5a-2", "strength_index": 1.0},
+    // ... All other Midwestern League schools
+    // 5A-3 Mid-Willamette Conference
+    {"id": "central-boys", "name": "Central Boys", "school_name": "Central / Kings Valley Char.", "classification": "5A", "district_id": "5a-3", "strength_index": 1.0},
+    {"id": "central-girls", "name": "Central Girls", "school_name": "Central / Kings Valley Char.", "classification": "5A", "district_id": "5a-3", "strength_index": 1.0},
+    // ... All other Mid-Willamette Conference schools
+    // 5A-4 Intermountain Conference
+    {"id": "bend-boys", "name": "Bend Boys", "school_name": "Bend", "classification": "5A", "district_id": "5a-4", "strength_index": 1.0},
+    {"id": "bend-girls", "name": "Bend Girls", "school_name": "Bend", "classification": "5A", "district_id": "5a-4", "strength_index": 1.0},
+    // ... All other Intermountain Conference schools
+    // Special District 1
+    {"id": "blanchet-catholic-boys", "name": "Blanchet Catholic Boys", "school_name": "Blanchet Catholic", "classification": "4A/3A/2A/1A", "district_id": "sd-1", "strength_index": 1.0},
+    {"id": "blanchet-catholic-girls", "name": "Blanchet Catholic Girls", "school_name": "Blanchet Catholic", "classification": "4A/3A/2A/1A", "district_id": "sd-1", "strength_index": 1.0},
+    // ... All other SD1 schools
+    // Special District 2
+    {"id": "cascade-boys", "name": "Cascade Boys", "school_name": "Cascade", "classification": "4A/3A/2A/1A", "district_id": "sd-2", "strength_index": 1.0},
+    {"id": "cascade-girls", "name": "Cascade Girls", "school_name": "Cascade", "classification": "4A/3A/2A/1A", "district_id": "sd-2", "strength_index": 1.0},
+    // ... All other SD2 schools
+    // Special District 3
+    {"id": "cascade-christian-boys", "name": "Cascade Christian Boys", "school_name": "Cascade Christian", "classification": "4A/3A/2A/1A", "district_id": "sd-3", "strength_index": 1.0},
+    {"id": "cascade-christian-girls", "name": "Cascade Christian Girls", "school_name": "Cascade Christian", "classification": "4A/3A/2A/1A", "district_id": "sd-3", "strength_index": 1.0},
+    // ... All other SD3 schools
+    // Special District 4
+    {"id": "arlington-boys", "name": "Arlington Boys", "school_name": "Arlington", "classification": "4A/3A/2A/1A", "district_id": "sd-4", "strength_index": 1.0},
+    {"id": "arlington-girls", "name": "Arlington Girls", "school_name": "Arlington", "classification": "4A/3A/2A/1A", "district_id": "sd-4", "strength_index": 1.0},
+    // ... All other SD4 schools
+    // Special District 5
+    {"id": "baker-boys", "name": "Baker Boys", "school_name": "Baker / Powder Valley", "classification": "4A/3A/2A/1A", "district_id": "sd-5", "strength_index": 1.0},
+    {"id": "baker-girls", "name": "Baker Girls", "school_name": "Baker / Powder Valley", "classification": "4A/3A/2A/1A", "district_id": "sd-5", "strength_index": 1.0}
+    // ... All other SD5 schools
+  ]
 }

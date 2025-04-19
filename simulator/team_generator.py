@@ -102,66 +102,67 @@ def generate_oregon_teams() -> dict:
     ]
     
     schools = {
-        # 6A-1 Portland Interscholastic League
+        # 6A-1 Portland Interscholastic League schools
         "6a-1": ["Benson", "Cleveland", "Franklin", "Grant", "Ida B. Wells", "Lincoln", 
                  "McDaniel", "Roosevelt"],
         
-        # 6A-2 Metro League
+        # 6A-2 Metro League schools 
         "6a-2": ["Aloha", "Beaverton", "Jesuit", "Mountainside", "Southridge", "Sunset", 
                  "Westview"],
         
-        # 6A-3 Pacific Conference
+        # 6A-3 Pacific Conference schools
         "6a-3": ["Century", "Forest Grove", "Glencoe", "Liberty", "McMinnville", "Newberg", 
                  "Sherwood"],
         
-        # 6A-4 Mt. Hood Conference
+        # 6A-4 Mt. Hood Conference schools
         "6a-4": ["Barlow", "Central Catholic", "Clackamas", "David Douglas", "Gresham", 
                  "Nelson", "Reynolds", "Sandy"],
         
-        # 6A-5 Three Rivers League
+        # 6A-5 Three Rivers League schools
         "6a-5": ["Lake Oswego", "Lakeridge", "St. Mary's Academy", "Tigard", "Tualatin", 
                  "West Linn"],
         
-        # 6A-6 Central Valley Conference
+        # 6A-6 Central Valley Conference schools
         "6a-6": ["McNary", "North Salem", "South Salem", "Sprague", "West Salem"],
         
-        # 6A-7 Southwest Conference
+        # 6A-7 Southwest Conference schools
         "6a-7": ["Grants Pass", "North Medford", "Roseburg", "Sheldon", "South Eugene", 
                  "South Medford", "Willamette"],
         
-        # 5A-1 Northwest Oregon Conference
+        # 5A-1 Northwest Oregon Conference schools
         "5a-1": ["Canby", "Centennial", "Hillsboro", "Hood River Valley", "La Salle Prep",
                  "Milwaukie / Milwaukie Acad. of the Arts", "Parkrose", "Putnam", "Wilsonville"],
         
-        # 5A-2 Midwestern League
+        # 5A-2 Midwestern League schools
         "5a-2": ["Ashland", "Churchill", "North Eugene", "Springfield", "Thurston"],
         
-        # 5A-3 Mid-Willamette Conference
+        # 5A-3 Mid-Willamette Conference schools
         "5a-3": ["Central / Kings Valley Char.", "Corvallis", "Crescent Valley", "Dallas",
                  "Lebanon", "McKay", "Silverton", "South Albany", "West Albany", "Woodburn"],
         
-        # 5A-4 Intermountain Conference
+        # 5A-4 Intermountain Conference schools
         "5a-4": ["Bend", "Caldera", "Mountain View", "Redmond", "Ridgeview", "Summit"],
         
-        # SD-1 Special District 1
+        # SD-1 Special District 1 schools
         "sd-1": ["Blanchet Catholic", "Catlin Gabel", "Oregon Episcopal", "Riverdale",
                  "Riverside, WLWV", "Scappoose", "St. Helens", "Tillamook", "Trinity Academy",
                  "Valley Catholic", "Westside Christian"],
         
-        # SD-2 Special District 2
+        # SD-2 Special District 2 schools
         "sd-2": ["Cascade", "Estacada", "Junction City", "Marist Catholic", "Molalla",
                  "North Marion", "Philomath", "Stayton"],
         
-        # SD-3 Special District 3
+        # SD-3 Special District 3 schools
         "sd-3": ["Cascade Christian", "Creswell", "Henley", "Hidden Valley", "Klamath Union",
-                 "Marshfield", "Mazama", "North Bend", "North Valley", "Phoenix", "St. Mary's, Medford"],
+                 "Marshfield", "Mazama", "North Bend", "North Valley", "Phoenix", 
+                 "St. Mary's, Medford"],
         
-        # SD-4 Special District 4
+        # SD-4 Special District 4 schools
         "sd-4": ["Arlington", "Condon", "Crook County", "Ione / Heppner", "Irrigon", "Madras",
-                 "Riverside", "Sherman", "Sisters", "Stanfield / Echo", "The Dalles", "Umatilla",
-                 "Weston-McEwen / Griswold"],
+                 "Riverside", "Sherman", "Sisters", "Stanfield / Echo", "The Dalles", 
+                 "Umatilla", "Weston-McEwen / Griswold"],
         
-        # SD-5 Special District 5
+        # SD-5 Special District 5 schools
         "sd-5": ["Baker / Powder Valley", "Four Rivers", "La Grande", "McLoughlin", "Nyssa",
                  "Ontario", "Pendleton", "Vale"]
     }
@@ -172,7 +173,7 @@ def generate_oregon_teams() -> dict:
         district_info = next(d for d in districts if d["id"] == district_id)
         for school in school_list:
             for gender in ["Boys", "Girls"]:
-                team_id = str(uuid.uuid4())
+                team_id = f"{school.lower().replace(' ', '-')}-{gender.lower()}"
                 team = {
                     "id": team_id,
                     "name": f"{school} {gender}",
