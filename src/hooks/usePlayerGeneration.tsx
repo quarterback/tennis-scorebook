@@ -146,7 +146,7 @@ export const usePlayerGeneration = () => {
           name: playerName,
           teamId: team.id,
           gender: team.gender,
-          grade: playerGrade,
+          grade: playerGrade.toString(), // Fix: Convert number to string
           skillTier,
           skillRating: finalSkill,
           singles_preference: singlesPreference,

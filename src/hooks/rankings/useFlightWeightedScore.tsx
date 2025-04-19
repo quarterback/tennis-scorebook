@@ -31,13 +31,16 @@ export const useFlightWeightedScore = (
     let homeWins = 0;
     let awayWins = 0;
     
-    // Access sets and count wins
+    // Access sets and count wins - ensure we check if sets property exists
     if (flight.sets && flight.sets.length > 0) {
       for (const set of flight.sets) {
-        if (set.homeScore > set.awayScore) {
-          homeWins++;
-        } else {
-          awayWins++;
+        // Make sure homeScore and awayScore are accessible
+        if (set.homeScore !== undefined && set.awayScore !== undefined) {
+          if (set.homeScore > set.awayScore) {
+            homeWins++;
+          } else if (set.homeScore < set.awayScore) {
+            awayWins++;
+          }
         }
       }
     }
@@ -80,9 +83,9 @@ export const useFlightWeightedScore = (
           flightWinRate = calculateFlightWinRate(flight, teamId);
         }
         
-        // Default weight function if not provided on the flight
-        const weightFn = flight.weight || (() => 1);
-        weightedScore += flightWinRate * weightFn();
+        // Use a default weight of 1 if the flight doesn't have a weight function
+        const weight = typeof flight.weight === 'function' ? flight.weight() : 1;
+        weightedScore += flightWinRate * weight;
       });
       matchesIncluded++;
     });

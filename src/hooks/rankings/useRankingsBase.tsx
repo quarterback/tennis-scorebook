@@ -14,7 +14,7 @@ export const useRankingsBase = (
   districts: any[]
 ) => {
   const historicalData = getHistoricalData();
-  const { calculateFlightWeightedScore } = useFlightWeightedScore(matches);
+  const { calculateFlightWeightedScore } = useFlightWeightedScore(teams, matches);
   const { calculateLeagueStrengthCoefficient } = useLeagueStrengthCoefficient(districts, historicalData);
   const { calculateOpponentStrengthIndex } = useOpponentStrengthIndex(teams, schools, matches, historicalData);
   const { calculateTeamAprs } = useAprCalculator();
@@ -23,8 +23,10 @@ export const useRankingsBase = (
     const teamScores = new Map<string, number>();
     
     teams.forEach(team => {
-      const fws = calculateFlightWeightedScore(team.id, config);
-      teamScores.set(team.id, fws);
+      // Fix: Pass the team and config to the function
+      const result = calculateFlightWeightedScore(team.id, config);
+      // Fix: Extract just the score from the returned object
+      teamScores.set(team.id, result.flightWeightedScore);
     });
     
     const rankings: TeamRanking[] = teams.map(team => {
@@ -111,8 +113,9 @@ export const useRankingsBase = (
         (m.awayTeamId === team.id && m.homeTeamWon === true)
       ).length;
       
-      // Get APR components
-      const fws = teamScores.get(team.id) || 0;
+      // Get APR components - Fix: Extract just the score
+      const result = calculateFlightWeightedScore(team.id, config);
+      const fws = result.flightWeightedScore;
       const lsc = calculateLeagueStrengthCoefficient(school.districtId);
       const osi = calculateOpponentStrengthIndex(team.id, teamScores);
       

@@ -1,192 +1,104 @@
 
-export interface District {
+// Adding the missing types for Flight
+
+export type Gender = 'Boys' | 'Girls';
+export type Classification = '6A' | '5A' | '4A/3A/2A/1A';
+export type PlayerSkillTier = 'elite' | 'competitive' | 'developmental';
+
+export interface Player {
   id: string;
   name: string;
-  classification: Classification;
-  // New fields for tournament scheduling
-  tournamentDates?: {
-    start: string;  // ISO date string
-    end: string;    // ISO date string
-  };
-  tournamentLocation?: string;
-  tournamentYear?: number;
+  teamId: string;
+  gender: Gender;
+  grade: string; // Changed from number to string
+  previousTeams?: string[];
+  status?: 'active' | 'retired' | 'transferred';
+  skillTier?: PlayerSkillTier;
+  skillRating?: number;
+  singles_preference?: number;
+  seasonId?: string;
+  seasons?: string[];
 }
-
-export type Classification = "6A" | "5A" | "4A/3A/2A/1A";
-export type Gender = "Boys" | "Girls";
 
 export interface School {
   id: string;
   name: string;
+  classification: Classification;
   districtId: string;
   city: string;
   state: string;
+}
+
+export interface District {
+  id: string;
+  name: string;
   classification: Classification;
-  teams?: Team[]; // Optional teams property
 }
 
 export interface Team {
   id: string;
   schoolId: string;
   gender: Gender;
-  seasonId?: string;
-  players?: Player[];
+  players?: string[];
   roster?: Player[];
-  coaches?: string[]; // Add coaches property for sample data
 }
-
-export interface Player {
-  id: string;
-  name: string;
-  teamId: string;
-  grade: string; // Use string for grade to match implementations
-  skillRating?: number;
-  singlesPreference?: number;
-  doublesPreference?: number;
-  isActive?: boolean;
-  gender?: Gender;
-  seasonId?: string;
-  status?: string;
-  skillTier?: PlayerSkillTier;
-  singles_preference?: number; // For backward compatibility
-  previousTeams?: string[];
-  seasons?: string[];
-}
-
-export type PlayerSkillTier = 'developmental' | 'intermediate' | 'advanced' | 'elite' | 'competitive';
 
 export interface Match {
   id: string;
-  date: string;
   homeTeamId: string;
   awayTeamId: string;
-  homeTeamName?: string;
-  awayTeamName?: string;
-  isLeagueMatch: boolean;
+  date: string;
   isComplete: boolean;
-  hasJvMatches?: boolean;
+  isLeagueMatch: boolean;
   homeTeamWon?: boolean;
-  homeCoachApproved?: boolean;
-  awayCoachApproved?: boolean;
-  homeTeamScore?: number;
-  awayTeamScore?: number;
+  isTie?: boolean;
   flights: Flight[];
-  isTie?: boolean; // Add isTie property for simulation
-  tiebreakRound?: number; // Add tiebreakRound property
-}
-
-export interface EnhancedMatch extends Match {
-  // EnhancedMatch just extends Match with potentially additional properties
+  tiebreakRound?: number;
 }
 
 export interface Flight {
-  id?: string;
-  matchId?: string;
+  id: string;
   type: 'singles' | 'doubles';
   position: number;
-  level: 'varsity' | 'jv';
   homePlayers: string[];
   awayPlayers: string[];
-  sets: Set[];
-  homePlayerWon?: boolean;
-  retired?: boolean;
-  defaulted?: boolean;
-  scoreDisplay?: string; // Add scoreDisplay property for sample data
-  // For the flight weighted score function
-  weight?: () => number;
-  homeScore?: number[];
-  awayScore?: number[];
+  sets?: Set[];
+  homeScore?: number; // Added to fix type errors
+  awayScore?: number; // Added to fix type errors
+  weight?: () => number; // Added to fix type errors
 }
 
 export interface Set {
   homeScore: number;
   awayScore: number;
-  tiebreak?: {
-    homeScore: number;
-    awayScore: number;
-  };
 }
 
-export interface MatchFormData {
-  date: string;
-  homeTeamId: string;
-  awayTeamId: string;
-  isLeagueMatch: boolean;
-  isComplete: boolean;
-  hasJvMatches: boolean;
-  homeTeamWon?: boolean;
-  homeCoachApproved?: boolean;
-  awayCoachApproved?: boolean;
-  homeTeamScore?: number;
-  awayTeamScore?: number;
-  flights: {
-    type: 'singles' | 'doubles';
-    position: number;
-    level: 'varsity' | 'jv';
-    homePlayers: string[];
-    awayPlayers: string[];
-    sets: {
-      homeScore: number;
-      awayScore: number;
-      tiebreak?: {
-        homeScore: number;
-        awayScore: number;
-      };
-    }[];
-    homePlayerWon?: boolean;
-    retired?: boolean;
-    defaulted?: boolean;
-  }[];
-}
-
-// Add Season interface
 export interface Season {
   id: string;
-  year: number;
   name: string;
+  startDate: string;
+  endDate: string;
   isCurrent: boolean;
 }
 
-// Add User interface
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'coach' | 'player';
-  schoolId?: string;
-}
-
-// Updated TeamStanding interface to match usage in the codebase
 export interface TeamStanding {
   teamId: string;
   teamName: string;
   schoolName: string;
-  gender?: Gender;
-  classification?: string;
-  districtName?: string;
+  leagueStanding: number;
   wins: number;
   losses: number;
-  ties?: number;
+  ties: number;
+  leagueWins: number;
+  leagueLosses: number;
+  leagueTies: number;
   winPercentage: number;
-  leagueWins?: number;
-  leagueLosses?: number;
-  leagueTies?: number;
-  leagueWinPercentage?: number;
-  points?: number;
-  gamesPlayed?: number;
-  
-  // Add properties used in StandingsTable.tsx
-  overallWins?: number;
-  overallLosses?: number;
-  overallTies?: number;
-  overallWinPct?: number;
-  leagueWinPct?: number;
-  qualificationStatus?: 'automatic' | 'at-large' | 'none';
-  qualificationSeed?: number;
-  matchesPlayed?: number;
+  leagueWinPercentage: number;
+  classification: Classification;
+  districtId?: string;
+  districtName?: string;
 }
 
-// Add PlayerTransfer interface
 export interface PlayerTransfer {
   id: string;
   playerId: string;
@@ -194,6 +106,4 @@ export interface PlayerTransfer {
   toTeamId: string;
   date: string;
   reason?: string;
-  approved: boolean;
-  seasonId?: string; // Optional seasonId
 }

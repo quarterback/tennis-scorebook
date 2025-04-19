@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -66,8 +67,11 @@ const PlayerManagement = () => {
     return `${school.name} ${team.gender}`;
   };
   
-  const getGradeDisplay = (grade: number): string => {
-    switch (grade) {
+  const getGradeDisplay = (grade: string): string => {
+    // Convert string grade to number for comparison
+    const gradeNum = parseInt(grade, 10);
+    
+    switch (gradeNum) {
       case 9: return 'Freshman (9th)';
       case 10: return 'Sophomore (10th)';
       case 11: return 'Junior (11th)';
