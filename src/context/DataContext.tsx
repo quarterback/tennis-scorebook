@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect } from 'react';
 import { School, Team, Player, Match, TeamStanding, Gender, Classification, District, Season, PlayerTransfer } from '@/types';
 
@@ -74,6 +73,22 @@ export const useData = () => {
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
+  // Load initial districts from localStorage or fallback to sample data
+  const getInitialDistricts = (): District[] => {
+    try {
+      const savedDistricts = localStorage.getItem('districts');
+      if (savedDistricts) {
+        const parsedDistricts = JSON.parse(savedDistricts);
+        if (Array.isArray(parsedDistricts) && parsedDistricts.length > 0) {
+          return parsedDistricts;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading districts from localStorage:', error);
+    }
+    return sampleDistricts;
+  };
+  
   const { 
     schools, setSchools, addSchool, updateSchool, deleteSchool 
   } = useSchoolOperations(sampleSchools);
@@ -94,7 +109,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const { 
     districts, setDistricts, addDistrict, updateDistrict, deleteDistrict, getDistrictsByClassification 
-  } = useDistrictOperations(sampleDistricts);
+  } = useDistrictOperations(getInitialDistricts());
   
   useEffect(() => {
     loadPlayersData(samplePlayers);
@@ -107,12 +122,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { getStandings, getStateQualifiers } = useStandingsCalculator(teams, schools, matches, districts);
   
   // Add methods to clear all players and matches
-  const deleteAllPlayers = () => {
+  const deleteAllPlayers = async () => {
     setPlayers([]);
+    // Clear players from localStorage
+    localStorage.removeItem('players');
+    return Promise.resolve();
   };
   
-  const deleteAllMatches = () => {
+  const deleteAllMatches = async () => {
     setMatches([]);
+    // Clear matches from localStorage
+    localStorage.removeItem('matches');
+    return Promise.resolve();
   };
   
   const value: DataContextType = {
