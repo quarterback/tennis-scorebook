@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -34,6 +35,7 @@ const Schools = () => {
   const [classificationFilter, setClassificationFilter] = useState<Classification | 'all'>('all');
   const [districtFilter, setDistrictFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'table' | 'grouped'>('table');
   
   // Log for debugging
   useEffect(() => {
@@ -129,7 +131,7 @@ const Schools = () => {
     <div className="space-y-6">
       <SchoolsHeader 
         schoolCount={schools.length}
-        filteredCount={schools.length}
+        filteredCount={filteredSchools.length}
         isAdmin={user?.role === 'admin'}
         onAddClick={() => setIsAddDialogOpen(true)}
       />
@@ -142,12 +144,136 @@ const Schools = () => {
         />
       )}
 
-      <GroupedSchoolsList
-        schools={schools}
-        districts={districts}
-        canEdit={user?.role === 'admin'}
-        onEditSchool={openEditDialog}
-      />
+      <div className="mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <Select
+              value={classificationFilter}
+              onValueChange={(value: Classification | 'all') => setClassificationFilter(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Classifications" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classifications</SelectItem>
+                <SelectItem value="6A">6A</SelectItem>
+                <SelectItem value="5A">5A</SelectItem>
+                <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Select
+              value={districtFilter}
+              onValueChange={setDistrictFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Districts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Districts</SelectItem>
+                {districts.map(district => (
+                  <SelectItem key={district.id} value={district.id}>
+                    {district.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              type="search"
+              placeholder="Search schools..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end mb-4">
+          <div className="space-x-2">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+            >
+              Table View
+            </Button>
+            <Button
+              variant={viewMode === 'grouped' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grouped')}
+            >
+              Grouped View
+            </Button>
+          </div>
+        </div>
+
+        {viewMode === 'table' ? (
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>School Name</TableHead>
+                    <TableHead>Classification</TableHead>
+                    <TableHead>District</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSchools.length > 0 ? (
+                    filteredSchools.map(school => (
+                      <TableRow key={school.id}>
+                        <TableCell className="font-medium">{school.name}</TableCell>
+                        <TableCell>{school.classification}</TableCell>
+                        <TableCell>{school.districtId ? getDistrictName(school.districtId) : 'Unknown District'}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <Link to={`/teams?schoolId=${school.id}`}>
+                                <Users className="h-4 w-4 mr-1" />
+                                Teams
+                              </Link>
+                            </Button>
+                            {user?.role === 'admin' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditDialog(school)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                        No schools found with the current filters
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ) : (
+          <GroupedSchoolsList
+            schools={filteredSchools}
+            districts={districts}
+            canEdit={user?.role === 'admin'}
+            onEditSchool={openEditDialog}
+          />
+        )}
+      </div>
       
       <SchoolFormDialog 
         isOpen={isAddDialogOpen}

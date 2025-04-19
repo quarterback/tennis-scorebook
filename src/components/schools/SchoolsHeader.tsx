@@ -18,7 +18,7 @@ const SchoolsHeader = ({ schoolCount, filteredCount, isAdmin, onAddClick }: Scho
         
         {isAdmin && (
           <Button 
-            className="bg-tennis-blue hover:bg-tennis-darkBlue"
+            className="bg-blue-500 hover:bg-blue-600"
             onClick={onAddClick}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -27,13 +27,11 @@ const SchoolsHeader = ({ schoolCount, filteredCount, isAdmin, onAddClick }: Scho
         )}
       </div>
       
-      <div className="p-2 bg-blue-50 rounded-md mb-4">
-        <div className="flex flex-col md:flex-row md:justify-between">
-          <p className="text-sm text-blue-700">Total Schools: {schoolCount}</p>
-          {filteredCount !== schoolCount && (
-            <p className="text-sm text-blue-700">Filtered: {filteredCount}</p>
-          )}
-        </div>
+      <div className="text-blue-700 mb-6">
+        Total Schools: {schoolCount}
+        {filteredCount !== schoolCount && (
+          <span className="ml-4">Filtered: {filteredCount}</span>
+        )}
       </div>
     </>
   );
