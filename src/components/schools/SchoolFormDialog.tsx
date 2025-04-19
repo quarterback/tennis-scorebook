@@ -14,8 +14,16 @@ interface SchoolFormDialogProps {
     name: string;
     classification: Classification;
     districtId: string;
+    city: string;
+    state: string;
   };
-  setFormData: (data: { name: string; classification: Classification; districtId: string }) => void;
+  setFormData: React.Dispatch<React.SetStateAction<{
+    name: string;
+    classification: Classification;
+    districtId: string;
+    city: string;
+    state: string;
+  }>>;
   onSubmit: (e: React.FormEvent) => void;
   availableDistricts: { id: string; name: string }[];
   mode: 'add' | 'edit';
@@ -52,6 +60,28 @@ const SchoolFormDialog = ({
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                required
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
@@ -102,7 +132,7 @@ const SchoolFormDialog = ({
             <Button 
               type="submit" 
               className="bg-tennis-blue hover:bg-tennis-darkBlue"
-              disabled={!formData.districtId || !formData.name}
+              disabled={!formData.districtId || !formData.name || !formData.city || !formData.state}
             >
               {mode === 'add' ? 'Add School' : 'Save Changes'}
             </Button>

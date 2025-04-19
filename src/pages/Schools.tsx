@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -234,6 +233,7 @@ const Schools = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>School Name</TableHead>
+                    <TableHead>Location</TableHead>
                     <TableHead>Classification</TableHead>
                     <TableHead>District</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -244,6 +244,7 @@ const Schools = () => {
                     filteredSchools.map(school => (
                       <TableRow key={school.id}>
                         <TableCell className="font-medium">{school.name}</TableCell>
+                        <TableCell>{school.city}, {school.state}</TableCell>
                         <TableCell>{school.classification}</TableCell>
                         <TableCell>{school.districtId ? getDistrictName(school.districtId) : 'Unknown District'}</TableCell>
                         <TableCell className="text-right">
@@ -270,7 +271,7 @@ const Schools = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                         No schools found with the current filters
                       </TableCell>
                     </TableRow>

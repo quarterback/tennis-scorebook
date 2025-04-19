@@ -37,11 +37,11 @@ interface DataContextType {
   deleteSchool: (id: string) => void;
   createTeamsForAllSchools: () => void;
   
-  addTeam: (team: Omit<Team, 'id'>) => void;
+  addTeam: (team: Omit<Team, 'id'>) => Team;
   updateTeam: (team: Team) => void;
   deleteTeam: (id: string) => void;
   
-  addPlayer: (player: Omit<Player, 'id' | 'status' | 'seasonId'>) => void;
+  addPlayer: (player: Omit<Player, 'id' | 'status' | 'seasonId'>) => Player;
   updatePlayer: (player: Player) => void;
   deletePlayer: (id: string) => void;
   deleteAllPlayers: () => void;
@@ -99,36 +99,56 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const { 
-    schools, setSchools, addSchool, updateSchool, deleteSchool, createTeamsForAllSchools 
+    schools, setSchools, addSchool: addNewSchool, updateSchool, deleteSchool, createTeamsForAllSchools 
   } = useSchoolOperations(sampleSchools);
   
   const { 
-    teams, setTeams, addTeam, updateTeam, deleteTeam 
+    teams, setTeams, addTeam: addNewTeam, updateTeam, deleteTeam 
   } = useTeamOperations(sampleTeams);
   
   const { 
-    players, addPlayer, updatePlayer, deletePlayer, getPlayerById, getPlayersByTeam, loadPlayersData,
-    transfers, seasons, transferPlayer, retirePlayer, progressSeasons, getCurrentSeason, getArchivedSeasons,
-    getPlayersByseason, setPlayers, setPlayerTransfers
+    players, transfers, seasons, addPlayer: addNewPlayer, updatePlayer, deletePlayer, getPlayerById, 
+    getPlayersByTeam, transferPlayer, retirePlayer, progressSeasons, getCurrentSeason, 
+    getArchivedSeasons, getPlayersByseason, setPlayers, setPlayerTransfers
   } = usePlayersData(samplePlayers);
   
   const { 
-    matches, setMatches, addMatch, updateMatch, deleteMatch 
+    matches, setMatches, addMatch: addNewMatch, updateMatch, deleteMatch 
   } = useMatchOperations(sampleMatches);
   
   const { 
-    districts, setDistricts, addDistrict, updateDistrict, deleteDistrict, getDistrictsByClassification 
+    districts, setDistricts, addDistrict: addNewDistrict, updateDistrict, deleteDistrict, getDistrictsByClassification 
   } = useDistrictOperations(getInitialDistricts());
-  
-  useEffect(() => {
-    loadPlayersData(samplePlayers);
-  }, []);
   
   const { 
     getTeamsBySchool, getMatchesByTeam 
   } = useFilterOperations(teams, players, matches);
   
   const { getStandings, getStateQualifiers } = useStandingsCalculator(teams, schools, matches, districts);
+  
+  // Add method to create school with teams automatically
+  const addSchool = (schoolData: Omit<School, 'id'>) => {
+    const newSchool = addNewSchool();
+    
+    if (newSchool) {
+      // Automatically create boys and girls teams for this school
+      const boysTeam = addNewTeam({
+        schoolId: newSchool.id,
+        gender: 'Boys',
+        players: []
+      });
+      
+      const girlsTeam = addNewTeam({
+        schoolId: newSchool.id,
+        gender: 'Girls',
+        players: []
+      });
+      
+      console.log(`Created teams for ${newSchool.name}:`, boysTeam.id, girlsTeam.id);
+    }
+    
+    return newSchool;
+  };
   
   // Add methods to clear all players and matches
   const deleteAllPlayers = async () => {
@@ -143,6 +163,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Clear matches from localStorage
     localStorage.removeItem('matches');
     return Promise.resolve();
+  };
+  
+  // Fix the add player method to handle both string and number grades
+  const addPlayer = (playerData: Omit<Player, 'id' | 'status' | 'seasonId'>) => {
+    return addNewPlayer(playerData);
   };
   
   const value: DataContextType = {
@@ -167,7 +192,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteSchool,
     createTeamsForAllSchools,
     
-    addTeam,
+    addTeam: addNewTeam,
     updateTeam,
     deleteTeam,
     
@@ -183,12 +208,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getArchivedSeasons,
     getPlayersByseason,
     
-    addMatch,
+    addMatch: addNewMatch,
     updateMatch,
     deleteMatch,
     deleteAllMatches,
     
-    addDistrict,
+    addDistrict: addNewDistrict,
     updateDistrict,
     deleteDistrict,
     getDistrictsByClassification,

@@ -1,5 +1,4 @@
 
-// Fix the school creation to include city and state
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 import { useData } from '@/context/DataContext';
