@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { School, Classification, Gender } from '@/types';
+import { School, Classification, Gender, Team } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useTeamOperations } from './useTeamOperations';
 
@@ -102,7 +102,7 @@ const oregonDistricts = {
 export const useSchoolOperations = (initialSchools: School[] = []) => {
   const [schools, setSchools] = useState<School[]>([]);
   const { toast } = useToast();
-  const { addTeam } = useTeamOperations([]);
+  const { addTeam, teams } = useTeamOperations([]);
   
   // Initialize schools from localStorage or from district data
   useEffect(() => {
@@ -166,29 +166,79 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
   }, [schools]);
   
   const createTeamsForSchool = (schoolId: string) => {
+    const teamIds: string[] = [];
     const genders: Gender[] = ['Boys', 'Girls'];
+    
     genders.forEach(gender => {
-      addTeam({
+      const newTeam = addTeam({
         schoolId: schoolId,
         gender: gender,
         players: [],
         coaches: []
       });
-    });
-  };
-
-  const createTeamsForAllSchools = () => {
-    schools.forEach(school => {
-      // Only create teams if the school doesn't have any
-      if (!school.teams || school.teams.length === 0) {
-        createTeamsForSchool(school.id);
+      if (newTeam && newTeam.id) {
+        teamIds.push(newTeam.id);
       }
     });
     
-    toast({
-      title: 'Teams Created',
-      description: 'Teams have been created for all schools that were missing them.'
+    return teamIds;
+  };
+
+  const createTeamsForAllSchools = async () => {
+    console.log("Creating teams for all schools...");
+    console.log("Current schools:", schools.length);
+    console.log("Current teams:", teams.length);
+    
+    let createdTeamsCount = 0;
+    const schoolsProcessed: Record<string, boolean> = {};
+    
+    // Map of schools to their teams
+    const schoolTeamsMap: Record<string, Gender[]> = {};
+    
+    // First, build a map of which schools have which gender teams
+    teams.forEach(team => {
+      if (!schoolTeamsMap[team.schoolId]) {
+        schoolTeamsMap[team.schoolId] = [];
+      }
+      schoolTeamsMap[team.schoolId].push(team.gender);
     });
+    
+    console.log("Schools with teams:", Object.keys(schoolTeamsMap).length);
+    
+    // Then create missing teams for each school
+    for (const school of schools) {
+      // Skip if we've already processed this school
+      if (schoolsProcessed[school.id]) continue;
+      schoolsProcessed[school.id] = true;
+      
+      const existingGenders = schoolTeamsMap[school.id] || [];
+      console.log(`School ${school.name} has teams: ${existingGenders.join(', ')}`);
+      
+      if (!existingGenders.includes('Boys')) {
+        console.log(`Creating Boys team for ${school.name}`);
+        addTeam({
+          schoolId: school.id,
+          gender: 'Boys',
+          players: [],
+          coaches: []
+        });
+        createdTeamsCount++;
+      }
+      
+      if (!existingGenders.includes('Girls')) {
+        console.log(`Creating Girls team for ${school.name}`);
+        addTeam({
+          schoolId: school.id,
+          gender: 'Girls',
+          players: [],
+          coaches: []
+        });
+        createdTeamsCount++;
+      }
+    }
+    
+    console.log(`Created ${createdTeamsCount} new teams`);
+    return createdTeamsCount;
   };
 
   const addSchool = (school: Omit<School, 'id'>) => {

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Team } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,11 +12,13 @@ export const useTeamOperations = (initialTeams: Team[]) => {
       id: crypto.randomUUID(),
       players: []
     };
-    setTeams([...teams, newTeam]);
+    setTeams(prevTeams => [...prevTeams, newTeam]);
     toast({
       title: 'Team Added',
       description: `New ${newTeam.gender} team has been added successfully.`
     });
+    
+    return newTeam; // Return the created team
   };
   
   const updateTeam = (team: Team) => {
