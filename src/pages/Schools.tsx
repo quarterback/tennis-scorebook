@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +11,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Search, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import GroupedSchoolsList from '@/components/schools/GroupedSchoolsList';
+import BulkDistrictAssignment from '@/components/schools/BulkDistrictAssignment';
 
 const Schools = () => {
   const { schools, addSchool, updateSchool, deleteSchool, districts, getDistrictsByClassification } = useData();
@@ -111,117 +112,42 @@ const Schools = () => {
     const district = districts.find(d => d.id === districtId);
     return district ? district.name : 'Unknown District';
   };
-  
+
+  const handleBulkDistrictAssignment = (schoolIds: string[], districtId: string) => {
+    schoolIds.forEach(schoolId => {
+      const school = schools.find(s => s.id === schoolId);
+      if (school) {
+        updateSchool({
+          ...school,
+          districtId: districtId
+        });
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <SchoolsHeader 
         schoolCount={schools.length}
-        filteredCount={filteredSchools.length}
+        filteredCount={schools.length}
         isAdmin={user?.role === 'admin'}
         onAddClick={() => setIsAddDialogOpen(true)}
       />
       
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <Select
-                value={classificationFilter}
-                onValueChange={(value) => setClassificationFilter(value as Classification | 'all')}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Classification" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classifications</SelectItem>
-                  <SelectItem value="6A">6A</SelectItem>
-                  <SelectItem value="5A">5A</SelectItem>
-                  <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Select
-                value={districtFilter}
-                onValueChange={setDistrictFilter}
-                disabled={classificationFilter === 'all'}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select District" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Districts</SelectItem>
-                  {districts
-                    .filter(d => classificationFilter === 'all' || d.classification === classificationFilter)
-                    .map(district => (
-                      <SelectItem key={district.id} value={district.id}>
-                        {district.name}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search schools..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          
-          {filteredSchools.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>School Name</TableHead>
-                  <TableHead>Classification</TableHead>
-                  <TableHead>District</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSchools.map((school) => (
-                  <TableRow key={school.id}>
-                    <TableCell className="font-medium">{school.name}</TableCell>
-                    <TableCell>{school.classification}</TableCell>
-                    <TableCell>{getDistrictName(school.districtId)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link to={`/teams?school=${school.id}`}>
-                          <Button variant="outline" size="sm" className="flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            Teams
-                          </Button>
-                        </Link>
-                        
-                        {user?.role === 'admin' && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => openEditDialog(school)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-gray-500">No schools found matching your filters.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {user?.role === 'admin' && (
+        <BulkDistrictAssignment
+          schools={schools}
+          districts={districts}
+          onAssignDistrict={handleBulkDistrictAssignment}
+        />
+      )}
+
+      <GroupedSchoolsList
+        schools={schools}
+        districts={districts}
+        canEdit={user?.role === 'admin'}
+        onEditSchool={openEditDialog}
+      />
       
       <SchoolFormDialog 
         isOpen={isAddDialogOpen}
