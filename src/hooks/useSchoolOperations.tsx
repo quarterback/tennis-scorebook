@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 // Define initial districts with their schools
 const oregonDistricts = {
+  // 6A Districts
   "6a-1": {
     name: "Portland Interscholastic League",
     classification: "6A" as Classification,
@@ -40,6 +41,8 @@ const oregonDistricts = {
     classification: "6A" as Classification,
     schools: ["Grants Pass", "North Medford", "Roseburg", "Sheldon", "South Eugene", "South Medford", "Willamette"]
   },
+  
+  // 5A Districts
   "5a-1": {
     name: "Northwest Oregon Conference",
     classification: "5A" as Classification,
@@ -62,6 +65,8 @@ const oregonDistricts = {
     classification: "5A" as Classification,
     schools: ["Bend", "Caldera", "Mountain View", "Redmond", "Ridgeview", "Summit"]
   },
+  
+  // 4A/3A/2A/1A Special Districts
   "sd-1": {
     name: "Special District 1",
     classification: "4A/3A/2A/1A" as Classification,
