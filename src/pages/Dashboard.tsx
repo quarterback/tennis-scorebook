@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
@@ -6,21 +5,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, Calendar, School, CheckCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PlayerLeaderboard from '@/components/dashboard/PlayerLeaderboard';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 const Dashboard = () => {
-  const { schools, teams, matches } = useData();
+  const { teams, schools, matches } = useData();
   const { user } = useAuth();
+  const { data: dashboardData, isLoading } = useDashboardData();
   
-  // If user is a coach, filter to only show their school
-  const filteredSchools = user?.role === 'coach' && user.schoolId
-    ? schools.filter(school => school.id === user.schoolId)
-    : schools;
-  
-  // Filter teams based on user role
-  const filteredTeams = user?.role === 'coach' && user.schoolId
-    ? teams.filter(team => team.schoolId === user.schoolId)
-    : teams;
-  
+  const getTeamName = (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return 'Unknown Team';
+    
+    const school = schools.find(s => s.id === team.schoolId);
+    return `${school?.name || 'Unknown'} ${team.gender}`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tennis-blue"></div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return null;
+  }
+
   // Get upcoming matches (within next 14 days)
   const today = new Date();
   const twoWeeksFromNow = new Date();
@@ -64,111 +75,68 @@ const Dashboard = () => {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
-    
-  // Find team name by ID
-  const getTeamName = (teamId: string) => {
-    const team = teams.find(t => t.id === teamId);
-    if (!team) return 'Unknown Team';
-    
-    const school = schools.find(s => s.id === team.schoolId);
-    return `${school?.name || 'Unknown'} ${team.gender}`;
-  };
 
-  // Sample data for player leaderboards
-  const sampleTopSingles = [
-    { id: "s1", name: "Sophia Chen", school: "Catlin Gabel", wins: 13, losses: 0, powerRating: 9.8 },
-    { id: "s2", name: "Isabella Martinez", school: "Oregon Episcopal", wins: 12, losses: 1, powerRating: 9.6 },
-    { id: "s3", name: "Emma Thompson", school: "Valley Catholic", wins: 11, losses: 2, powerRating: 9.3 },
-    { id: "s4", name: "Olivia Jackson", school: "North Valley", wins: 10, losses: 2, powerRating: 9.1 },
-    { id: "s5", name: "Madison Taylor", school: "Cascade", wins: 12, losses: 3, powerRating: 8.9 }
-  ];
-
-  const sampleTopDoubles = [
-    { id: "d1", players: "Lin/Garcia", school: "Catlin Gabel", wins: 12, losses: 1, powerRating: 9.7 },
-    { id: "d2", players: "Wilson/Davis", school: "St. Mary's", wins: 11, losses: 1, powerRating: 9.5 },
-    { id: "d3", players: "Rodriguez/Kim", school: "La Grande", wins: 10, losses: 2, powerRating: 9.3 },
-    { id: "d4", players: "Johnson/Patel", school: "Philomath", wins: 9, losses: 3, powerRating: 9.0 },
-    { id: "d5", players: "Lee/Washington", school: "The Dalles", wins: 11, losses: 4, powerRating: 8.8 }
-  ];
-
-  const seasonInsights = {
-    undefeatedCount: 3,
-    upsetOfSeason: "Philomath's Johnson/Patel over Catlin Gabel's Lin/Garcia (April 12)",
-    longestStreak: "Sophia Chen (Catlin Gabel) - 24 consecutive matches dating back to 2024",
-    crossClassSuccess: "Class 4A La Grande has defeated three 5A teams this season",
-    mostImproved: "Estacada (+35% win rate from last season)"
-  };
-
-  const tournamentSchedule = [
-    { districtName: "Special District 1", dates: "May 10-11", location: "Oregon Episcopal" },
-    { districtName: "Special District 2", dates: "May 9-10", location: "Cascade" },
-    { districtName: "Special District 3", dates: "May 11-12", location: "North Valley" },
-    { districtName: "Special District 4", dates: "May 10-11", location: "The Dalles" },
-    { districtName: "Special District 5", dates: "May 9-10", location: "La Grande" }
-  ];
-  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-tennis-dark">Dashboard</h1>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-gradient-to-br from-tennis-blue to-tennis-blue/90">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Schools</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Schools</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{filteredSchools.length}</div>
-              <School className="h-8 w-8 text-tennis-blue opacity-80" />
+              <div className="text-2xl font-bold text-white">{dashboardData.stats.schoolsCount}</div>
+              <School className="h-8 w-8 text-white opacity-80" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-tennis-green to-tennis-green/90">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Teams</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Teams</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{filteredTeams.length}</div>
-              <Users className="h-8 w-8 text-tennis-green opacity-80" />
+              <div className="text-2xl font-bold text-white">{dashboardData.stats.teamsCount}</div>
+              <Users className="h-8 w-8 text-white opacity-80" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-tennis-accent to-tennis-accent/90">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Matches</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Upcoming Matches</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{upcomingMatches.length}</div>
-              <Calendar className="h-8 w-8 text-tennis-blue opacity-80" />
+              <div className="text-2xl font-bold text-white">{dashboardData.stats.upcomingMatchesCount}</div>
+              <Calendar className="h-8 w-8 text-white opacity-80" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gradient-to-br from-tennis-blue to-tennis-blue/90">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed Matches</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Completed Matches</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{recentMatches.length}</div>
-              <CheckCircle className="h-8 w-8 text-tennis-green opacity-80" />
+              <div className="text-2xl font-bold text-white">{dashboardData.stats.completedMatchesCount}</div>
+              <CheckCircle className="h-8 w-8 text-white opacity-80" />
             </div>
           </CardContent>
         </Card>
       </div>
       
-      {/* Player Leaderboard Component */}
       <PlayerLeaderboard 
-        topSingles={sampleTopSingles}
-        topDoubles={sampleTopDoubles}
-        insights={seasonInsights}
-        tournaments={tournamentSchedule}
+        topSingles={dashboardData.topSingles}
+        topDoubles={dashboardData.topDoubles}
+        insights={dashboardData.insights}
+        tournaments={dashboardData.tournaments}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
