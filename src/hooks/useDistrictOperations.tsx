@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { District, Classification } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -91,12 +90,21 @@ export const useDistrictOperations = (customInitialDistricts: District[] = []) =
   };
   
   const updateDistrict = (district: District) => {
-    const updatedDistricts = districts.map(d => d.id === district.id ? district : d);
+    const updatedDistricts = districts.map(d => 
+      d.id === district.id 
+        ? {
+            ...d, 
+            tournamentDates: district.tournamentDates,
+            tournamentLocation: district.tournamentLocation,
+            tournamentYear: district.tournamentYear
+          } 
+        : d
+    );
     setDistricts(updatedDistricts);
     localStorage.setItem('districts', JSON.stringify(updatedDistricts));
     toast({
       title: 'District Updated',
-      description: `${district.name} has been updated successfully.`
+      description: `${district.name} tournament details have been updated.`
     });
   };
   
