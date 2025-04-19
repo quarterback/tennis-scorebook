@@ -7,7 +7,7 @@ export const useTeamOperations = (initialTeams: Team[]) => {
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const { toast } = useToast();
   
-  const addTeam = (team: Omit<Team, 'id'>) => {
+  const addTeam = (team: Omit<Team, 'id'>): Team => {
     const newTeam: Team = {
       ...team,
       id: crypto.randomUUID(),

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { School, Classification, Gender, Team } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -184,7 +185,7 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
     return teamIds;
   };
 
-  const createTeamsForAllSchools = async () => {
+  const createTeamsForAllSchools = async (): Promise<number> => {
     console.log("Creating teams for all schools...");
     console.log("Current schools:", schools.length);
     console.log("Current teams:", teams.length);
