@@ -6,18 +6,15 @@ import {
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Users } from 'lucide-react';  // Changed from Team to Users
-import { useToast } from '@/components/ui/use-toast';
+import { Users } from 'lucide-react';
 
 const Teams = () => {
-  const { teams, schools, createTeamsForAllSchools } = useData();
+  const { teams, schools } = useData();
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingTeams, setIsCreatingTeams] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     console.log("Teams page loaded with", teams.length, "teams");
@@ -27,49 +24,31 @@ const Teams = () => {
     return () => clearTimeout(timer);
   }, [teams]);
 
-  const handleCreateMissingTeams = async () => {
-    setIsCreatingTeams(true);
-    try {
-      const createdCount = await createTeamsForAllSchools();
-      console.log("Created teams count:", createdCount);
-      toast({
-        title: 'Teams Created',
-        description: `Created ${createdCount} new teams for schools missing them.`,
-        variant: createdCount > 0 ? 'default' : 'destructive',
-      });
-    } catch (error) {
-      console.error("Error creating teams:", error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create teams. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsCreatingTeams(false);
-    }
-  };
-
   return (
-    <div className="container mx-auto p-4">
-      <Card className="mb-6">
+    <div className="container mx-auto p-4 space-y-6">
+      <Card className="border-tennis-blue/20">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Teams Management</span>
-            <Button 
-              variant="outline" 
-              onClick={handleCreateMissingTeams}
-              disabled={isCreatingTeams}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              {isCreatingTeams ? 'Creating...' : 'Create Missing Teams'}
-            </Button>
-          </CardTitle>
+          <div className="flex items-center space-x-2">
+            <Users className="h-6 w-6 text-tennis-blue" />
+            <div>
+              <CardTitle>Teams Management</CardTitle>
+              <CardDescription>
+                Manage school teams and rosters
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Total Teams: {teams.length} | Schools: {schools.length} | Manage school teams and rosters
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Total Teams:</span>
+              <span className="text-tennis-blue">{teams.length}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Total Schools:</span>
+              <span className="text-tennis-green">{schools.length}</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
       
