@@ -27,6 +27,7 @@ interface DataContextType {
   addSchool: (school: Omit<School, 'id'>) => void;
   updateSchool: (school: School) => void;
   deleteSchool: (id: string) => void;
+  createTeamsForAllSchools: () => void;
   
   addTeam: (team: Omit<Team, 'id'>) => void;
   updateTeam: (team: Team) => void;
@@ -90,7 +91,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const { 
-    schools, setSchools, addSchool, updateSchool, deleteSchool 
+    schools, setSchools, addSchool, updateSchool, deleteSchool, createTeamsForAllSchools 
   } = useSchoolOperations(sampleSchools);
   
   const { 
@@ -149,6 +150,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addSchool,
     updateSchool,
     deleteSchool,
+    createTeamsForAllSchools,
     
     addTeam,
     updateTeam,
