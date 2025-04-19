@@ -153,11 +153,14 @@ export interface User {
   schoolId?: string;
 }
 
-// Add TeamStanding interface
+// Updated TeamStanding interface to match usage in the codebase
 export interface TeamStanding {
   teamId: string;
   teamName: string;
   schoolName: string;
+  gender?: Gender;
+  classification?: string;
+  districtName?: string;
   wins: number;
   losses: number;
   ties?: number;
@@ -168,6 +171,16 @@ export interface TeamStanding {
   leagueWinPercentage?: number;
   points?: number;
   gamesPlayed?: number;
+  
+  // Add properties used in StandingsTable.tsx
+  overallWins?: number;
+  overallLosses?: number;
+  overallTies?: number;
+  overallWinPct?: number;
+  leagueWinPct?: number;
+  qualificationStatus?: 'automatic' | 'at-large' | 'none';
+  qualificationSeed?: number;
+  matchesPlayed?: number;
 }
 
 // Add PlayerTransfer interface
@@ -179,4 +192,5 @@ export interface PlayerTransfer {
   date: string;
   reason?: string;
   approved: boolean;
+  seasonId?: string; // Add seasonId to support usage in hooks
 }

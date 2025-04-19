@@ -1,3 +1,4 @@
+
 import { District, School, Team, Player, Match, User, Season } from '@/types';
 import { TeamLadder } from '@/types/ranking';
 
@@ -46,6 +47,8 @@ export const sampleSchools: School[] = [
     name: 'Jesuit',
     classification: '6A',
     districtId: 'district-1',
+    city: 'Portland',
+    state: 'OR',
     teams: []
   },
   {
@@ -53,6 +56,8 @@ export const sampleSchools: School[] = [
     name: 'Sunset',
     classification: '6A',
     districtId: 'district-1',
+    city: 'Portland',
+    state: 'OR',
     teams: []
   },
   {
@@ -60,6 +65,8 @@ export const sampleSchools: School[] = [
     name: 'Beaverton',
     classification: '6A',
     districtId: 'district-1',
+    city: 'Beaverton',
+    state: 'OR',
     teams: []
   },
   {
@@ -67,6 +74,8 @@ export const sampleSchools: School[] = [
     name: 'Lake Oswego',
     classification: '6A',
     districtId: 'district-2',
+    city: 'Lake Oswego',
+    state: 'OR',
     teams: []
   },
   {
@@ -74,6 +83,8 @@ export const sampleSchools: School[] = [
     name: 'Lakeridge',
     classification: '6A',
     districtId: 'district-2',
+    city: 'Lake Oswego',
+    state: 'OR',
     teams: []
   },
   {
@@ -81,6 +92,8 @@ export const sampleSchools: School[] = [
     name: 'West Linn',
     classification: '6A',
     districtId: 'district-2',
+    city: 'West Linn',
+    state: 'OR',
     teams: []
   },
   {
@@ -88,6 +101,8 @@ export const sampleSchools: School[] = [
     name: 'Central Catholic',
     classification: '6A',
     districtId: 'district-3',
+    city: 'Portland',
+    state: 'OR',
     teams: []
   },
   {
@@ -95,6 +110,8 @@ export const sampleSchools: School[] = [
     name: 'Wilsonville',
     classification: '5A',
     districtId: 'district-4',
+    city: 'Wilsonville',
+    state: 'OR',
     teams: []
   },
   {
@@ -102,6 +119,8 @@ export const sampleSchools: School[] = [
     name: 'La Salle',
     classification: '5A',
     districtId: 'district-4',
+    city: 'Milwaukie',
+    state: 'OR',
     teams: []
   },
   {
@@ -109,6 +128,8 @@ export const sampleSchools: School[] = [
     name: 'Marist Catholic',
     classification: '4A/3A/2A/1A',
     districtId: 'district-6',
+    city: 'Eugene',
+    state: 'OR',
     teams: []
   },
   {
@@ -116,6 +137,8 @@ export const sampleSchools: School[] = [
     name: 'Oregon Episcopal',
     classification: '4A/3A/2A/1A',
     districtId: 'district-6',
+    city: 'Portland',
+    state: 'OR',
     teams: []
   },
   {
@@ -123,6 +146,8 @@ export const sampleSchools: School[] = [
     name: 'Catlin Gabel',
     classification: '4A/3A/2A/1A',
     districtId: 'district-6',
+    city: 'Portland',
+    state: 'OR',
     teams: []
   }
 ];

@@ -1,209 +1,222 @@
-import { useState, useEffect } from 'react';
-import { Player, PlayerTransfer, Season } from '@/types';
+import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useData } from '@/context/DataContext';
+import { Player, Team, School, PlayerTransfer } from '@/types';
+import { useToast } from '@/components/ui/use-toast';
 
 export const usePlayersData = () => {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [transfers, setTransfers] = useState<PlayerTransfer[]>([]);
+  const { players, setPlayers, teams, schools, currentSeason, playerTransfers, setPlayerTransfers } = useData();
+  const { toast } = useToast();
   
-  // Hardcoded seasons for demonstration - added isCurrent property to fix TypeScript errors
-  const [seasons, setSeasons] = useState<Season[]>([
-    { id: 'spring-2023', name: 'Spring 2023', year: 2023, isCurrent: false },
-    { id: 'spring-2024', name: 'Spring 2024', year: 2024, isCurrent: false },
-    { id: 'spring-2025', name: 'Spring 2025', year: 2025, isCurrent: true }
-  ]);
+  const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
+  const [playerFormData, setPlayerFormData] = useState<Omit<Player, 'id' | 'status' | 'seasonId'>>({
+    name: '',
+    grade: '9', // Changed to string to match type
+    teamId: '',
+    gender: 'Boys',
+    previousTeams: [],
+    seasons: []
+  });
   
-  // Load players data from localStorage on initialization
-  useEffect(() => {
-    const savedPlayers = localStorage.getItem('players');
-    if (savedPlayers) {
-      try {
-        const parsedPlayers = JSON.parse(savedPlayers);
-        if (Array.isArray(parsedPlayers) && parsedPlayers.length > 0) {
-          setPlayers(parsedPlayers);
-        }
-      } catch (error) {
-        console.error('Error loading players from localStorage:', error);
-      }
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
+  const [transferFormData, setTransferFormData] = useState({
+    playerId: '',
+    fromTeamId: '',
+    toTeamId: '',
+    reason: ''
+  });
+  
+  const getTeamName = (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return 'Unknown Team';
+    const school = schools.find(s => s.id === team.schoolId);
+    return `${school?.name || 'Unknown School'} ${team.gender}`;
+  };
+  
+  const getPlayerName = (playerId: string) => {
+    const player = players.find(p => p.id === playerId);
+    return player ? player.name : 'Unknown Player';
+  };
+  
+  const handleAddPlayer = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!playerFormData.teamId) {
+      toast({
+        title: "Error",
+        description: "Please select a team",
+        variant: "destructive"
+      });
+      return;
     }
     
-    const savedTransfers = localStorage.getItem('transfers');
-    if (savedTransfers) {
-      try {
-        const parsedTransfers = JSON.parse(savedTransfers);
-        if (Array.isArray(parsedTransfers)) {
-          setTransfers(parsedTransfers);
-        }
-      } catch (error) {
-        console.error('Error loading transfers from localStorage:', error);
-      }
+    const selectedTeam = teams.find(t => t.id === playerFormData.teamId);
+    if (!selectedTeam) {
+      toast({
+        title: "Error",
+        description: "Selected team not found",
+        variant: "destructive"
+      });
+      return;
     }
-  }, []);
-  
-  // Save players data to localStorage whenever it changes
-  useEffect(() => {
-    if (players.length > 0) {
-      localStorage.setItem('players', JSON.stringify(players));
-    }
-  }, [players]);
-  
-  // Save transfers data to localStorage whenever it changes
-  useEffect(() => {
-    if (transfers.length > 0) {
-      localStorage.setItem('transfers', JSON.stringify(transfers));
-    }
-  }, [transfers]);
-  
-  const loadPlayersData = (initialPlayers: Player[]) => {
-    // Only load initial data if no data in localStorage
-    if (players.length === 0) {
-      setPlayers(initialPlayers);
-    }
-  };
-  
-  const getCurrentSeason = (): Season => {
-    const current = seasons.find(s => s.isCurrent);
-    if (!current) {
-      return seasons[seasons.length - 1]; // Default to last season if no current specified
-    }
-    return current;
-  };
-  
-  const getArchivedSeasons = (): Season[] => {
-    return seasons.filter(s => !s.isCurrent);
-  };
-  
-  const addPlayer = (player: Omit<Player, 'id' | 'status' | 'seasonId'>) => {
-    const currentSeason = getCurrentSeason();
     
+    // Create new player with current team ID
     const newPlayer: Player = {
-      id: crypto.randomUUID(),
-      ...player,
-      status: 'active',
-      seasonId: currentSeason.id,
-      seasons: player.seasons || [currentSeason.id]
+      id: uuidv4(),
+      name: playerFormData.name,
+      grade: playerFormData.grade,
+      teamId: playerFormData.teamId,
+      gender: selectedTeam.gender,
+      previousTeams: [],
+      seasons: [currentSeason?.id || '']
     };
     
-    setPlayers(prevPlayers => [...prevPlayers, newPlayer]);
+    setPlayers([...players, newPlayer]);
     
-    // Save to localStorage after adding
-    const updatedPlayers = [...players, newPlayer];
-    localStorage.setItem('players', JSON.stringify(updatedPlayers));
-    
-    return newPlayer; // Return the new player for use in other functions
-  };
-  
-  const updatePlayer = (player: Player) => {
-    const updatedPlayers = players.map(p => p.id === player.id ? player : p);
-    setPlayers(updatedPlayers);
-    localStorage.setItem('players', JSON.stringify(updatedPlayers));
-  };
-  
-  const deletePlayer = (id: string) => {
-    const updatedPlayers = players.filter(p => p.id !== id);
-    setPlayers(updatedPlayers);
-    localStorage.setItem('players', JSON.stringify(updatedPlayers));
-  };
-  
-  const getPlayerById = (id: string): Player | undefined => {
-    return players.find(p => p.id === id);
-  };
-  
-  const getPlayersByTeam = (teamId: string): Player[] => {
-    return players.filter(p => p.teamId === teamId && p.status === 'active');
-  };
-  
-  const getPlayersByseason = (seasonId: string): Player[] => {
-    return players.filter(p => p.seasons.includes(seasonId));
-  };
-  
-  const transferPlayer = (playerId: string, toTeamId: string) => {
-    // Find the player
-    const player = players.find(p => p.id === playerId);
-    if (!player) return;
-
-    // Get current season
-    const currentSeason = getCurrentSeason();
-    
-    // Create new transfer record
-    const transfer: PlayerTransfer = {
-      id: crypto.randomUUID(),
-      playerId,
-      fromTeamId: player.teamId,
-      toTeamId,
-      date: new Date().toISOString(),
-      seasonId: currentSeason.id
-    };
-
-    // Update player with new team and add previous team to history
-    const updatedPlayer = {
-      ...player,
-      teamId: toTeamId,
-      previousTeams: player.previousTeams ? 
-        [...player.previousTeams, player.teamId] : 
-        [player.teamId]
-    };
-
-    setTransfers(prev => [...prev, transfer]);
-    updatePlayer(updatedPlayer);
-  };
-
-  const retirePlayer = (playerId: string) => {
-    // Find the player
-    const player = players.find(p => p.id === playerId);
-    if (!player) return;
-    
-    // Update player's status
-    const updatedPlayer = {
-      ...player,
-      status: 'retired' as const
-    };
-    
-    updatePlayer(updatedPlayer);
-  };
-  
-  const progressSeasons = (): Season => {
-    // Find current season
-    const currentSeason = getCurrentSeason();
-    
-    // Create new season based on current
-    const nextYear = currentSeason.year + 1;
-    const newSeason: Season = {
-      id: `spring-${nextYear}`,
-      name: `Spring ${nextYear}`,
-      year: nextYear,
-      isCurrent: true
-    };
-    
-    // Update current season to not be current
-    const updatedSeasons = seasons.map(s => {
-      if (s.id === currentSeason.id) {
-        return { ...s, isCurrent: false };
-      }
-      return s;
+    // Reset form
+    setPlayerFormData({
+      name: '',
+      grade: '9',
+      teamId: '',
+      gender: 'Boys',
+      previousTeams: [],
+      seasons: []
     });
     
-    // Add new season
-    setSeasons([...updatedSeasons, newSeason]);
+    setIsPlayerDialogOpen(false);
     
-    return newSeason;
+    toast({
+      title: "Player Added",
+      description: `${playerFormData.name} has been added to the team roster`,
+    });
+  };
+  
+  const updatePlayer = (updatedPlayer: Player) => {
+    const updatedPlayers = players.map(player =>
+      player.id === updatedPlayer.id ? updatedPlayer : player
+    );
+    setPlayers(updatedPlayers);
+  };
+  
+  const deletePlayer = (playerId: string) => {
+    setPlayers(players.filter(player => player.id !== playerId));
+    toast({
+      title: "Player Deleted",
+      description: "Player has been removed from the team.",
+    });
+  };
+  
+  const handleInitiateTransfer = (playerId: string) => {
+    setTransferFormData({
+      playerId: playerId,
+      fromTeamId: players.find(p => p.id === playerId)?.teamId || '',
+      toTeamId: '',
+      reason: ''
+    });
+    setIsTransferDialogOpen(true);
+  };
+  
+  const handleApproveTransfer = (transferId: string) => {
+    const updatedTransfers = playerTransfers.map(transfer => {
+      if (transfer.id === transferId) {
+        return { ...transfer, approved: true };
+      }
+      return transfer;
+    });
+    setPlayerTransfers(updatedTransfers);
+    
+    const transfer = playerTransfers.find(t => t.id === transferId);
+    if (transfer) {
+      // Update player's team
+      const updatedPlayers = players.map(player => {
+        if (player.id === transfer.playerId) {
+          return { ...player, teamId: transfer.toTeamId };
+        }
+        return player;
+      });
+      setPlayers(updatedPlayers);
+    }
+    
+    toast({
+      title: "Transfer Approved",
+      description: "Player transfer has been approved.",
+    });
+  };
+  
+  const handleRejectTransfer = (transferId: string) => {
+    const updatedTransfers = playerTransfers.map(transfer => {
+      if (transfer.id === transferId) {
+        return { ...transfer, approved: false };
+      }
+      return transfer;
+    });
+    setPlayerTransfers(updatedTransfers);
+    
+    toast({
+      title: "Transfer Rejected",
+      description: "Player transfer has been rejected.",
+    });
+  };
+  
+  const createPlayerTransfer = (
+    playerId: string,
+    fromTeamId: string,
+    toTeamId: string,
+    reason: string
+  ): PlayerTransfer => {
+    return {
+      id: uuidv4(),
+      playerId,
+      fromTeamId,
+      toTeamId,
+      date: new Date().toISOString(),
+      reason,
+      approved: false,
+      seasonId: currentSeason?.id
+    };
+  };
+  
+  const submitTransferRequest = () => {
+    const { playerId, fromTeamId, toTeamId, reason } = transferFormData;
+    
+    if (!playerId || !fromTeamId || !toTeamId) {
+      toast({
+        title: "Error",
+        description: "Please fill out all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newTransfer = createPlayerTransfer(playerId, fromTeamId, toTeamId, reason);
+    setPlayerTransfers([...playerTransfers, newTransfer]);
+    setIsTransferDialogOpen(false);
+    
+    toast({
+      title: "Transfer Request Sent",
+      description: "Player transfer request has been submitted.",
+    });
   };
   
   return {
     players,
     setPlayers,
-    addPlayer,
+    isPlayerDialogOpen,
+    setIsPlayerDialogOpen,
+    playerFormData,
+    setPlayerFormData,
+    handleAddPlayer,
     updatePlayer,
     deletePlayer,
-    getPlayerById,
-    getPlayersByTeam,
-    transfers,
-    seasons,
-    transferPlayer,
-    retirePlayer,
-    progressSeasons,
-    getCurrentSeason,
-    loadPlayersData,
-    getArchivedSeasons,
-    getPlayersByseason
+    getTeamName,
+    getPlayerName,
+    isTransferDialogOpen,
+    setIsTransferDialogOpen,
+    transferFormData,
+    setTransferFormData,
+    handleInitiateTransfer,
+    handleApproveTransfer,
+    handleRejectTransfer,
+    submitTransferRequest
   };
 };

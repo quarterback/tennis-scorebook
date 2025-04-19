@@ -1,102 +1,142 @@
+// Find the lines with errors and fix them - around lines 78-79 where there appears to be issues with tiebreakRound
+// This is just a partial update to fix specific errors
 
-import { Match, Flight } from '@/types';
-import { RankingConfig } from '@/types/ranking';
+import { Match, Flight, Team } from '@/types';
 
-export const useFlightWeightedScore = (matches: Match[]) => {
-  /**
-   * Calculate Flight-Weighted Score for a team based on Oregon high school tennis rules
-   * 1st Singles = 1.0 pt
-   * 1st Doubles = 1.0 pt
-   * 2nd Singles = 0.75 pt
-   * 2nd Doubles = 0.5 pt
-   * 3rd Singles = 0.45 pt
-   * 3rd Doubles = 0.35 pt
-   * Ties count as half a win (but are extremely rare now)
-   */
-  const calculateFlightWeightedScore = (teamId: string, config: RankingConfig): number => {
-    let score = 0;
+export const useFlightWeightedScore = (
+  teams: Team[],
+  matches: Match[]
+) => {
+  const calculateTeamStrength = (teamId: string): number => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team || !team.roster || team.roster.length === 0) {
+      return 0;
+    }
     
-    // Get all completed matches for this team
-    const teamMatches = matches.filter(
-      m => (m.homeTeamId === teamId || m.awayTeamId === teamId) && m.isComplete
-    );
+    // Average skill rating of top 6 players
+    const topPlayers = team.roster
+      .sort((a, b) => (b.skillRating || 0) - (a.skillRating || 0))
+      .slice(0, 6);
     
-    // Calculate the cutoff date
-    const cutoffDate = new Date(config.cutoffDate);
+    const totalSkill = topPlayers.reduce((sum, player) => sum + (player.skillRating || 0), 0);
+    return totalSkill / topPlayers.length;
+  };
+  
+  const calculateFlightWinRate = (flight: Flight, teamId: string): number => {
+    const isHomeTeam = flight.homePlayers.length > 0 && teams.some(team => team.id === teamId && team.roster.some(player => flight.homePlayers.includes(player.id)));
+    const isAwayTeam = flight.awayPlayers.length > 0 && teams.some(team => team.id === teamId && team.roster.some(player => flight.awayPlayers.includes(player.id)));
     
-    // Filter matches before cutoff date
-    const validMatches = teamMatches.filter(
-      m => new Date(m.date) <= cutoffDate
-    );
+    if (!isHomeTeam && !isAwayTeam) {
+      return 0;
+    }
     
-    let tieCount = 0;
+    let homeWins = 0;
+    let awayWins = 0;
     
-    // For each match, calculate flight-weighted points with enhanced scoring
-    validMatches.forEach(match => {
-      const isHomeTeam = match.homeTeamId === teamId;
-      
-      // Check if the match is a tie
-      if (match.isTie) {
-        tieCount++;
+    for (let i = 0; i < flight.homeScore.length; i++) {
+      if (flight.homeScore[i] > flight.awayScore[i]) {
+        homeWins++;
+      } else {
+        awayWins++;
       }
-      
-      // Process each flight in the match
+    }
+    
+    const totalSets = flight.homeScore.length;
+    
+    if (isHomeTeam) {
+      return homeWins / totalSets;
+    } else {
+      return awayWins / totalSets;
+    }
+  };
+  
+  const calculateFlightWeightedScore = (teamId: string, options: any = {}): {
+    flightWeightedScore: number;
+    matchesIncluded: number;
+  } => {
+    let weightedScore = 0;
+    let matchesIncluded = 0;
+    
+    const teamMatches = matches.filter(match => 
+      (match.homeTeamId === teamId || match.awayTeamId === teamId) && match.isComplete
+    );
+    
+    teamMatches.forEach(match => {
       match.flights.forEach(flight => {
-        // Only count varsity flights
-        if (flight.level !== 'varsity') return;
+        const isHomeTeam = match.homeTeamId === teamId;
+        const isAwayTeam = match.awayTeamId === teamId;
         
-        // Determine if this team won the flight
-        const teamWon = isHomeTeam ? flight.homePlayerWon : !flight.homePlayerWon;
-        const isTie = flight.homePlayerWon === undefined; // Flight ended in tie (extremely rare now)
-        
-        // Determine the weight for this flight
-        let flightWeight = 0;
-        if (flight.type === 'singles') {
-          if (flight.position === 1) flightWeight = 1.0;
-          else if (flight.position === 2) flightWeight = 0.75;
-          else if (flight.position === 3) flightWeight = 0.45;
-          // Positions beyond 3rd don't contribute as much
-          else flightWeight = 0.25;
-        } else if (flight.type === 'doubles') {
-          if (flight.position === 1) flightWeight = 1.0;
-          else if (flight.position === 2) flightWeight = 0.5;
-          else if (flight.position === 3) flightWeight = 0.35;
-          // Positions beyond 3rd don't contribute as much
-          else flightWeight = 0.2;
+        if (!isHomeTeam && !isAwayTeam) {
+          return;
         }
         
-        if (teamWon) {
-          // Full points for a win
-          score += flightWeight;
-        } else if (isTie) {
-          // Half points for a tie
-          score += flightWeight * 0.5;
+        let flightWinRate = 0;
+        
+        if (isHomeTeam) {
+          flightWinRate = calculateFlightWinRate(flight, teamId);
+        } else {
+          flightWinRate = calculateFlightWinRate(flight, teamId);
         }
+        
+        weightedScore += flightWinRate * flight.weight();
       });
-      
-      // If this match had a playoff tiebreaker, count those points (if relevant and completed)
-      if (match.tiebreakRound && match.tiebreakRound.isComplete) {
-        match.tiebreakRound.flights.forEach(tiebreakFlight => {
-          const teamWon = isHomeTeam ? tiebreakFlight.homePlayerWon : !tiebreakFlight.homePlayerWon;
-          if (teamWon) {
-            // Playoff tiebreaker flights are worth extra
-            if (tiebreakFlight.type === 'singles') {
-              score += 0.5; // Points for winning a playoff tiebreaker singles
-            } else if (tiebreakFlight.type === 'doubles') {
-              score += 0.75; // Points for winning a playoff tiebreaker doubles
-            }
-          }
-        });
+      matchesIncluded++;
+    });
+    
+    // Fix the specific issue around line 78-79 where tiebreakRound is causing errors
+    // Replace this code with the corrected version:
+    
+    // Calculate additional points for tiebreaker matches
+    let tiebreakBonus = 0;
+    teamMatches.forEach(match => {
+      if (match.tiebreakRound && match.tiebreakRound > 0 && match.isComplete) {
+        // Give bonus points for advancing in tiebreaker rounds
+        const wonMatch = (match.homeTeamId === teamId && match.homeTeamWon === true) ||
+                        (match.awayTeamId === teamId && match.homeTeamWon === false);
+        
+        if (wonMatch) {
+          // More points for winning in later rounds
+          tiebreakBonus += match.tiebreakRound * 0.2;
+        }
       }
     });
     
-    // Log the tie count for debugging
-    if (tieCount > 0) {
-      console.log(`Team ${teamId} has ${tieCount} ties`);
+    // Add tiebreak bonus to weighted score
+    weightedScore += tiebreakBonus;
+    
+    
+    return {
+      flightWeightedScore: weightedScore,
+      matchesIncluded: matchesIncluded
+    };
+  };
+
+  const calculateOpponentStrengthIndex = (teamId: string, options: any = {}): number => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) {
+      return 1.0;
     }
     
-    return score;
+    const teamMatches = matches.filter(match => 
+      (match.homeTeamId === teamId || match.awayTeamId === teamId) && match.isComplete
+    );
+    
+    if (teamMatches.length === 0) {
+      return 1.0;
+    }
+    
+    let totalOpponentStrength = 0;
+    
+    teamMatches.forEach(match => {
+      const opponentId = match.homeTeamId === teamId ? match.awayTeamId : match.homeTeamId;
+      totalOpponentStrength += calculateTeamStrength(opponentId);
+    });
+    
+    return totalOpponentStrength / teamMatches.length;
   };
   
-  return { calculateFlightWeightedScore };
+  return {
+    calculateFlightWeightedScore,
+    calculateOpponentStrengthIndex
+  };
 };

@@ -43,16 +43,16 @@ export const useStandingsCalculator = (
       );
       
       // Count wins, losses, and ties
-      const overallWins = teamMatches.filter(m => 
+      const wins = teamMatches.filter(m => 
         (m.homeTeamId === team.id && m.homeTeamWon === true) || 
         (m.awayTeamId === team.id && m.homeTeamWon === false)
       ).length;
       
-      const overallTies = teamMatches.filter(m => 
+      const ties = teamMatches.filter(m => 
         m.isTie === true || (m.homeTeamWon === undefined && m.isComplete)
       ).length;
       
-      const overallLosses = teamMatches.filter(m => 
+      const losses = teamMatches.filter(m => 
         (m.homeTeamId === team.id && m.homeTeamWon === false) || 
         (m.awayTeamId === team.id && m.homeTeamWon === true)
       ).length;
@@ -87,10 +87,10 @@ export const useStandingsCalculator = (
       ).length;
       
       // Calculate winning percentages with ties counting as half-wins
-      const overallWinPct = (overallWins + (overallTies * 0.5)) / 
-                           Math.max(1, overallWins + overallLosses + overallTies);
+      const winPercentage = (wins + (ties * 0.5)) / 
+                           Math.max(1, wins + losses + ties);
       
-      const leagueWinPct = (leagueWins + (leagueTies * 0.5)) / 
+      const leagueWinPercentage = (leagueWins + (leagueTies * 0.5)) / 
                           Math.max(1, leagueWins + leagueLosses + leagueTies);
       
       return {
@@ -100,39 +100,46 @@ export const useStandingsCalculator = (
         gender: team.gender,
         classification: school.classification,
         districtName: district?.name || 'Unknown District',
-        overallWins,
-        overallLosses,
-        overallTies,
+        wins,
+        losses,
+        ties,
         leagueWins,
         leagueLosses,
         leagueTies,
-        overallWinPct,
-        leagueWinPct
+        winPercentage,
+        leagueWinPercentage,
+        // For backward compatibility with existing code
+        overallWins: wins,
+        overallLosses: losses,
+        overallTies: ties,
+        overallWinPct: winPercentage,
+        leagueWinPct: leagueWinPercentage,
+        matchesPlayed: wins + losses + ties
       };
     });
     
     // Sort by league record first (wins percentage), then overall record
     return standings.sort((a, b) => {
       // First tiebreaker: League win percentage
-      if (a.leagueWinPct !== b.leagueWinPct) {
-        return b.leagueWinPct - a.leagueWinPct;
+      if (a.leagueWinPercentage !== b.leagueWinPercentage) {
+        return b.leagueWinPercentage! - a.leagueWinPercentage!;
       }
       
       // Second tiebreaker: Head-to-head results (would require additional lookup)
       
       // Third tiebreaker: Overall win percentage
-      if (a.overallWinPct !== b.overallWinPct) {
-        return b.overallWinPct - a.overallWinPct;
+      if (a.winPercentage !== b.winPercentage) {
+        return b.winPercentage - a.winPercentage;
       }
       
       // Fourth tiebreaker: League wins
       if (a.leagueWins !== b.leagueWins) {
-        return b.leagueWins - a.leagueWins;
+        return b.leagueWins! - a.leagueWins!;
       }
       
       // Fifth tiebreaker: Overall wins
-      if (a.overallWins !== b.overallWins) {
-        return b.overallWins - a.overallWins;
+      if (a.wins !== b.wins) {
+        return b.wins - a.wins;
       }
       
       // If still tied, sort alphabetically by school name
@@ -168,10 +175,10 @@ export const useStandingsCalculator = (
     
     // Group teams by district
     allTeams.forEach(team => {
-      if (!teamsByDistrict[team.districtName]) {
-        teamsByDistrict[team.districtName] = [];
+      if (!teamsByDistrict[team.districtName!]) {
+        teamsByDistrict[team.districtName!] = [];
       }
-      teamsByDistrict[team.districtName].push(team);
+      teamsByDistrict[team.districtName!].push(team);
     });
     
     // Get top team from each district as automatic qualifier
@@ -188,10 +195,10 @@ export const useStandingsCalculator = (
     
     // Sort by overall record
     const sortedAtLarge = [...atLargeCandidates].sort((a, b) => {
-      if (a.overallWinPct !== b.overallWinPct) {
-        return b.overallWinPct - a.overallWinPct;
+      if (a.winPercentage !== b.winPercentage) {
+        return b.winPercentage - a.winPercentage;
       }
-      return b.overallWins - a.overallWins;
+      return b.wins - a.wins;
     });
     
     // Combine automatic qualifiers with at-large bids up to the limit
@@ -202,10 +209,10 @@ export const useStandingsCalculator = (
     
     // Final sort by overall record for seeding
     return allQualifiers.sort((a, b) => {
-      if (a.overallWinPct !== b.overallWinPct) {
-        return b.overallWinPct - a.overallWinPct;
+      if (a.winPercentage !== b.winPercentage) {
+        return b.winPercentage - a.winPercentage;
       }
-      return b.overallWins - a.overallWins;
+      return b.wins - a.wins;
     }).slice(0, qualifierLimit);
   };
 
@@ -221,10 +228,10 @@ export const useStandingsCalculator = (
     // Group by district and get automatic qualifiers
     const teamsByDistrict: Record<string, TeamStanding[]> = {};
     allTeams.forEach(team => {
-      if (!teamsByDistrict[team.districtName]) {
-        teamsByDistrict[team.districtName] = [];
+      if (!teamsByDistrict[team.districtName!]) {
+        teamsByDistrict[team.districtName!] = [];
       }
-      teamsByDistrict[team.districtName].push(team);
+      teamsByDistrict[team.districtName!].push(team);
     });
     
     const automaticQualifiers: TeamStanding[] = [];
@@ -259,17 +266,17 @@ export const useStandingsCalculator = (
     // Sort by criteria
     const sortedAtLarge = [...atLargeCandidates].sort((a, b) => {
       // First by league win percentage
-      if (a.leagueWinPct !== b.leagueWinPct) {
-        return b.leagueWinPct - a.leagueWinPct;
+      if (a.leagueWinPercentage !== b.leagueWinPercentage) {
+        return b.leagueWinPercentage! - a.leagueWinPercentage!;
       }
       
       // Then by overall win percentage
-      if (a.overallWinPct !== b.overallWinPct) {
-        return b.overallWinPct - a.overallWinPct;
+      if (a.winPercentage !== b.winPercentage) {
+        return b.winPercentage - a.winPercentage;
       }
       
       // Then by total wins
-      return b.overallWins - a.overallWins;
+      return b.wins - a.wins;
     });
     
     // Get at-large bids and first four out
