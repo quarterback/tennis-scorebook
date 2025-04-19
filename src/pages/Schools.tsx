@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { School, District, Classification } from '@/types';
 import SchoolFormDialog from '@/components/schools/SchoolFormDialog';
 import SchoolsHeader from '@/components/schools/SchoolsHeader';
+import { SchoolImportButton } from '@/components/schools/SchoolImportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -251,11 +252,14 @@ const Schools = () => {
         onAddClick={() => setIsAddDialogOpen(true)}
       />
       
-      <BulkDistrictAssignment
-        schools={schools}
-        districts={districts}
-        onAssignDistrict={handleBulkDistrictAssignment}
-      />
+      <div className="flex justify-between items-center">
+        <BulkDistrictAssignment
+          schools={schools}
+          districts={districts}
+          onAssignDistrict={handleBulkDistrictAssignment}
+        />
+        <SchoolImportButton />
+      </div>
 
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
