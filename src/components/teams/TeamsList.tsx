@@ -30,6 +30,10 @@ const TeamsList = ({
   onTeamSelect
 }: TeamsListProps) => {
 
+  // Log for debugging
+  console.log("Teams in list:", teams.length);
+  console.log("Selected school:", selectedSchool?.name);
+
   if (!selectedSchool) {
     return (
       <div className="mt-4 text-center text-gray-500 py-6">
@@ -41,7 +45,20 @@ const TeamsList = ({
   if (teams.length === 0) {
     return (
       <div className="mt-4 text-center text-gray-500 py-6">
-        No teams available for this school
+        No teams available for this school. 
+        {canEditTeam(selectedSchool.id) && (
+          <div className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mx-auto flex items-center"
+              onClick={() => setIsAddTeamDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Team
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -51,9 +68,9 @@ const TeamsList = ({
       {teams.map((team) => (
         <div
           key={team.id}
-          className={`tennis-card ${team.gender === 'Boys' ? 'team-boys' : 'team-girls'} cursor-pointer p-3 ${
-            selectedTeamId === team.id ? 'bg-gray-100' : ''
-          }`}
+          className={`border rounded-md ${team.gender === 'Boys' ? 'bg-blue-50' : 'bg-pink-50'} cursor-pointer p-3 ${
+            selectedTeamId === team.id ? 'ring-2 ring-primary' : ''
+          } hover:bg-gray-100 transition-colors`}
           onClick={() => onTeamSelect(team.id)}
         >
           <div className="flex justify-between items-center">

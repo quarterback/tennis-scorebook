@@ -10,6 +10,7 @@ import AddTeamDialog from './AddTeamDialog';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import { Team, Gender, Player, School } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 interface TeamsContainerProps {
   filter: {
@@ -52,11 +53,15 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
     : filteredSchools;
   
   useEffect(() => {
+    // Log for debugging
+    console.log("Teams in container:", teams.length);
+    console.log("Schools:", classificationFilteredSchools.length);
+    
     if (classificationFilteredSchools.length > 0 && !selectedSchoolId) {
       setSelectedSchoolId(classificationFilteredSchools[0].id);
       setTeamFormData(prev => ({ ...prev, schoolId: classificationFilteredSchools[0].id }));
     }
-  }, [classificationFilteredSchools, selectedSchoolId]);
+  }, [classificationFilteredSchools, selectedSchoolId, teams]);
   
   // Filter teams by selected school
   const schoolTeams = teams.filter(team => 
@@ -68,6 +73,15 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
   
   const handleAddTeam = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!teamFormData.schoolId) {
+      toast({
+        title: "Error",
+        description: "Please select a school",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     addTeam({
       schoolId: teamFormData.schoolId,
       gender: teamFormData.gender,
@@ -96,7 +110,7 @@ const TeamsContainer = ({ filter }: TeamsContainerProps) => {
   };
   
   const handleDeleteTeam = (teamId: string) => {
-    if (confirm('Are you sure you want to delete this team? All players will be removed.')) {
+    if (window.confirm('Are you sure you want to delete this team? All players will be removed.')) {
       deleteTeam(teamId);
       if (selectedTeamId === teamId) {
         setSelectedTeamId(null);
