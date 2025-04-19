@@ -35,7 +35,7 @@ const Teams = () => {
       toast({
         title: 'Teams Created',
         description: `Created ${createdCount} new teams for schools missing them.`,
-        variant: createdCount && createdCount > 0 ? 'default' : 'destructive',
+        variant: createdCount > 0 ? 'default' : 'destructive',
       });
     } catch (error) {
       console.error("Error creating teams:", error);
