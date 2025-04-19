@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { 
-  Racquet, 
   Users, 
   Award, 
   Calendar, 
@@ -18,6 +17,7 @@ import {
   ChevronRight,
   Rocket
 } from 'lucide-react';
+import { Racquet } from '@/components/icons/Racquet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Drawer,

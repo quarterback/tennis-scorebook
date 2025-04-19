@@ -19,8 +19,8 @@ import PlayerManagement from "@/pages/PlayerManagement";
 import Simulator from "@/pages/Simulator";
 import NotFound from "@/pages/NotFound";
 
-// Import our custom icon
-import "@/components/icons/Racquet";
+// Remove the incorrect import and use the component directly where needed
+// import "@/components/icons/Racquet";
 
 const queryClient = new QueryClient();
 
