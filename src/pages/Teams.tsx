@@ -9,12 +9,13 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Team } from 'lucide-react';
 
 const Teams = () => {
-  const { teams } = useData();
+  const { teams, createTeamsForAllSchools } = useData();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use effect to simulate loading and ensure teams are properly loaded
   useEffect(() => {
     console.log("Teams page loaded with", teams.length, "teams");
     const timer = setTimeout(() => {
@@ -27,7 +28,17 @@ const Teams = () => {
     <div className="container mx-auto p-4">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Teams Management</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Teams Management</span>
+            <Button 
+              variant="outline" 
+              onClick={createTeamsForAllSchools}
+              className="flex items-center gap-2"
+            >
+              <Team className="h-4 w-4" />
+              Create Missing Teams
+            </Button>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -38,7 +49,6 @@ const Teams = () => {
       
       <Separator className="my-6" />
       
-      {/* Use the TeamsContainer component to manage teams */}
       <TeamsContainer filter={{}} />
     </div>
   );
