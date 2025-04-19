@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Team } from 'lucide-react';
+import { Users } from 'lucide-react';  // Changed from Team to Users
 
 const Teams = () => {
   const { teams, createTeamsForAllSchools } = useData();
@@ -35,7 +35,7 @@ const Teams = () => {
               onClick={createTeamsForAllSchools}
               className="flex items-center gap-2"
             >
-              <Team className="h-4 w-4" />
+              <Users className="h-4 w-4" />  {/* Changed from Team to Users */}
               Create Missing Teams
             </Button>
           </CardTitle>
