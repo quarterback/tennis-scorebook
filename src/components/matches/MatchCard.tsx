@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,55 +10,43 @@ import {
   MapPin,
   Trophy,
   CheckSquare,
-  XSquare,
-  MoreHorizontal,
-  Pencil,
-  Trash
+  XSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMatches } from '@/context/MatchesContext';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import MatchActions from './MatchActions';
 
 interface MatchCardProps {
   matchId: string;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
-  showExpandButton?: boolean;
+  expandedMatchId: string | null;
+  setExpandedMatchId: (id: string | null) => void;
+  getTeamName: (teamId: string) => string;
+  canEditMatch: (match: any) => boolean;
+  openEditDialog: () => void;
+  players: any[];
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
   matchId,
-  isExpanded,
-  onToggleExpand,
-  showExpandButton = true
+  expandedMatchId,
+  setExpandedMatchId,
+  getTeamName,
+  canEditMatch,
+  openEditDialog,
+  players
 }) => {
-  const { 
-    filteredMatches, 
-    expandedMatchId, 
-    setExpandedMatchId,
-    getTeamName,
-    approveMatch,
-    canApproveMatch,
-    openEditDialog,
-    deleteMatch,
-    canEditMatch
-  } = useMatches();
+  const { filteredMatches, approveMatch, canApproveMatch } = useMatches();
   
   const match = filteredMatches.find(m => m.id === matchId);
   if (!match) return null;
   
+  const isExpanded = expandedMatchId === matchId;
   const formattedDate = format(new Date(match.date), 'EEE, MMM d, yyyy');
   const homeTeamName = match.homeTeamName || getTeamName(match.homeTeamId);
   const awayTeamName = match.awayTeamName || getTeamName(match.awayTeamId);
   const hasScores = match.isComplete && (match.homeTeamScore !== undefined || match.awayTeamScore !== undefined);
   
   const toggleExpand = () => {
-    onToggleExpand();
     if (expandedMatchId === matchId) {
       setExpandedMatchId(null);
     } else {
@@ -118,18 +107,6 @@ const MatchCard: React.FC<MatchCardProps> = ({
     );
   };
 
-  const handleEdit = () => {
-    openEditDialog(match);
-  };
-  
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this match? This action cannot be undone.')) {
-      deleteMatch(matchId);
-    }
-  };
-
-  const canEdit = canEditMatch(match);
-
   return (
     <Card className={`mb-4 overflow-hidden transition-all ${isExpanded ? 'ring-1 ring-primary' : ''}`}>
       <CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between">
@@ -142,42 +119,20 @@ const MatchCard: React.FC<MatchCardProps> = ({
           )}
         </div>
         <div className="flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {canEdit && (
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-              )}
-              {canEdit && (
-                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                  <Trash className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <MatchActions matchId={matchId} isComplete={match.isComplete} />
           
-          {showExpandButton && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={toggleExpand}
-              className="h-7 w-7 p-0"
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleExpand}
+            className="h-7 w-7 p-0"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </CardHeader>
       
