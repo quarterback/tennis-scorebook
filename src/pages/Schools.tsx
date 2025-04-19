@@ -1,16 +1,14 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { School, Edit, Plus, Users } from 'lucide-react';
-import { School as SchoolType, Classification, District } from '@/types';
-import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { School, Classification } from '@/types';
+import GroupedSchoolsList from '@/components/schools/GroupedSchoolsList';
 
 const Schools = () => {
   const { schools, addSchool, updateSchool, districts, getDistrictsByClassification } = useData();
@@ -26,7 +24,7 @@ const Schools = () => {
     classification: '6A',
     districtId: ''
   });
-  const [editingSchool, setEditingSchool] = useState<SchoolType | null>(null);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
   
   // Get available districts based on selected classification
   const availableDistricts = getDistrictsByClassification(formData.classification);
@@ -35,7 +33,7 @@ const Schools = () => {
   const filteredSchools = user?.role === 'coach' && user.schoolId
     ? schools.filter(school => school.id === user.schoolId)
     : schools;
-  
+
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addSchool({ ...formData, teams: [] });
@@ -64,7 +62,7 @@ const Schools = () => {
     });
   };
   
-  const openEditDialog = (school: SchoolType) => {
+  const openEditDialog = (school: School) => {
     setEditingSchool(school);
     setFormData({
       name: school.name,
@@ -72,12 +70,6 @@ const Schools = () => {
       districtId: school.districtId
     });
     setIsEditDialogOpen(true);
-  };
-  
-  // Function to get district name from ID
-  const getDistrictName = (districtId: string): string => {
-    const district = districts.find(d => d.id === districtId);
-    return district ? district.name : 'Unknown District';
   };
   
   return (
@@ -168,50 +160,12 @@ const Schools = () => {
         )}
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredSchools.map((school) => (
-          <Card key={school.id} className="overflow-hidden">
-            <CardHeader className="bg-tennis-gray pb-2 flex flex-row justify-between items-center">
-              <CardTitle className="text-lg flex items-center">
-                <School className="h-5 w-5 mr-2 text-tennis-blue" />
-                {school.name}
-              </CardTitle>
-              
-              {(user?.role === 'admin' || (user?.role === 'coach' && user.schoolId === school.id)) && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0"
-                  onClick={() => openEditDialog(school)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="mb-4">
-                <div className="text-sm text-gray-500">Classification</div>
-                <div>{school.classification}</div>
-              </div>
-              
-              <div className="mb-4">
-                <div className="text-sm text-gray-500">District/Conference</div>
-                <div>{getDistrictName(school.districtId)}</div>
-              </div>
-              
-              <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-100">
-                <div className="text-sm text-gray-500">Teams</div>
-                <Link to={`/teams?school=${school.id}`}>
-                  <Button variant="outline" size="sm" className="flex items-center">
-                    <Users className="h-4 w-4 mr-1" />
-                    Manage Teams
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <GroupedSchoolsList 
+        schools={filteredSchools}
+        districts={districts}
+        canEdit={user?.role === 'admin'}
+        onEditSchool={openEditDialog}
+      />
       
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
