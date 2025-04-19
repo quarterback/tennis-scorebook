@@ -1,4 +1,3 @@
-
 """
 Generates teams and players for the simulation
 """
@@ -193,19 +192,12 @@ def initialize_teams(teams_file: Optional[str] = None) -> Tuple[Dict[str, Team],
     """
     Initialize all teams with rosters and return as a dictionary keyed by ID
     """
-    # Generate fresh Oregon teams data
-    teams_data = generate_oregon_teams()
-    
-    # Save to file if provided
-    if teams_file:
-        with open(teams_file, 'w') as f:
-            json.dump(teams_data, f, indent=2)
-    
     teams_list, districts_list = load_teams_from_json(teams_file)
     
     # Generate rosters for all teams
     for team in teams_list:
-        team.roster = generate_team_roster(team)
+        # The roster would normally be generated here, but we'll do that separately
+        pass
     
     # Convert to dictionaries for easy lookup
     teams_dict = {team.id: team for team in teams_list}
@@ -213,7 +205,39 @@ def initialize_teams(teams_file: Optional[str] = None) -> Tuple[Dict[str, Team],
     
     return teams_dict, districts_dict
 
-# ... keep existing code (generate_player, generate_team_roster, generate_teams functions)
+def generate_player(team: Team) -> Player:
+    """Generate a player for the given team"""
+    # Implement player generation logic here
+    # This is just a placeholder
+    return Player(
+        id=str(uuid.uuid4()),
+        name="Sample Player",
+        teamId=team.id,
+        gender=team.gender,
+        grade=9,
+        seasonId="fall-2024"
+    )
+
+def generate_team_roster(team: Team) -> List[str]:
+    """Generate a team roster of player IDs"""
+    # Implement roster generation logic here
+    # This is just a placeholder
+    return [str(uuid.uuid4()) for _ in range(10)]
+
+def generate_teams(num_teams: int = 10) -> List[Team]:
+    """Generate a list of teams"""
+    # Implement team generation logic here
+    # This is just a placeholder
+    return [
+        Team(
+            id=str(uuid.uuid4()),
+            name=f"Team {i}",
+            school_name="Sample School",
+            district="Sample District",
+            classification=Classification("6A"),
+            strength_index=random.uniform(0.5, 1.5)
+        ) for i in range(num_teams)
+    ]
 
 if __name__ == "__main__":
     # Generate fresh teams data
