@@ -11,13 +11,15 @@ interface PlayerGenerationControlsProps {
   selectedSeasonId: string;
   seasons: Season[];
   disabled?: boolean;
+  setIsGeneratingPlayers: (state: boolean) => void;
 }
 
 const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
   isGeneratingPlayers,
   selectedSeasonId,
   seasons,
-  disabled = false
+  disabled = false,
+  setIsGeneratingPlayers
 }) => {
   const { toast } = useToast();
   const { teams, players, addPlayer, deleteAllPlayers, schools } = useData();
@@ -36,6 +38,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
 
     // Import needed hook dynamically to avoid circular dependencies
     setGeneratingStatus('Importing player generation utilities...');
+    setIsGeneratingPlayers(true);
     
     // Log the team data to help debug
     console.log("Teams data before player generation:", teams);
@@ -63,6 +66,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
         });
         
         setGeneratingStatus('');
+        setIsGeneratingPlayers(false);
         
         toast({
           title: "Player Generation Complete",
@@ -74,6 +78,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
       } catch (error) {
         console.error('Error generating players:', error);
         setGeneratingStatus('');
+        setIsGeneratingPlayers(false);
         toast({
           title: "Error Generating Players",
           description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -83,6 +88,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
     }).catch(error => {
       console.error('Error importing player generation module:', error);
       setGeneratingStatus('');
+      setIsGeneratingPlayers(false);
       toast({
         title: "Module Import Error",
         description: "Failed to load player generation module",

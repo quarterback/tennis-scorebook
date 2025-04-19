@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 // Import UI components
 import DateRangePicker from './components/DateRangePicker';
@@ -29,6 +31,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
   const [doubleRoundRobin, setDoubleRoundRobin] = useState(true);
   const [generatingMatches, setGeneratingMatches] = useState(false);
   const [isGeneratingPlayers, setIsGeneratingPlayers] = useState(false);
+  const [isErasingData, setIsErasingData] = useState(false);
   
   // Update dates when season changes
   useEffect(() => {
@@ -70,12 +73,39 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
     // We'll set isGeneratingPlayers to false in the component when complete
   };
 
+  const handleEraseData = () => {
+    setIsErasingData(true);
+    try {
+      // Delete all matches and players
+      deleteAllMatches();
+      deleteAllPlayers();
+      console.log("All simulation data has been erased");
+    } catch (error) {
+      console.error("Error erasing data:", error);
+    } finally {
+      setIsErasingData(false);
+    }
+  };
+
   return (
     <Card className="border-blue-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">Simulation Controls</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex justify-end">
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleEraseData}
+            disabled={isErasingData || generatingMatches || isGeneratingPlayers}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            {isErasingData ? 'Erasing...' : 'Erase All Data'}
+          </Button>
+        </div>
+
         <SeasonSelector
           seasons={extendedSeasonsList}
           selectedSeasonId={selectedSeasonId}
@@ -114,6 +144,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           selectedSeasonId={selectedSeasonId}
           seasons={extendedSeasonsList}
           disabled={generatingMatches}
+          setIsGeneratingPlayers={setIsGeneratingPlayers}
         />
       </CardContent>
     </Card>

@@ -1,13 +1,30 @@
 
-import { useState } from 'react';
 import { Player, Team, School, Gender, PlayerSkillTier } from '@/types';
 import { generatePlayerName, generatePlayerGrade, assignPlayerSkillTier } from '@/utils/playerSimulation';
 import { TeamLadder, PlayerLadderPosition } from '@/types/ranking';
 import { determineTeamArchetype, determineTeamSize } from '@/utils/playerGeneration';
 
-export const usePlayerGeneration = () => {
-  const [generatingPlayers, setGeneratingPlayers] = useState(false);
+// Moved outside of the hook function
+const createTeamLadder = (team: Team, players: Player[], seasonId: string): TeamLadder => {
+  // Sort players by skill for ladder creation
+  const sortedPlayers = [...players].sort((a, b) => 
+    (b.skillRating || 0) - (a.skillRating || 0)
+  );
   
+  return {
+    teamId: team.id,
+    seasonId: seasonId,
+    lastUpdated: new Date().toISOString(),
+    rankings: sortedPlayers.map((player, index) => ({
+      playerId: player.id,
+      rank: index + 1, // 1-based ranking
+      ladderPoints: Math.round((10 - (index / sortedPlayers.length) * 10) * 10), // 0-100 scale
+      previousRanks: [] // Initialize with empty array for previous ranks
+    }))
+  };
+};
+
+export const usePlayerGeneration = () => {
   /**
    * Generate player data for all teams
    */
@@ -146,19 +163,8 @@ export const usePlayerGeneration = () => {
       );
       players.push(...sortedPlayers);
       
-      // Create ladder for this team
-      const ladder: TeamLadder = {
-        teamId: team.id,
-        seasonId: seasonId,
-        lastUpdated: new Date().toISOString(),
-        rankings: sortedPlayers.map((player, index) => ({
-          playerId: player.id,
-          rank: index + 1, // 1-based ranking
-          ladderPoints: Math.round((10 - (index / sortedPlayers.length) * 10) * 10), // 0-100 scale
-          previousRanks: [] // Initialize with empty array for previous ranks
-        }))
-      };
-      
+      // Create ladder for this team using the helper function
+      const ladder = createTeamLadder(team, teamPlayers, seasonId);
       ladders.push(ladder);
     }
     
@@ -168,6 +174,6 @@ export const usePlayerGeneration = () => {
   
   return {
     generatePlayerData,
-    generatingPlayers
+    generatingPlayers: false
   };
 };
