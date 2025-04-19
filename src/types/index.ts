@@ -1,3 +1,4 @@
+
 // Adding the missing types for Flight
 
 export type Gender = 'Boys' | 'Girls';
@@ -40,8 +41,13 @@ export interface District {
   id: string;
   name: string;
   classification: Classification;
-  tournamentDates?: string[];
+  code?: string;
+  tournamentDates?: {
+    start: string;
+    end: string;
+  };
   tournamentLocation?: string;
+  tournamentYear?: number;
 }
 
 export interface Team {
@@ -60,6 +66,7 @@ export interface Match {
   date: string;
   isComplete: boolean;
   isLeagueMatch: boolean;
+  hasJvMatches?: boolean;
   homeTeamWon?: boolean;
   isTie?: boolean;
   homeTeamScore?: number;
@@ -72,14 +79,19 @@ export interface Match {
 
 export interface Flight {
   id: string;
+  matchId?: string;
   type: 'singles' | 'doubles';
   position: number;
+  level?: 'varsity' | 'jv';
   homePlayers: string[];
   awayPlayers: string[];
   homePlayerWon?: boolean;
   sets?: Set[];
   homeScore?: number;
   awayScore?: number;
+  retired?: boolean;
+  defaulted?: boolean;
+  scoreDisplay?: string;
   weight?: () => number;
 }
 
@@ -121,6 +133,7 @@ export interface TeamStanding {
   overallLosses?: number;
   qualificationStatus?: string;
   qualificationSeed?: number;
+  matchesPlayed?: number;
 }
 
 export interface PlayerTransfer {
@@ -130,4 +143,32 @@ export interface PlayerTransfer {
   toTeamId: string;
   date: string;
   reason?: string;
+  approved?: boolean;
+}
+
+// Add the missing MatchFormData type
+export interface MatchFormData {
+  date: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  isLeagueMatch: boolean;
+  isComplete: boolean;
+  hasJvMatches?: boolean;
+  homeTeamWon?: boolean;
+  isTie?: boolean;
+  homeTeamScore?: number;
+  awayTeamScore?: number;
+  homeCoachApproved?: boolean;
+  awayCoachApproved?: boolean;
+  flights: Array<{
+    type: 'singles' | 'doubles';
+    position: number;
+    level: 'varsity' | 'jv';
+    homePlayers: string[];
+    awayPlayers: string[];
+    homePlayerWon?: boolean;
+    sets: Set[];
+    retired?: boolean;
+    defaulted?: boolean;
+  }>;
 }

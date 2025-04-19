@@ -34,25 +34,20 @@ const Schools = () => {
   });
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   
-  // Filtering state
   const [classificationFilter, setClassificationFilter] = useState<Classification | 'all'>('all');
   const [districtFilter, setDistrictFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grouped'>('table');
   
-  // Log for debugging
   useEffect(() => {
     console.log(`Schools page loaded with ${schools.length} schools`);
     console.log('Districts available:', districts.length);
   }, [schools, districts]);
   
-  // Get available districts based on selected classification
   const availableDistricts = districts.filter(district => district.classification === formData.classification);
   
-  // Fetch schools and districts from Supabase
   useEffect(() => {
     const fetchSchoolsAndDistricts = async () => {
-      // Fetch districts first
       const { data: districtData, error: districtError } = await supabase
         .from('districts')
         .select('*');
@@ -62,7 +57,6 @@ const Schools = () => {
         return;
       }
 
-      // Fetch schools with district info
       const { data: schoolData, error: schoolError } = await supabase
         .from('schools')
         .select(`
@@ -79,37 +73,46 @@ const Schools = () => {
         return;
       }
 
-      // Transform the data to match our School type
-      const formattedSchools = schoolData.map(school => ({
+      const formattedSchools: School[] = schoolData.map(school => ({
         id: school.id,
         name: school.name,
-        classification: school.classification,
+        classification: school.classification as Classification,
         districtId: school.district_id,
         city: school.city,
         state: school.state
       }));
 
+      const formattedDistricts: District[] = districtData.map(district => ({
+        id: district.id,
+        name: district.name,
+        code: district.code,
+        classification: district.classification as Classification,
+        tournamentDates: district.tournament_dates ? {
+          start: Array.isArray(district.tournament_dates) && district.tournament_dates.length > 0 
+            ? district.tournament_dates[0] : '',
+          end: Array.isArray(district.tournament_dates) && district.tournament_dates.length > 1 
+            ? district.tournament_dates[1] : ''
+        } : undefined,
+        tournamentLocation: district.tournament_location
+      }));
+
       setSchools(formattedSchools);
-      setDistricts(districtData);
+      setDistricts(formattedDistricts);
       setIsLoading(false);
     };
 
     fetchSchoolsAndDistricts();
   }, []);
     
-  // Apply filters
   const filteredSchools = schools.filter(school => {
-    // Apply classification filter
     if (classificationFilter !== 'all' && school.classification !== classificationFilter) {
       return false;
     }
     
-    // Apply district filter
     if (districtFilter !== 'all' && school.districtId !== districtFilter) {
       return false;
     }
     
-    // Apply search filter
     if (searchTerm.trim() !== '') {
       return school.name.toLowerCase().includes(searchTerm.toLowerCase());
     }
@@ -137,7 +140,16 @@ const Schools = () => {
       return;
     }
     
-    setSchools([...schools, data]);
+    const newSchool: School = {
+      id: data.id,
+      name: data.name,
+      classification: data.classification as Classification,
+      districtId: data.district_id,
+      city: data.city,
+      state: data.state
+    };
+    
+    setSchools([...schools, newSchool]);
     setFormData({ name: '', classification: '6A', districtId: '', city: '', state: 'OR' });
     setIsAddDialogOpen(false);
   };
@@ -163,7 +175,16 @@ const Schools = () => {
         return;
       }
       
-      setSchools(schools.map(school => school.id === editingSchool.id ? data : school));
+      const updatedSchool: School = {
+        id: data.id,
+        name: data.name,
+        classification: data.classification as Classification,
+        districtId: data.district_id,
+        city: data.city,
+        state: data.state
+      };
+      
+      setSchools(schools.map(school => school.id === editingSchool.id ? updatedSchool : school));
     }
     setIsEditDialogOpen(false);
   };
@@ -172,7 +193,7 @@ const Schools = () => {
     setFormData({ 
       ...formData, 
       classification: value,
-      districtId: '' // Reset district when classification changes
+      districtId: '' 
     });
   };
   
@@ -188,20 +209,31 @@ const Schools = () => {
     setIsEditDialogOpen(true);
   };
   
-  // Get the district name for a given district ID
   const getDistrictName = (districtId: string) => {
     const district = districts.find(d => d.id === districtId);
     return district ? district.name : 'Unknown District';
   };
 
   const handleBulkDistrictAssignment = (schoolIds: string[], districtId: string) => {
-    schoolIds.forEach(schoolId => {
+    schoolIds.forEach(async schoolId => {
       const school = schools.find(s => s.id === schoolId);
       if (school) {
-        updateSchool({
+        const updatedSchool = {
           ...school,
           districtId: districtId
-        });
+        };
+        
+        const { error } = await supabase
+          .from('schools')
+          .update({ district_id: districtId })
+          .eq('id', schoolId);
+          
+        if (error) {
+          console.error(`Error updating school ${school.name}:`, error);
+          return;
+        }
+        
+        setSchools(schools.map(s => s.id === schoolId ? updatedSchool : s));
       }
     });
   };
@@ -215,7 +247,7 @@ const Schools = () => {
       <SchoolsHeader 
         schoolCount={schools.length}
         filteredCount={filteredSchools.length}
-        isAdmin={true}  // Adjust based on actual user role
+        isAdmin={true}
         onAddClick={() => setIsAddDialogOpen(true)}
       />
       
@@ -324,15 +356,14 @@ const Schools = () => {
                               </Link>
                             </Button>
                             
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditDialog(school)}
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Edit
-                              </Button>
-                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(school)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
