@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
-import { School, Classification } from '@/types';
+import { School, Classification, Gender } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
+import { useTeamOperations } from './useTeamOperations';
 
 // Define initial districts with their schools
 const oregonDistricts = {
@@ -102,6 +102,7 @@ const oregonDistricts = {
 export const useSchoolOperations = (initialSchools: School[] = []) => {
   const [schools, setSchools] = useState<School[]>([]);
   const { toast } = useToast();
+  const { addTeam } = useTeamOperations([]);
   
   // Initialize schools from localStorage or from district data
   useEffect(() => {
@@ -170,13 +171,26 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
       id: crypto.randomUUID(),
       teams: []
     };
+
+    // Create both boys and girls teams
+    const genders: Gender[] = ['Boys', 'Girls'];
+    genders.forEach(gender => {
+      addTeam({
+        schoolId: newSchool.id,
+        gender: gender,
+        players: [],
+        coaches: []
+      });
+    });
+    
     setSchools(prevSchools => {
       const updatedSchools = [...prevSchools, newSchool];
       return updatedSchools;
     });
+    
     toast({
       title: 'School Added',
-      description: `${newSchool.name} has been added successfully.`
+      description: `${newSchool.name} has been added with boys and girls teams.`
     });
   };
   
