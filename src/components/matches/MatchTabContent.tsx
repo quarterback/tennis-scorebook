@@ -164,12 +164,12 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
           {filteredMatches.map((match) => (
             <MatchCard
               key={match.id}
-              match={match}
+              matchId={match.id}
               expandedMatchId={expandedMatchId}
               setExpandedMatchId={setExpandedMatchId}
               getTeamName={getTeamName}
               canEditMatch={canEditMatch}
-              openEditDialog={openEditDialog}
+              openEditDialog={() => openEditDialog(match)}
               players={players}
             />
           ))}

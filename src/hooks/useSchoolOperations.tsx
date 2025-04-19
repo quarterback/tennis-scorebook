@@ -102,61 +102,49 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
   const [schools, setSchools] = useState<School[]>([]);
   const { toast } = useToast();
   
-  // Load schools when component mounts
   useEffect(() => {
-    // Try to load from localStorage first
-    try {
-      const savedSchools = localStorage.getItem('schools');
-      if (savedSchools) {
-        const parsedSchools = JSON.parse(savedSchools);
-        if (Array.isArray(parsedSchools) && parsedSchools.length > 0) {
-          console.log(`Loaded ${parsedSchools.length} schools from localStorage`);
-          setSchools(parsedSchools);
-          return;
+    const initializeSchools = () => {
+      // Try to load from localStorage first
+      try {
+        const savedSchools = localStorage.getItem('schools');
+        if (savedSchools) {
+          const parsedSchools = JSON.parse(savedSchools);
+          if (Array.isArray(parsedSchools) && parsedSchools.length > 0) {
+            console.log(`Loaded ${parsedSchools.length} schools from localStorage`);
+            setSchools(parsedSchools);
+            return;
+          }
         }
+      } catch (error) {
+        console.error('Error loading schools from localStorage:', error);
       }
-    } catch (error) {
-      console.error('Error loading schools from localStorage:', error);
-    }
-    
-    // If no schools in localStorage or error loading, initialize
-    const newSchools: School[] = [];
-    
-    // If initialSchools is provided and has items, use it
-    if (initialSchools.length > 0) {
-      console.log(`Using ${initialSchools.length} provided initial schools`);
-      setSchools(initialSchools);
-      localStorage.setItem('schools', JSON.stringify(initialSchools));
-      return;
-    }
-    
-    // Otherwise create from oregonDistricts
-    Object.entries(oregonDistricts).forEach(([districtId, district]) => {
-      district.schools.forEach(schoolName => {
-        newSchools.push({
-          id: crypto.randomUUID(),
-          name: schoolName,
-          classification: district.classification,
-          districtId: districtId,
-          teams: []
+      
+      // If no schools in localStorage or error loading, initialize from districts
+      const newSchools: School[] = [];
+      Object.entries(oregonDistricts).forEach(([districtId, district]) => {
+        district.schools.forEach(schoolName => {
+          newSchools.push({
+            id: crypto.randomUUID(),
+            name: schoolName,
+            classification: district.classification,
+            districtId: districtId,
+            teams: []
+          });
         });
       });
-    });
+      
+      console.log(`Created ${newSchools.length} initial schools`);
+      setSchools(newSchools);
+      localStorage.setItem('schools', JSON.stringify(newSchools));
+    };
     
-    console.log(`Created ${newSchools.length} initial schools`);
-    setSchools(newSchools);
-    localStorage.setItem('schools', JSON.stringify(newSchools));
-  }, [initialSchools]);
+    initializeSchools();
+  }, []);
   
   // Save to localStorage whenever schools change (after initial load)
   useEffect(() => {
     if (schools.length > 0) {
-      try {
-        localStorage.setItem('schools', JSON.stringify(schools));
-        console.log(`Saved ${schools.length} schools to localStorage`);
-      } catch (error) {
-        console.error('Error saving schools to localStorage:', error);
-      }
+      localStorage.setItem('schools', JSON.stringify(schools));
     }
   }, [schools]);
   
