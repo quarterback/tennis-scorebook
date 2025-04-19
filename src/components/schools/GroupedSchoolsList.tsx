@@ -1,12 +1,11 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { School, Classification, District } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { School as SchoolIcon, Edit } from 'lucide-react';
+import { School as SchoolIcon, Edit, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Users } from 'lucide-react';
 
 interface GroupedSchoolsListProps {
   schools: School[];
@@ -17,6 +16,14 @@ interface GroupedSchoolsListProps {
 
 const GroupedSchoolsList = ({ schools, districts, canEdit, onEditSchool }: GroupedSchoolsListProps) => {
   const classifications: Classification[] = ['6A', '5A', '4A/3A/2A/1A'];
+  
+  // Log for debugging
+  useEffect(() => {
+    console.log(`GroupedSchoolsList received ${schools.length} schools`);
+    if (schools.length > 0) {
+      console.log('Sample school:', schools[0]);
+    }
+  }, [schools]);
   
   // Get district name helper
   const getDistrictName = (districtId: string): string => {
@@ -39,6 +46,14 @@ const GroupedSchoolsList = ({ schools, districts, canEdit, onEditSchool }: Group
     return groupedByDistrict;
   };
 
+  if (schools.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500">No schools found. Please add schools to get started.</p>
+      </div>
+    );
+  }
+
   return (
     <Tabs defaultValue="6A" className="w-full">
       <TabsList className="mb-4">
@@ -53,6 +68,17 @@ const GroupedSchoolsList = ({ schools, districts, canEdit, onEditSchool }: Group
         const classificationSchools = schools.filter(
           school => school.classification === classification
         );
+        
+        if (classificationSchools.length === 0) {
+          return (
+            <TabsContent key={classification} value={classification}>
+              <div className="text-center py-10">
+                <p className="text-gray-500">No {classification} schools found.</p>
+              </div>
+            </TabsContent>
+          );
+        }
+        
         const groupedByDistrict = groupSchoolsByDistrict(classificationSchools);
         
         return (

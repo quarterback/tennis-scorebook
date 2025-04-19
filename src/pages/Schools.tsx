@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,12 @@ const Schools = () => {
     districtId: ''
   });
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  
+  // Log for debugging
+  useEffect(() => {
+    console.log(`Schools page loaded with ${schools.length} schools`);
+    console.log('Districts available:', districts.length);
+  }, [schools, districts]);
   
   // Get available districts based on selected classification
   const availableDistricts = getDistrictsByClassification(formData.classification);
@@ -158,6 +165,10 @@ const Schools = () => {
             </DialogContent>
           </Dialog>
         )}
+      </div>
+      
+      <div className="p-2 bg-blue-50 rounded-md mb-4">
+        <p className="text-sm text-blue-700">Total Schools: {filteredSchools.length}</p>
       </div>
       
       <GroupedSchoolsList 

@@ -147,7 +147,7 @@ export const useSchoolOperations = (initialSchools: School[]) => {
       id: crypto.randomUUID(),
       teams: []
     };
-    setSchools([...schools, newSchool]);
+    setSchools(prevSchools => [...prevSchools, newSchool]);
     toast({
       title: 'School Added',
       description: `${newSchool.name} has been added successfully.`
@@ -155,7 +155,7 @@ export const useSchoolOperations = (initialSchools: School[]) => {
   };
   
   const updateSchool = (school: School) => {
-    setSchools(schools.map(s => s.id === school.id ? school : s));
+    setSchools(prevSchools => prevSchools.map(s => s.id === school.id ? school : s));
     toast({
       title: 'School Updated',
       description: `${school.name} has been updated successfully.`
@@ -164,7 +164,7 @@ export const useSchoolOperations = (initialSchools: School[]) => {
   
   const deleteSchool = (id: string) => {
     const school = schools.find(s => s.id === id);
-    setSchools(schools.filter(s => s.id !== id));
+    setSchools(prevSchools => prevSchools.filter(s => s.id !== id));
     toast({
       title: 'School Deleted',
       description: `${school?.name || 'School'} has been deleted successfully.`
