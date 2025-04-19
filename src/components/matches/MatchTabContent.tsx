@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TabsContent } from '@/components/ui/tabs';
 import { Match, Team, School, Player, Classification } from '@/types';
@@ -168,7 +169,7 @@ const MatchTabContent: React.FC<MatchTabContentProps> = ({
               expandedMatchId={expandedMatchId}
               setExpandedMatchId={setExpandedMatchId}
               getTeamName={getTeamName}
-              canEditMatch={canEditMatch}
+              canEditMatch={() => canEditMatch(match)}
               openEditDialog={() => openEditDialog(match)}
               players={players}
             />

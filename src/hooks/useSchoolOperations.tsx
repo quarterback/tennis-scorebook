@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { School, Classification } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
@@ -102,6 +103,7 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
   const [schools, setSchools] = useState<School[]>([]);
   const { toast } = useToast();
   
+  // Initialize schools from localStorage or from district data
   useEffect(() => {
     const initializeSchools = () => {
       // Try to load from localStorage first
@@ -135,10 +137,24 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
       
       console.log(`Created ${newSchools.length} initial schools`);
       setSchools(newSchools);
+      
+      // Save to localStorage for future sessions
       localStorage.setItem('schools', JSON.stringify(newSchools));
     };
     
     initializeSchools();
+    
+    // Force re-initialize if localStorage has been cleared or corrupted
+    const checkSchoolData = () => {
+      const savedSchools = localStorage.getItem('schools');
+      if (!savedSchools || JSON.parse(savedSchools).length < 50) {
+        console.log('School data missing or incomplete, reinitializing...');
+        localStorage.removeItem('schools');
+        initializeSchools();
+      }
+    };
+    
+    checkSchoolData();
   }, []);
   
   // Save to localStorage whenever schools change (after initial load)

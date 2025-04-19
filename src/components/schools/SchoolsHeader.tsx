@@ -5,11 +5,12 @@ import { Plus } from 'lucide-react';
 
 interface SchoolsHeaderProps {
   schoolCount: number;
+  filteredCount: number;
   isAdmin: boolean;
   onAddClick: () => void;
 }
 
-const SchoolsHeader = ({ schoolCount, isAdmin, onAddClick }: SchoolsHeaderProps) => {
+const SchoolsHeader = ({ schoolCount, filteredCount, isAdmin, onAddClick }: SchoolsHeaderProps) => {
   return (
     <>
       <div className="flex justify-between items-center">
@@ -27,7 +28,12 @@ const SchoolsHeader = ({ schoolCount, isAdmin, onAddClick }: SchoolsHeaderProps)
       </div>
       
       <div className="p-2 bg-blue-50 rounded-md mb-4">
-        <p className="text-sm text-blue-700">Total Schools: {schoolCount}</p>
+        <div className="flex flex-col md:flex-row md:justify-between">
+          <p className="text-sm text-blue-700">Total Schools: {schoolCount}</p>
+          {filteredCount !== schoolCount && (
+            <p className="text-sm text-blue-700">Filtered: {filteredCount}</p>
+          )}
+        </div>
       </div>
     </>
   );
