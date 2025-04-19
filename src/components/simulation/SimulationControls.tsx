@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +23,7 @@ interface SimulationControlsProps {
 const SimulationControls: React.FC<SimulationControlsProps> = ({ 
   onSimulationComplete = () => {} 
 }) => {
-  const { schools, deleteAllMatches, deleteAllPlayers } = useData();
+  const { schools, teams, players, deleteAllMatches, deleteAllPlayers } = useData();
   const { toast } = useToast();
   
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -43,6 +44,11 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
       setEndDate(new Date(selectedSeason.year, 4, 31)); // May 31st
     }
   }, [selectedSeasonId]);
+  
+  // Log status changes for debugging
+  useEffect(() => {
+    console.log(`Current status - Teams: ${teams.length}, Players: ${players.length}, Schools: ${schools.length}`);
+  }, [teams.length, players.length, schools.length]);
   
   const handleStartDateChange = (date: Date | undefined) => {
     setStartDate(date);
@@ -121,6 +127,10 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           </Button>
         </div>
 
+        <div className="text-sm">
+          Current data: {teams.length} teams, {players.length} players
+        </div>
+
         <SeasonSelector
           seasons={extendedSeasonsList}
           selectedSeasonId={selectedSeasonId}
@@ -139,6 +149,16 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         
         <Separator className="my-4" />
         
+        <PlayerGenerationControls
+          isGeneratingPlayers={isGeneratingPlayers}
+          selectedSeasonId={selectedSeasonId}
+          seasons={extendedSeasonsList}
+          disabled={generatingMatches}
+          setIsGeneratingPlayers={setIsGeneratingPlayers}
+        />
+        
+        <Separator className="my-4" />
+        
         <MatchGenerationControls 
           startDate={startDate}
           endDate={endDate}
@@ -150,16 +170,6 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
             onSimulationComplete(results);
           }}
           disabled={isGeneratingPlayers}
-        />
-        
-        <Separator className="my-4" />
-        
-        <PlayerGenerationControls
-          isGeneratingPlayers={isGeneratingPlayers}
-          selectedSeasonId={selectedSeasonId}
-          seasons={extendedSeasonsList}
-          disabled={generatingMatches}
-          setIsGeneratingPlayers={setIsGeneratingPlayers}
         />
       </CardContent>
     </Card>

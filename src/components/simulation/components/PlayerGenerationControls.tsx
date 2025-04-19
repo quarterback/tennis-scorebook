@@ -41,8 +41,8 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
     setIsGeneratingPlayers(true);
     
     // Log the team data to help debug
-    console.log("Teams data before player generation:", teams);
-    console.log("Schools data before player generation:", schools);
+    console.log("Teams available for player generation:", teams.length);
+    console.log("Schools available:", schools.length);
     
     try {
       // Clear existing players first
@@ -63,20 +63,24 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
       // Generate players for all available teams
       const { players: generatedPlayers } = generatePlayerData(teams, schools, selectedSeason.id);
       
+      console.log(`Generated ${generatedPlayers.length} players ready to add to the database`);
+      
       // Add all generated players to the state
-      generatedPlayers.forEach(player => {
+      let addedCount = 0;
+      for (const player of generatedPlayers) {
         addPlayer(player);
-      });
+        addedCount++;
+      }
       
       setGeneratingStatus('');
       
       toast({
         title: "Player Generation Complete",
-        description: `Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`,
+        description: `Generated ${addedCount} players for ${teams.length} teams successfully`,
         variant: "default"
       });
       
-      console.log(`Generated ${generatedPlayers.length} players for ${teams.length} teams successfully`);
+      console.log(`Successfully added ${addedCount} players for ${teams.length} teams to the database`);
     } catch (error) {
       console.error('Error generating players:', error);
       setGeneratingStatus('');
@@ -112,32 +116,44 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
     
     let playersAdded = 0;
     
+    // Directly add 12 players to each team
     teams.forEach(team => {
-      const teamPlayers = players.filter(p => p.teamId === team.id);
-      const playersNeeded = 12 - teamPlayers.length;
+      // Generate player names based on gender
+      const firstNames = team.gender === 'Boys' 
+        ? ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles', 'Daniel', 'Matthew']
+        : ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen', 'Nancy', 'Lisa'];
       
-      if (playersNeeded > 0) {
-        for (let i = 0; i < playersNeeded; i++) {
-          const newPlayer: Omit<Player, "id"> = {
-            name: `${team.gender === 'Boys' ? 'Player' : 'Player'} ${Math.floor(Math.random() * 100)}`,
-            grade: Math.floor(Math.random() * 4) + 9,
-            teamId: team.id,
-            seasonId: currentSeason.id,
-            seasons: [currentSeason.id],
-            skillTier: 'developmental' as PlayerSkillTier,
-            gender: team.gender
-          };
-          addPlayer(newPlayer);
-          playersAdded++;
-        }
+      const lastNames = ['Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas'];
+      
+      // Generate 12 players per team regardless of existing players
+      for (let i = 0; i < 12; i++) {
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+        
+        const newPlayer: Omit<Player, "id"> = {
+          name: `${firstName} ${lastName}`,
+          grade: Math.floor(Math.random() * 4) + 9, // 9-12 grade
+          teamId: team.id,
+          seasonId: currentSeason.id,
+          seasons: [currentSeason.id],
+          skillTier: ['developmental', 'intermediate', 'advanced', 'elite'][Math.floor(Math.random() * 4)] as PlayerSkillTier,
+          gender: team.gender,
+          previousTeams: [],
+          status: 'active'
+        };
+        
+        addPlayer(newPlayer);
+        playersAdded++;
       }
     });
     
     toast({
       title: "Players Added",
-      description: `Added ${playersAdded} players to ${teams.length} teams that needed them`,
+      description: `Added ${playersAdded} players to ${teams.length} teams`,
       variant: "default"
     });
+    
+    console.log(`Successfully added ${playersAdded} players to all teams`);
   };
 
   return (
@@ -158,7 +174,7 @@ const PlayerGenerationControls: React.FC<PlayerGenerationControlsProps> = ({
         <Button 
           variant="outline" 
           onClick={handleAddPlayersToAllTeams}
-          disabled={disabled}
+          disabled={isGeneratingPlayers || disabled}
           className="flex items-center gap-2"
         >
           <Users className="h-4 w-4" />
