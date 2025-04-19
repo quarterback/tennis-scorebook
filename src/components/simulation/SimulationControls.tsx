@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +47,20 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
   // Log status changes for debugging
   useEffect(() => {
     console.log(`Current status - Teams: ${teams.length}, Players: ${players.length}, Schools: ${schools.length}`);
+    console.log('Schools data:', schools);
+    
+    // Check localStorage status
+    try {
+      const savedSchools = localStorage.getItem('schools');
+      if (savedSchools) {
+        const parsedSchools = JSON.parse(savedSchools);
+        console.log(`Schools in localStorage: ${parsedSchools.length}`);
+      } else {
+        console.log('No schools found in localStorage');
+      }
+    } catch (error) {
+      console.error('Error checking localStorage:', error);
+    }
   }, [teams.length, players.length, schools.length]);
   
   const handleStartDateChange = (date: Date | undefined) => {
@@ -128,7 +141,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         </div>
 
         <div className="text-sm">
-          Current data: {teams.length} teams, {players.length} players
+          Current data: {teams.length} teams, {players.length} players, {schools.length} schools
         </div>
 
         <SeasonSelector
