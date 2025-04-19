@@ -120,28 +120,33 @@ export const usePlayersData = () => {
     // Find the player
     const player = players.find(p => p.id === playerId);
     if (!player) return;
-    
-    // Update player's team
-    const updatedPlayer = {
-      ...player,
-      teamId: toTeamId
-    };
-    
-    // Add transfer record - Added seasonId property to fix TypeScript error
+
+    // Get current season
     const currentSeason = getCurrentSeason();
+    
+    // Create new transfer record
     const transfer: PlayerTransfer = {
       id: crypto.randomUUID(),
       playerId,
       fromTeamId: player.teamId,
       toTeamId,
       date: new Date().toISOString(),
-      seasonId: currentSeason.id // Added the required seasonId property
+      seasonId: currentSeason.id
     };
-    
-    setTransfers([...transfers, transfer]);
+
+    // Update player with new team and add previous team to history
+    const updatedPlayer = {
+      ...player,
+      teamId: toTeamId,
+      previousTeams: player.previousTeams ? 
+        [...player.previousTeams, player.teamId] : 
+        [player.teamId]
+    };
+
+    setTransfers(prev => [...prev, transfer]);
     updatePlayer(updatedPlayer);
   };
-  
+
   const retirePlayer = (playerId: string) => {
     // Find the player
     const player = players.find(p => p.id === playerId);

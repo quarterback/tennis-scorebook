@@ -20,7 +20,7 @@ const PlayerManagement = () => {
   const { 
     players, teams, schools, addPlayer, updatePlayer, deletePlayer, 
     transferPlayer, retirePlayer, progressSeasons, seasons, currentSeason,
-    getArchivedSeasons, getPlayersByseason
+    getArchivedSeasons, getPlayersByseason, transfers
   } = useData();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -74,6 +74,74 @@ const PlayerManagement = () => {
       case 12: return 'Senior (12th)';
       default: return `Grade ${grade}`;
     }
+  };
+  
+  const getPlayerHistory = (player: Player) => {
+    const playerTransfers = transfers.filter(t => t.playerId === player.id);
+    const previousTeams = player.previousTeams || [];
+    
+    return previousTeams.map(teamId => {
+      const team = teams.find(t => t.id === teamId);
+      const school = team ? schools.find(s => s.id === team.schoolId) : undefined;
+      const transfer = playerTransfers.find(t => t.fromTeamId === teamId);
+      
+      return {
+        teamName: team ? `${school?.name || 'Unknown School'} ${team.gender}` : 'Unknown Team',
+        date: transfer?.date ? new Date(transfer.date).toLocaleDateString() : 'Unknown Date'
+      };
+    });
+  };
+  
+  const renderPlayerRow = (player: Player) => {
+    const team = getPlayerTeam(player);
+    const school = getPlayerSchool(player);
+    const history = getPlayerHistory(player);
+    
+    return (
+      <TableRow key={player.id}>
+        <TableCell>{player.name}</TableCell>
+        <TableCell>
+          <div className="flex items-center">
+            <GraduationCap className="h-4 w-4 mr-2 text-gray-500" />
+            {getGradeDisplay(player.grade)}
+          </div>
+        </TableCell>
+        <TableCell>{team ? `${team.gender} Team` : 'Unknown'}</TableCell>
+        <TableCell>{school ? school.name : 'Unknown'}</TableCell>
+        <TableCell>
+          {history.length > 0 && (
+            <div className="text-xs text-gray-500">
+              Previously: {history.map((h, i) => (
+                <div key={i}>{h.teamName} ({h.date})</div>
+              ))}
+            </div>
+          )}
+        </TableCell>
+        {user?.role === 'admin' && (
+          <TableCell>
+            <div className="flex space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedPlayer(player);
+                  setIsTransferDialogOpen(true);
+                }}
+              >
+                <ArrowRightLeft className="h-4 w-4 text-blue-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRetirePlayer(player)}
+              >
+                <UserMinus className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
+          </TableCell>
+        )}
+      </TableRow>
+    );
   };
   
   const handleTransferSubmit = () => {
@@ -184,47 +252,7 @@ const PlayerManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPlayers.map(player => {
-                    const team = getPlayerTeam(player);
-                    const school = getPlayerSchool(player);
-                    
-                    return (
-                      <TableRow key={player.id}>
-                        <TableCell>{player.name}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <GraduationCap className="h-4 w-4 mr-2 text-gray-500" />
-                            {getGradeDisplay(player.grade)}
-                          </div>
-                        </TableCell>
-                        <TableCell>{team ? `${team.gender} Team` : 'Unknown'}</TableCell>
-                        <TableCell>{school ? school.name : 'Unknown'}</TableCell>
-                        {user?.role === 'admin' && (
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedPlayer(player);
-                                  setIsTransferDialogOpen(true);
-                                }}
-                              >
-                                <ArrowRightLeft className="h-4 w-4 text-blue-500" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRetirePlayer(player)}
-                              >
-                                <UserMinus className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
+                  {filteredPlayers.map(player => renderPlayerRow(player))}
                 </TableBody>
               </Table>
               
