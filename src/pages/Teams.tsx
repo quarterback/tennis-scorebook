@@ -31,6 +31,7 @@ const Teams = () => {
     setIsCreatingTeams(true);
     try {
       const createdCount = await createTeamsForAllSchools();
+      console.log("Created teams count:", createdCount);
       toast({
         title: 'Teams Created',
         description: `Created ${createdCount} new teams for schools missing them.`,

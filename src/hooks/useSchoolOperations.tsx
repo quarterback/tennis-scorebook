@@ -217,24 +217,24 @@ export const useSchoolOperations = (initialSchools: School[] = []) => {
       
       if (!existingGenders.includes('Boys')) {
         console.log(`Creating Boys team for ${school.name}`);
-        addTeam({
+        const newTeam = addTeam({
           schoolId: school.id,
           gender: 'Boys',
           players: [],
           coaches: []
         });
-        createdTeamsCount++;
+        if (newTeam) createdTeamsCount++;
       }
       
       if (!existingGenders.includes('Girls')) {
         console.log(`Creating Girls team for ${school.name}`);
-        addTeam({
+        const newTeam = addTeam({
           schoolId: school.id,
           gender: 'Girls',
           players: [],
           coaches: []
         });
-        createdTeamsCount++;
+        if (newTeam) createdTeamsCount++;
       }
     }
     
