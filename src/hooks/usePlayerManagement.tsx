@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Player, Gender } from '@/types';
+import { Player } from '@/types';
 import { useData } from '@/context/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -14,7 +14,8 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
     grade: 9,
     teamId: '',
     seasons: [],
-    gender: 'Boys'
+    gender: 'Boys',
+    previousTeams: []  // Initialize with empty array
   });
 
   const handleAddPlayer = (e: React.FormEvent) => {
@@ -39,14 +40,17 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
       return;
     }
     
-    addPlayer({
+    // Create new player with current team ID
+    const newPlayer = addPlayer({
       name: playerFormData.name,
       grade: playerFormData.grade,
       teamId: selectedTeamId,
       seasons: [currentSeason?.id || ''],
-      gender: selectedTeam.gender
+      gender: selectedTeam.gender,
+      previousTeams: []  // Initialize with empty array
     });
     
+    // Reset form
     setPlayerFormData(prev => ({
       ...prev,
       name: '',
@@ -59,6 +63,8 @@ export const usePlayerManagement = (selectedTeamId: string | null) => {
       title: "Player Added",
       description: `${playerFormData.name} has been added to the team roster`,
     });
+    
+    console.log("Added new player:", newPlayer);
   };
 
   return {

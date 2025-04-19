@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, Plus, Trash } from 'lucide-react';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Player } from '@/types';
+import { Badge } from '@/components/ui/badge';
 
 interface TeamRosterProps {
   selectedTeamId: string | null;
@@ -44,8 +45,14 @@ const TeamRoster = ({
 
   return (
     <div className="space-y-2 mt-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-sm text-gray-500">
+          Total Players: <Badge variant="outline">{teamPlayers.length}</Badge>
+        </div>
+      </div>
+
       {sortedPlayers.map((player) => (
-        <div key={player.id} className="tennis-card p-3">
+        <div key={player.id} className="tennis-card p-3 border rounded-md">
           <div className="flex justify-between items-center">
             <div>
               <div className="font-medium">{player.name}</div>

@@ -33,9 +33,17 @@ const TeamManager = ({
   // Get players for the selected team
   const teamPlayers = selectedTeamId ? getPlayersByTeam(selectedTeamId) : [];
   
+  // Log the player count for debugging
+  console.log("Team players count:", teamPlayers.length);
+  if (teamPlayers.length > 0) {
+    console.log("First player:", teamPlayers[0]);
+  }
+  
   // Handle removing a player
   const handleRemovePlayer = (playerId: string) => {
-    deletePlayer(playerId);
+    if (confirm("Are you sure you want to remove this player from the team?")) {
+      deletePlayer(playerId);
+    }
   };
 
   return (
