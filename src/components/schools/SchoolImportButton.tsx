@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { importSchoolsAndTeams } from '@/utils/schoolDataImport';
@@ -160,7 +159,6 @@ export const SchoolImportButton = () => {
     }
   };
 
-  // New function to directly import schools using context
   const handleDirectImport = async () => {
     setIsImporting(true);
     try {
@@ -174,11 +172,13 @@ export const SchoolImportButton = () => {
       const existingSchools = [];
       const logs = [];
       
-      // First, get the districts from context to map district codes to IDs
-      const districtMapping: Record<string, string> = {};
+      // Map classification to district IDs
+      const classificationMapping: Record<string, string> = {};
       districts.forEach(district => {
-        districtMapping[district.code] = district.id;
+        classificationMapping[district.classification] = district.id;
       });
+      
+      console.log('Classification mapping:', classificationMapping);
       
       // Count total schools to import
       let totalSchools = 0;
@@ -192,13 +192,6 @@ export const SchoolImportButton = () => {
       for (const [districtCode, districtSchools] of Object.entries(leagueSchools)) {
         console.log(`Processing district ${districtCode} with ${districtSchools.length} schools`);
         
-        const districtId = districtMapping[districtCode];
-        if (!districtId) {
-          console.error(`District code ${districtCode} not found in database`);
-          logs.push(`District code ${districtCode} not found in database`);
-          continue;
-        }
-        
         for (const school of districtSchools) {
           try {
             // Check if school already exists
@@ -209,6 +202,15 @@ export const SchoolImportButton = () => {
             if (existingSchool) {
               console.log(`School ${school.name} already exists, skipping`);
               existingSchools.push(school.name);
+              continue;
+            }
+            
+            // Find the district ID based on classification
+            const districtId = classificationMapping[school.classification];
+            
+            if (!districtId) {
+              console.error(`Classification ${school.classification} not found in mapping`);
+              logs.push(`Classification ${school.classification} not found in mapping`);
               continue;
             }
             
@@ -224,7 +226,7 @@ export const SchoolImportButton = () => {
             // Add school using context API
             addSchool(newSchool);
             
-            console.log(`Added school: ${school.name}`);
+            console.log(`Added school: ${school.name} with classification ${school.classification} to district ${districtId}`);
             schoolsAdded.push(school.name);
             
             // Teams are automatically created by the addSchool function in DataContext
