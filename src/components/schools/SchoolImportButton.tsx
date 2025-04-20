@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { importSchoolsAndTeams } from '@/utils/schoolDataImport';
+import { useData } from '@/context/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -30,6 +31,7 @@ export const SchoolImportButton = () => {
     details?: string;
   } | null>(null);
   const { toast } = useToast();
+  const { addSchool, setSchools, schools, districts } = useData();
 
   const testConnection = async () => {
     setIsTesting(true);
@@ -158,6 +160,113 @@ export const SchoolImportButton = () => {
     }
   };
 
+  // New function to directly import schools using context
+  const handleDirectImport = async () => {
+    setIsImporting(true);
+    try {
+      console.log('Starting direct school import process...');
+      
+      // Import the school data
+      const { leagueSchools } = await import('@/utils/schoolDataImport');
+      
+      const schoolsAdded = [];
+      const teamsAdded = [];
+      const existingSchools = [];
+      const logs = [];
+      
+      // First, get the districts from context to map district codes to IDs
+      const districtMapping: Record<string, string> = {};
+      districts.forEach(district => {
+        districtMapping[district.code] = district.id;
+      });
+      
+      // Count total schools to import
+      let totalSchools = 0;
+      Object.values(leagueSchools).forEach(districtSchools => {
+        totalSchools += districtSchools.length;
+      });
+      
+      console.log(`Starting import of ${totalSchools} schools using context API...`);
+      
+      // Process each district and its schools
+      for (const [districtCode, districtSchools] of Object.entries(leagueSchools)) {
+        console.log(`Processing district ${districtCode} with ${districtSchools.length} schools`);
+        
+        const districtId = districtMapping[districtCode];
+        if (!districtId) {
+          console.error(`District code ${districtCode} not found in database`);
+          logs.push(`District code ${districtCode} not found in database`);
+          continue;
+        }
+        
+        for (const school of districtSchools) {
+          try {
+            // Check if school already exists
+            const existingSchool = schools.find(s => 
+              s.name.toLowerCase() === school.name.toLowerCase()
+            );
+            
+            if (existingSchool) {
+              console.log(`School ${school.name} already exists, skipping`);
+              existingSchools.push(school.name);
+              continue;
+            }
+            
+            // Create new school using context
+            const newSchool = {
+              name: school.name,
+              classification: school.classification,
+              districtId: districtId,
+              city: school.city || 'Portland',
+              state: 'OR'
+            };
+            
+            // Add school using context API
+            addSchool(newSchool);
+            
+            console.log(`Added school: ${school.name}`);
+            schoolsAdded.push(school.name);
+            
+            // Teams are automatically created by the addSchool function in DataContext
+            teamsAdded.push(`Boys team for ${school.name}`);
+            teamsAdded.push(`Girls team for ${school.name}`);
+            
+          } catch (error) {
+            console.error(`Error processing school ${school.name}:`, error);
+            logs.push(`Failed to add ${school.name}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+      }
+      
+      const summary = {
+        schoolsAdded: schoolsAdded.length,
+        teamsAdded: teamsAdded.length,
+        existingSchools: existingSchools.length,
+        logs: logs
+      };
+      
+      console.log('Direct import completed with summary:', summary);
+      setImportSummary(summary);
+      setIsDialogOpen(true);
+      
+      toast({
+        title: 'Direct Import Completed',
+        description: `Added ${schoolsAdded.length} schools and ${teamsAdded.length} teams.`,
+        variant: schoolsAdded.length > 0 ? 'default' : 'destructive'
+      });
+      
+    } catch (error) {
+      console.error('Direct import error:', error);
+      toast({
+        title: 'Import Failed',
+        description: 'An error occurred during direct import.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -186,8 +295,11 @@ export const SchoolImportButton = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+          <DropdownMenuItem onClick={handleDirectImport}>
+            Direct Import (No Database)
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleImport}>
-            Import All Schools
+            Database Import (Supabase)
           </DropdownMenuItem>
           <DropdownMenuItem onClick={testConnection}>
             Test Database Permissions
