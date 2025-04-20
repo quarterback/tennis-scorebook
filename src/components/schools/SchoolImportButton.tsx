@@ -4,23 +4,38 @@ import { Button } from '@/components/ui/button';
 import { importSchoolsAndTeams } from '@/utils/schoolDataImport';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const SchoolImportButton = () => {
   const [isImporting, setIsImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState<{
+    schoolsAdded: number;
+    teamsAdded: number;
+    existingSchools: number;
+    logs: string[];
+  } | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleImport = async () => {
     setIsImporting(true);
     try {
-      await importSchoolsAndTeams();
+      const summary = await importSchoolsAndTeams();
+      setImportSummary(summary);
+      setIsDialogOpen(true);
+      
       toast({
         title: 'Import Successful',
-        description: 'Schools and teams have been imported to the database.',
+        description: `Added ${summary.schoolsAdded} schools and ${summary.teamsAdded} teams.`,
         variant: 'default'
       });
       
-      // Reload the page to show the newly imported schools
-      window.location.reload();
+      // Only reload if new data was added
+      if (summary.schoolsAdded > 0 || summary.teamsAdded > 0) {
+        window.location.reload();
+      }
     } catch (error) {
       toast({
         title: 'Import Failed',
@@ -34,20 +49,65 @@ export const SchoolImportButton = () => {
   };
 
   return (
-    <Button 
-      onClick={handleImport} 
-      disabled={isImporting}
-      variant="outline"
-      className="flex items-center gap-2"
-    >
-      {isImporting ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Importing...
-        </>
-      ) : (
-        'Import Schools'
-      )}
-    </Button>
+    <>
+      <Button 
+        onClick={handleImport} 
+        disabled={isImporting}
+        variant="outline"
+        className="flex items-center gap-2"
+      >
+        {isImporting ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Importing...
+          </>
+        ) : (
+          'Import Schools'
+        )}
+      </Button>
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>School Import Results</DialogTitle>
+            <DialogDescription>
+              Summary of the school and team import process
+            </DialogDescription>
+          </DialogHeader>
+          
+          {importSummary && (
+            <div className="space-y-4">
+              <Alert variant={importSummary.schoolsAdded > 0 ? "default" : "secondary"}>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Import Summary</AlertTitle>
+                <AlertDescription>
+                  <ul className="mt-2 space-y-1 list-disc pl-5">
+                    <li>Added {importSummary.schoolsAdded} new schools</li>
+                    <li>Added {importSummary.teamsAdded} team rosters</li>
+                    <li>Skipped {importSummary.existingSchools} existing schools</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+              
+              {importSummary.logs.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Errors</AlertTitle>
+                  <AlertDescription>
+                    <div className="mt-2 max-h-40 overflow-y-auto">
+                      <ul className="space-y-1 list-disc pl-5">
+                        {importSummary.logs.map((log, index) => (
+                          <li key={index}>{log}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

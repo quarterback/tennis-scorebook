@@ -179,6 +179,25 @@ export const importSchoolsAndTeams = async () => {
     ]
   };
 
+  const importLogs: string[] = [];
+  let schoolsAdded = 0;
+  let teamsAdded = 0;
+  let existingSchools = 0;
+  
+  // First check if there are existing schools
+  const { data: existingSchoolsData, error: checkError } = await supabase
+    .from('schools')
+    .select('id, name')
+    .limit(1);
+    
+  if (checkError) {
+    console.error('Error checking for existing schools:', checkError);
+    throw checkError;
+  }
+  
+  // If schools already exist, only add new ones
+  const shouldOnlyAddNew = existingSchoolsData && existingSchoolsData.length > 0;
+
   for (const [districtCode, schools] of Object.entries(leagueSchools)) {
     const { data: districtData, error: districtError } = await supabase
       .from('districts')
@@ -188,10 +207,32 @@ export const importSchoolsAndTeams = async () => {
 
     if (districtError) {
       console.error(`Error finding district ${districtCode}:`, districtError);
+      importLogs.push(`Error finding district ${districtCode}`);
       continue;
     }
 
     for (const school of schools) {
+      // Check if school already exists
+      if (shouldOnlyAddNew) {
+        const { data: existingSchool, error: schoolCheckError } = await supabase
+          .from('schools')
+          .select('id')
+          .eq('name', school.name)
+          .maybeSingle();
+        
+        if (schoolCheckError) {
+          console.error(`Error checking if school ${school.name} exists:`, schoolCheckError);
+          importLogs.push(`Error checking for ${school.name}`);
+          continue;
+        }
+        
+        if (existingSchool) {
+          console.log(`School ${school.name} already exists, skipping`);
+          existingSchools++;
+          continue;
+        }
+      }
+
       const { data: schoolData, error: schoolError } = await supabase
         .from('schools')
         .insert({
@@ -206,9 +247,12 @@ export const importSchoolsAndTeams = async () => {
 
       if (schoolError) {
         console.error(`Error inserting school ${school.name}:`, schoolError);
+        importLogs.push(`Failed to add ${school.name}`);
         continue;
       }
 
+      schoolsAdded++;
+      
       // Create Boys and Girls teams for each school (except St. Mary's Academy which only gets a Girls team)
       const teamInserts = [];
       if (school.name !== "St. Mary's Academy") {
@@ -216,16 +260,27 @@ export const importSchoolsAndTeams = async () => {
       }
       teamInserts.push({ school_id: schoolData.id, gender: 'Girls' });
 
-      const { error: teamError } = await supabase
+      const { data: teamsData, error: teamError } = await supabase
         .from('teams')
-        .insert(teamInserts);
+        .insert(teamInserts)
+        .select();
 
       if (teamError) {
         console.error(`Error inserting teams for ${school.name}:`, teamError);
+        importLogs.push(`Failed to add teams for ${school.name}`);
+      } else {
+        teamsAdded += teamsData.length;
       }
     }
   }
 
   console.log('School and team data import completed');
+  const summary = {
+    schoolsAdded,
+    teamsAdded,
+    existingSchools,
+    logs: importLogs
+  };
+  
+  return summary;
 };
-
