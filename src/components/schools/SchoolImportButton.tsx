@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { importSchoolsAndTeams } from '@/utils/schoolDataImport';
@@ -21,7 +22,9 @@ export const SchoolImportButton = () => {
   const handleImport = async () => {
     setIsImporting(true);
     try {
+      console.log('Starting school import process...');
       const summary = await importSchoolsAndTeams();
+      console.log('Import finished with summary:', summary);
       setImportSummary(summary);
       setIsDialogOpen(true);
       
@@ -32,15 +35,18 @@ export const SchoolImportButton = () => {
       });
       
       if (summary.schoolsAdded > 0 || summary.teamsAdded > 0) {
-        window.location.reload();
+        console.log('Reloading page to show new schools...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000); // Give time for the toast to be visible
       }
     } catch (error) {
+      console.error('Import error:', error);
       toast({
         title: 'Import Failed',
         description: 'An error occurred while importing schools and teams.',
         variant: 'destructive'
       });
-      console.error('Import error:', error);
     } finally {
       setIsImporting(false);
     }

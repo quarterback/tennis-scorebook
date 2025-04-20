@@ -39,6 +39,7 @@ const Schools = () => {
   const [districtFilter, setDistrictFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grouped'>('table');
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   useEffect(() => {
     console.log(`Schools page loaded with ${schools.length} schools`);
@@ -49,15 +50,24 @@ const Schools = () => {
   
   useEffect(() => {
     const fetchSchoolsAndDistricts = async () => {
+      setIsLoading(true);
+      setFetchError(null);
+      
+      console.log('Fetching districts...');
       const { data: districtData, error: districtError } = await supabase
         .from('districts')
         .select('*');
 
       if (districtError) {
         console.error('Error fetching districts:', districtError);
+        setFetchError(`Error fetching districts: ${districtError.message}`);
+        setIsLoading(false);
         return;
       }
 
+      console.log(`Found ${districtData?.length || 0} districts`);
+
+      console.log('Fetching schools...');
       const { data: schoolData, error: schoolError } = await supabase
         .from('schools')
         .select(`
@@ -71,19 +81,23 @@ const Schools = () => {
 
       if (schoolError) {
         console.error('Error fetching schools:', schoolError);
+        setFetchError(`Error fetching schools: ${schoolError.message}`);
+        setIsLoading(false);
         return;
       }
 
-      const formattedSchools: School[] = schoolData.map(school => ({
+      console.log(`Found ${schoolData?.length || 0} schools`);
+
+      const formattedSchools: School[] = schoolData ? schoolData.map(school => ({
         id: school.id,
         name: school.name,
         classification: school.classification as Classification,
         districtId: school.district_id,
         city: school.city,
         state: school.state
-      }));
+      })) : [];
 
-      const formattedDistricts: District[] = districtData.map(district => ({
+      const formattedDistricts: District[] = districtData ? districtData.map(district => ({
         id: district.id,
         name: district.name,
         code: district.code,
@@ -95,7 +109,7 @@ const Schools = () => {
             ? district.tournament_dates[1] : ''
         } : undefined,
         tournamentLocation: district.tournament_location
-      }));
+      })) : [];
 
       setSchools(formattedSchools);
       setDistricts(formattedDistricts);
@@ -260,6 +274,13 @@ const Schools = () => {
         />
         <SchoolImportButton />
       </div>
+
+      {fetchError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{fetchError}</span>
+        </div>
+      )}
 
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
