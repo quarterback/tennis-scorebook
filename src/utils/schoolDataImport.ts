@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Classification, District } from '@/types';
 
@@ -8,6 +7,14 @@ interface SchoolData {
   classification: Classification;
   city?: string;
 }
+
+/** Schools which should only ever have a Girls team (no Boys team) */
+const ONLY_GIRLS_SCHOOLS = [
+  "Tillamook",
+  "Scappoose",
+  "Westside Christian",
+  "St. Mary's Academy"
+];
 
 export const importSchoolsAndTeams = async () => {
   // Schools by League
@@ -253,9 +260,11 @@ export const importSchoolsAndTeams = async () => {
 
       schoolsAdded++;
       
-      // Create Boys and Girls teams for each school (except St. Mary's Academy which only gets a Girls team)
-      const teamInserts = [];
-      if (school.name !== "St. Mary's Academy") {
+      // Determine whether to add both Boys and Girls teams, or only Girls
+      let teamInserts = [];
+      const isGirlsOnly = ONLY_GIRLS_SCHOOLS.includes(school.name);
+
+      if (!isGirlsOnly) {
         teamInserts.push({ school_id: schoolData.id, gender: 'Boys' });
       }
       teamInserts.push({ school_id: schoolData.id, gender: 'Girls' });

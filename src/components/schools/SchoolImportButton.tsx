@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { importSchoolsAndTeams } from '@/utils/schoolDataImport';
@@ -32,7 +31,6 @@ export const SchoolImportButton = () => {
         variant: 'default'
       });
       
-      // Only reload if new data was added
       if (summary.schoolsAdded > 0 || summary.teamsAdded > 0) {
         window.location.reload();
       }
@@ -74,10 +72,9 @@ export const SchoolImportButton = () => {
               Summary of the school and team import process
             </DialogDescription>
           </DialogHeader>
-          
           {importSummary && (
             <div className="space-y-4">
-              <Alert variant={importSummary.schoolsAdded > 0 ? "default" : "secondary"}>
+              <Alert variant={importSummary.schoolsAdded > 0 ? "default" : "destructive"}>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertTitle>Import Summary</AlertTitle>
                 <AlertDescription>
@@ -88,7 +85,7 @@ export const SchoolImportButton = () => {
                   </ul>
                 </AlertDescription>
               </Alert>
-              
+
               {importSummary.logs.length > 0 && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
