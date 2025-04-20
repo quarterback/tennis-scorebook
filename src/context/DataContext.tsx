@@ -32,7 +32,7 @@ interface DataContextType {
   setMatches?: React.Dispatch<React.SetStateAction<Match[]>>;
   setDistricts?: React.Dispatch<React.SetStateAction<District[]>>;
   
-  addSchool: (school: Omit<School, 'id'>) => void;
+  addSchool: (school: Omit<School, 'id'> | School) => void;
   updateSchool: (school: School) => void;
   deleteSchool: (id: string) => void;
   createTeamsForAllSchools: () => void;
@@ -127,27 +127,49 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { getStandings, getStateQualifiers } = useStandingsCalculator(teams, schools, matches, districts);
   
   // Add method to create school with teams automatically
-  const addSchool = (schoolData: Omit<School, 'id'>) => {
-    const newSchool = addNewSchool();
-    
-    if (newSchool) {
-      // Automatically create boys and girls teams for this school
+  const addSchool = (schoolData: Omit<School, 'id'> | School) => {
+    // Check if this is a complete school object or just school data
+    if ('id' in schoolData) {
+      // This is a complete school object, we're just adding teams for it
+      console.log(`Creating teams for existing school ${schoolData.name}`);
+      
       const boysTeam = addNewTeam({
-        schoolId: newSchool.id,
+        schoolId: schoolData.id,
         gender: 'Boys',
         players: []
       });
       
       const girlsTeam = addNewTeam({
-        schoolId: newSchool.id,
+        schoolId: schoolData.id,
         gender: 'Girls',
         players: []
       });
       
-      console.log(`Created teams for ${newSchool.name}:`, boysTeam.id, girlsTeam.id);
+      console.log(`Created teams for ${schoolData.name}:`, boysTeam.id, girlsTeam.id);
+      return schoolData;
+    } else {
+      // Create new school and teams
+      const newSchool = addNewSchool();
+      
+      if (newSchool) {
+        // Automatically create boys and girls teams for this school
+        const boysTeam = addNewTeam({
+          schoolId: newSchool.id,
+          gender: 'Boys',
+          players: []
+        });
+        
+        const girlsTeam = addNewTeam({
+          schoolId: newSchool.id,
+          gender: 'Girls',
+          players: []
+        });
+        
+        console.log(`Created teams for ${newSchool.name}:`, boysTeam.id, girlsTeam.id);
+      }
+      
+      return newSchool;
     }
-    
-    return newSchool;
   };
   
   // Add methods to clear all players and matches
@@ -169,6 +191,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addPlayer = (playerData: Omit<Player, 'id' | 'status' | 'seasonId'>) => {
     return addNewPlayer(playerData);
   };
+
+  // Store schools and teams in localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('schools', JSON.stringify(schools));
+      console.log(`Saved ${schools.length} schools to localStorage`);
+    } catch (error) {
+      console.error('Error saving schools to localStorage:', error);
+    }
+  }, [schools]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('teams', JSON.stringify(teams));
+      console.log(`Saved ${teams.length} teams to localStorage`);
+    } catch (error) {
+      console.error('Error saving teams to localStorage:', error);
+    }
+  }, [teams]);
   
   const value: DataContextType = {
     schools,

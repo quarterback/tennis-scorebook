@@ -3,10 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 import { useData } from '@/context/DataContext';
 import { School, Classification } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const useSchoolOperations = (initialSchools = []) => {
-  const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [schools, setSchools] = useState<School[]>([]);
   const { toast } = useToast();
   const [isSchoolDialogOpen, setIsSchoolDialogOpen] = useState(false);
   const [schoolFormData, setSchoolFormData] = useState<Omit<School, 'id'>>({
@@ -16,6 +16,27 @@ export const useSchoolOperations = (initialSchools = []) => {
     classification: '6A',
     districtId: ''
   });
+  
+  // Load schools from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedSchools = localStorage.getItem('schools');
+      if (savedSchools) {
+        const parsedSchools = JSON.parse(savedSchools);
+        if (Array.isArray(parsedSchools) && parsedSchools.length > 0) {
+          console.log(`Loaded ${parsedSchools.length} schools from localStorage`);
+          setSchools(parsedSchools);
+          return;
+        }
+      }
+      // Fall back to initial schools if nothing in localStorage
+      setSchools(initialSchools);
+      console.log(`Initialized with ${initialSchools.length} sample schools`);
+    } catch (error) {
+      console.error('Error loading schools from localStorage:', error);
+      setSchools(initialSchools);
+    }
+  }, []);
   
   // When creating a new school, ensure city and state are included
   const addSchool = () => {
@@ -38,7 +59,7 @@ export const useSchoolOperations = (initialSchools = []) => {
       state: schoolFormData.state
     };
     
-    setSchools([...schools, newSchool]);
+    setSchools(prevSchools => [...prevSchools, newSchool]);
     setIsSchoolDialogOpen(false);
     
     // Reset form data

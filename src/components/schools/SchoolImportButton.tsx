@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { importSchoolsAndTeams } from '@/utils/schoolDataImport';
@@ -188,6 +189,9 @@ export const SchoolImportButton = () => {
       
       console.log(`Starting import of ${totalSchools} schools using context API...`);
       
+      // Create a copy of the current schools array to add new schools to
+      const updatedSchools = [...schools];
+      
       // Process each district and its schools
       for (const [districtCode, districtSchools] of Object.entries(leagueSchools)) {
         console.log(`Processing district ${districtCode} with ${districtSchools.length} schools`);
@@ -214,8 +218,9 @@ export const SchoolImportButton = () => {
               continue;
             }
             
-            // Create new school using context
+            // Create new school directly (without using addSchool to avoid immediate state updates)
             const newSchool = {
+              id: crypto.randomUUID(),
               name: school.name,
               classification: school.classification,
               districtId: districtId,
@@ -223,20 +228,32 @@ export const SchoolImportButton = () => {
               state: 'OR'
             };
             
-            // Add school using context API
-            addSchool(newSchool);
+            // Add to our updated schools array
+            updatedSchools.push(newSchool);
             
             console.log(`Added school: ${school.name} with classification ${school.classification} to district ${districtId}`);
             schoolsAdded.push(school.name);
             
-            // Teams are automatically created by the addSchool function in DataContext
-            teamsAdded.push(`Boys team for ${school.name}`);
-            teamsAdded.push(`Girls team for ${school.name}`);
-            
+            // We'll create teams separately after updating all schools
           } catch (error) {
             console.error(`Error processing school ${school.name}:`, error);
             logs.push(`Failed to add ${school.name}: ${error instanceof Error ? error.message : String(error)}`);
           }
+        }
+      }
+      
+      // Update the schools state once with all new schools
+      console.log(`Setting schools state with ${updatedSchools.length} schools (${schoolsAdded.length} new)...`);
+      setSchools(updatedSchools);
+      
+      // Now create teams for all new schools
+      for (const schoolName of schoolsAdded) {
+        const school = updatedSchools.find(s => s.name === schoolName);
+        if (school) {
+          // Create boys and girls teams
+          addSchool(school); // This just adds teams for the school (the school already exists in state)
+          teamsAdded.push(`Boys team for ${school.name}`);
+          teamsAdded.push(`Girls team for ${school.name}`);
         }
       }
       
@@ -256,6 +273,19 @@ export const SchoolImportButton = () => {
         description: `Added ${schoolsAdded.length} schools and ${teamsAdded.length} teams.`,
         variant: schoolsAdded.length > 0 ? 'default' : 'destructive'
       });
+      
+      // Force page refresh to ensure all components re-render with new data
+      if (schoolsAdded.length > 0) {
+        toast({
+          title: 'Refreshing page',
+          description: 'Reloading to show your newly imported schools.',
+          duration: 3000
+        });
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
       
     } catch (error) {
       console.error('Direct import error:', error);
