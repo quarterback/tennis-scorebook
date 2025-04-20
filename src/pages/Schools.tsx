@@ -238,7 +238,7 @@ const Schools = () => {
       };
       
       const updatedSchools = localSchools.map(s => 
-        school.id === editingSchool.id ? updatedSchool : school
+        s.id === editingSchool.id ? updatedSchool : s
       );
       setLocalSchools(updatedSchools);
       setSchools(updatedSchools);
@@ -423,7 +423,6 @@ const Schools = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>School Name</TableHead>
-                      <TableHead>Location</TableHead>
                       <TableHead>Classification</TableHead>
                       <TableHead>District</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -434,7 +433,6 @@ const Schools = () => {
                       filteredSchools.map(school => (
                         <TableRow key={school.id}>
                           <TableCell className="font-medium">{school.name}</TableCell>
-                          <TableCell>{school.city}, {school.state}</TableCell>
                           <TableCell>{school.classification}</TableCell>
                           <TableCell>{school.districtId ? getDistrictName(school.districtId) : 'Unknown District'}</TableCell>
                           <TableCell className="text-right">
@@ -460,7 +458,7 @@ const Schools = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
                           No schools found with the current filters
                         </TableCell>
                       </TableRow>
