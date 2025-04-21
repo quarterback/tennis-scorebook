@@ -38,7 +38,6 @@ function standardizePosition(pos: string): { type: "singles" | "doubles"; positi
 export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setOpen }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const { updateMatch } = useMatches();
   const { matches, setMatches } = useMatches();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
