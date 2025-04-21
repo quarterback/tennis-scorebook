@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useMatches } from "@/context/MatchesContext";
+import { useData } from "@/context/DataContext";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
 import { Match, Flight } from "@/types";
@@ -39,6 +40,30 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const { matches, setMatches } = useMatches();
+  const { teams } = useData();
+
+  // Helper function to find team ID from name
+  const findTeamIdByName = (teamName: string): string => {
+    const team = teams.find(t => t.name === teamName);
+    if (team) return team.id;
+    
+    // Try to match by partial name
+    const fuzzyMatch = teams.find(t => 
+      t.name.toLowerCase().includes(teamName.toLowerCase()) || 
+      teamName.toLowerCase().includes(t.name.toLowerCase())
+    );
+    
+    if (fuzzyMatch) return fuzzyMatch.id;
+    
+    // Return the first team ID as fallback (or generate a warning)
+    toast({
+      title: "Team not found",
+      description: `Could not find team: "${teamName}". Please check team name.`,
+      variant: "destructive"
+    });
+    
+    return teams.length > 0 ? teams[0].id : "unknown";
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,17 +71,17 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
 
     setLoading(true);
     const ext = file.name.split(".").pop()?.toLowerCase();
-    let matches: ImportMatch[] = [];
+    let importedMatches: ImportMatch[] = [];
 
     try {
       if (ext === "json") {
         const text = await file.text();
-        matches = JSON.parse(text);
+        importedMatches = JSON.parse(text);
       } else if (ext === "csv") {
         const text = await file.text();
         const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
         // Transform each row into an ImportMatch shape
-        matches = parsed.data.map((row: any) => {
+        importedMatches = parsed.data.map((row: any) => {
           // Assume columns: date, home_team, away_team, 1S, 2S, 3S, 1D, 2D, 3D, 1S_score, etc.
           const flights: ImportFlight[] = [];
           ["1S","2S","3S","1D","2D","3D"].forEach((label) => {
@@ -87,11 +112,21 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
     }
 
     let imported = 0;
+    let skipped = 0;
     // Map ImportMatch -> Match, then add to system
     const newMatches: Match[] = [];
     
-    matches.forEach(importEntry => {
+    importedMatches.forEach(importEntry => {
       try {
+        // Find team IDs from names
+        const homeTeamId = findTeamIdByName(importEntry.home_team);
+        const awayTeamId = findTeamIdByName(importEntry.away_team);
+        
+        if (homeTeamId === "unknown" || awayTeamId === "unknown") {
+          skipped++;
+          return; // Skip this match if teams not found
+        }
+        
         const flights: Flight[] = importEntry.flights.map(f => {
           const { type, position } = standardizePosition(f.position);
           let winner: boolean|undefined;
@@ -118,8 +153,8 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
         const newMatch: Match = {
           id: crypto.randomUUID(),
           date: importEntry.date,
-          homeTeamId: importEntry.home_team,
-          awayTeamId: importEntry.away_team,
+          homeTeamId: homeTeamId,
+          awayTeamId: awayTeamId,
           isLeagueMatch: true,
           isComplete: true,
           hasJvMatches: false,
@@ -135,6 +170,7 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
         imported += 1;
       } catch (err) {
         // Skip and show error
+        skipped++;
         toast({ title: "Match import failed", description: String(err) });
       }
     });
@@ -144,7 +180,7 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
 
     toast({
       title: "Import Complete",
-      description: `Imported ${imported} matches.`
+      description: `Imported ${imported} matches${skipped > 0 ? `, skipped ${skipped} invalid entries` : ''}.`
     });
     setLoading(false);
     setOpen(false);
