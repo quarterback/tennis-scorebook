@@ -1,14 +1,23 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, SortAsc, SortDesc } from 'lucide-react';
+import { BarChart3, SortAsc, SortDesc, Info } from 'lucide-react';
 import { Gender, Classification } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { calculateWs10, calculateOsi, calculateApr } from '@/utils/aprCalculations';
+import { 
+  calculateWs10, 
+  calculateOsi, 
+  calculateApr, 
+  FLIGHT_WEIGHTS 
+} from '@/utils/aprCalculations';
+import { APR_CONSTANTS } from '@/utils/aprConstants';
 import { useDistrictOperations } from '@/hooks/useDistrictOperations';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { RankingSystemExplanation } from '@/components/rankings/RankingSystemExplanation';
 
 interface TeamRankingData {
   teamId: string;
@@ -44,6 +53,7 @@ const Rankings = () => {
   }, [teams, matches, selectedGender, selectedClassification]);
   
   const calculateRankings = () => {
+    // Step 1: Calculate WS10 for all teams
     const teamWs10Map = new Map<string, { ws10: number, matchesPlayed: number }>();
     
     teams.forEach(team => {
@@ -59,6 +69,7 @@ const Rankings = () => {
       });
     });
     
+    // Step 2: Calculate rankings with OSI
     const rankings: TeamRankingData[] = teams
       .filter(team => {
         if (team.gender !== selectedGender) return false;
@@ -201,7 +212,7 @@ const Rankings = () => {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-500 mb-4">
-            APR = WS10 × OSI — where WS10 is the team's weighted flight score and OSI is the opponent strength index.
+            APR = WS10 × OSI — where WS10 is the sum of your 10 best match scores and OSI is the opponent strength index.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -259,6 +270,19 @@ const Rankings = () => {
         </CardContent>
       </Card>
       
+      <RankingSystemExplanation defaultConfig={{
+        weights: {
+          singles1: FLIGHT_WEIGHTS.singles1,
+          singles2: FLIGHT_WEIGHTS.singles2,
+          singles3: FLIGHT_WEIGHTS.singles3,
+          doubles1: FLIGHT_WEIGHTS.doubles1,
+          doubles2: FLIGHT_WEIGHTS.doubles2,
+          doubles3: FLIGHT_WEIGHTS.doubles3
+        },
+        minimumMatches: APR_CONSTANTS.MIN_MATCHES,
+        cutoffDate: new Date().toISOString()
+      }} />
+      
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -277,13 +301,43 @@ const Rankings = () => {
                   Record <SortIcon field="winPercentage" />
                 </TableHead>
                 <TableHead onClick={() => handleSort('ws10')}>
-                  WS10 <SortIcon field="ws10" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="flex items-center">
+                        WS10 <Info className="h-3 w-3 ml-1" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Win Score 10: Sum of your 10 best match scores using weighted flight values</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <SortIcon field="ws10" />
                 </TableHead>
                 <TableHead onClick={() => handleSort('osi')}>
-                  OSI <SortIcon field="osi" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="flex items-center">
+                        OSI <Info className="h-3 w-3 ml-1" /> 
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Opponent Strength Index: Average of opponents' WS10 scores</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <SortIcon field="osi" />
                 </TableHead>
                 <TableHead onClick={() => handleSort('apr')}>
-                  APR <SortIcon field="apr" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="flex items-center">
+                        APR <Info className="h-3 w-3 ml-1" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Athletic Power Rating: WS10 × OSI</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <SortIcon field="apr" />
                 </TableHead>
                 <TableHead className="text-right">APR Score</TableHead>
               </TableRow>
