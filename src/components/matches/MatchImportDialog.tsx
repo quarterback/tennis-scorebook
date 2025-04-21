@@ -25,7 +25,7 @@ type ImportMatch = {
   flights: ImportFlight[];
 };
 
-function standardizePosition(pos: string) {
+function standardizePosition(pos: string): { type: "singles" | "doubles"; position: number } {
   // Convert "1S" -> { type: "singles", position: 1 }, etc
   if (!pos || pos.length < 2) return { type: "singles", position: 1 };
   const [num, t] = [pos[0], pos[1]?.toUpperCase()];
@@ -38,7 +38,8 @@ function standardizePosition(pos: string) {
 export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setOpen }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const { addMatch } = useMatches();
+  const { updateMatch } = useMatches();
+  const { matches, setMatches } = useMatches();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,6 +89,8 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
 
     let imported = 0;
     // Map ImportMatch -> Match, then add to system
+    const newMatches: Match[] = [];
+    
     matches.forEach(importEntry => {
       try {
         const flights: Flight[] = importEntry.flights.map(f => {
@@ -111,7 +114,8 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
           };
         });
 
-        addMatch({
+        const newMatch: Match = {
+          id: crypto.randomUUID(),
           date: importEntry.date,
           homeTeamId: importEntry.home_team,
           awayTeamId: importEntry.away_team,
@@ -124,13 +128,18 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
           homeTeamScore: undefined,
           awayTeamScore: undefined,
           flights
-        });
+        };
+        
+        newMatches.push(newMatch);
         imported += 1;
       } catch (err) {
         // Skip and show error
         toast({ title: "Match import failed", description: String(err) });
       }
     });
+    
+    // Add all new matches to the existing matches
+    setMatches(prevMatches => [...prevMatches, ...newMatches]);
 
     toast({
       title: "Import Complete",

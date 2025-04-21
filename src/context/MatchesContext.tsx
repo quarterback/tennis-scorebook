@@ -25,6 +25,8 @@ interface MatchesContextType {
   schools: School[];
   teams: Team[];
   players: Player[];
+  matches: Match[];
+  setMatches: React.Dispatch<React.SetStateAction<Match[]>>;
   getTeamName: (teamId: string) => string;
   getTeamPlayersForSelect: (teamId: string) => { id: string; name: string }[];
   handleAddMatchSubmit: (e: React.FormEvent) => void;
@@ -62,7 +64,7 @@ export const useMatches = () => {
 };
 
 export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { schools, teams, players, matches, addMatch, updateMatch, deleteMatch: deleteMatchFromData } = useData();
+  const { schools, teams, players, matches, setMatches, addMatch, updateMatch, deleteMatch: deleteMatchFromData } = useData();
   const { user } = useAuth();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -300,6 +302,8 @@ export const MatchesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     schools,
     teams,
     players,
+    matches,
+    setMatches,
     getTeamName,
     getTeamPlayersForSelect,
     handleAddMatchSubmit,
