@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MatchesProvider } from '@/context/MatchesContext';
 import MatchesHeader from '@/components/matches/MatchesHeader';
@@ -13,11 +12,13 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import CustomMatchTabContent from '@/components/matches/CustomMatchTabContent';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import MatchImportDialog from "@/components/matches/MatchImportDialog";
 
 const Matches = () => {
   const [showSimulation, setShowSimulation] = useState(false);
   const isMobile = useIsMobile();
-  
+  const [importOpen, setImportOpen] = useState(false);
+
   return (
     <MatchesProvider>
       <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 pb-6">
@@ -25,6 +26,14 @@ const Matches = () => {
           <MatchesHeader />
           <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto justify-between xs:justify-end">
             <MediaToolbar />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setImportOpen(true)}
+              className="gap-1.5 text-xs sm:text-sm w-full xs:w-auto"
+            >
+              Import Matches
+            </Button>
             <Button 
               variant={showSimulation ? "default" : "outline"} 
               size="sm"
@@ -36,7 +45,7 @@ const Matches = () => {
             </Button>
           </div>
         </div>
-        
+        <MatchImportDialog open={importOpen} setOpen={setImportOpen} />
         {showSimulation && (
           <>
             <Separator className="my-4" />
