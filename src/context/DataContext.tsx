@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { School, Team, Player, Match, TeamStanding, Gender, Classification, District, Season, PlayerTransfer } from '@/types';
 
@@ -211,6 +210,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [teams]);
   
+  // Fix the addMatch function to handle Omit<Match, 'id'>
+  const addMatch = (matchData: Omit<Match, 'id'>) => {
+    // Use the hook's function but cast the parameter type correctly
+    return addNewMatch(matchData);
+  };
+  
   const value: DataContextType = {
     schools,
     teams,
@@ -249,7 +254,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getArchivedSeasons,
     getPlayersByseason,
     
-    addMatch: addNewMatch,
+    addMatch,
     updateMatch,
     deleteMatch,
     deleteAllMatches,
