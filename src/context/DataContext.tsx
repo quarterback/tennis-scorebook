@@ -52,7 +52,7 @@ interface DataContextType {
   getArchivedSeasons: () => Season[];
   getPlayersByseason: (seasonId: string) => Player[];
   
-  addMatch: (match: Omit<Match, 'id'>) => void;
+  addMatch: (match: Omit<Match, 'id'>) => Match;
   updateMatch: (match: Match) => void;
   deleteMatch: (id: string) => void;
   deleteAllMatches: () => void;
@@ -210,8 +210,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [teams]);
   
-  // Fix the addMatch function to handle Omit<Match, 'id'>
-  const addMatch = (matchData: Omit<Match, 'id'>) => {
+  // Fix the addMatch function to handle Omit<Match, 'id'> and return Match (with id)
+  const addMatch = (matchData: Omit<Match, 'id'>): Match => {
     // Use the hook's function but cast the parameter type correctly
     return addNewMatch(matchData);
   };
