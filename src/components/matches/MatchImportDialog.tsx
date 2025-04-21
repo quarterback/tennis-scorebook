@@ -40,18 +40,29 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const { matches, setMatches } = useMatches();
-  const { teams } = useData();
+  const { teams, schools } = useData();
 
   // Helper function to find team ID from name
   const findTeamIdByName = (teamName: string): string => {
-    const team = teams.find(t => t.name === teamName);
-    if (team) return team.id;
+    // First, try to find by constructed team name (school name + gender)
+    const foundTeam = teams.find(t => {
+      const school = schools.find(s => s.id === t.schoolId);
+      if (!school) return false;
+      const fullTeamName = `${school.name} ${t.gender}`;
+      return fullTeamName === teamName;
+    });
+    
+    if (foundTeam) return foundTeam.id;
     
     // Try to match by partial name
-    const fuzzyMatch = teams.find(t => 
-      t.name.toLowerCase().includes(teamName.toLowerCase()) || 
-      teamName.toLowerCase().includes(t.name.toLowerCase())
-    );
+    const fuzzyMatch = teams.find(t => {
+      const school = schools.find(s => s.id === t.schoolId);
+      if (!school) return false;
+      const fullTeamName = `${school.name} ${t.gender}`;
+      return fullTeamName.toLowerCase().includes(teamName.toLowerCase()) || 
+             teamName.toLowerCase().includes(fullTeamName.toLowerCase()) ||
+             teamName.toLowerCase().includes(school.name.toLowerCase());
+    });
     
     if (fuzzyMatch) return fuzzyMatch.id;
     
