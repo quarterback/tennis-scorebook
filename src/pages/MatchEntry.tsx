@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +28,6 @@ const MatchEntry = () => {
   const [isHomeTeam, setIsHomeTeam] = useState<boolean>(true);
   const [isLeagueMatch, setIsLeagueMatch] = useState<boolean>(true);
   
-  // Track which flights were won
   const [flightsWon, setFlightsWon] = useState({
     singles1: false,
     singles2: false,
@@ -38,17 +36,14 @@ const MatchEntry = () => {
     doubles2: false,
   });
   
-  // Get team's school
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
   const teamSchool = selectedTeam ? schools.find(s => s.id === selectedTeam.schoolId) : null;
   
-  // Filter schools to only show those in the same classification as the selected team
   const opponentSchools = schools.filter(s => 
     s.id !== teamSchool?.id && 
     (!teamSchool || s.classification === teamSchool.classification)
   );
   
-  // Reset match form when team changes
   useEffect(() => {
     setOpponentSchoolId('');
     setHomeTeamScore(0);
@@ -72,11 +67,9 @@ const MatchEntry = () => {
   };
   
   const createMatchFromForm = (): Omit<Match, 'id'> => {
-    // Determine the team IDs based on whether our team is home or away
     const homeTeamId = isHomeTeam ? selectedTeamId : '';
     const awayTeamId = !isHomeTeam ? selectedTeamId : '';
     
-    // Generate flights based on won/lost checkboxes
     const flights: Flight[] = [
       {
         id: crypto.randomUUID(),
@@ -135,7 +128,6 @@ const MatchEntry = () => {
       },
     ];
     
-    // Ensure we've correctly set the home/away teams
     const opponentTeam = teams.find(t => 
       t.schoolId === opponentSchoolId && 
       t.gender === selectedTeam?.gender
@@ -144,7 +136,6 @@ const MatchEntry = () => {
     const actualHomeTeamId = isHomeTeam ? selectedTeamId : (opponentTeam?.id || '');
     const actualAwayTeamId = !isHomeTeam ? selectedTeamId : (opponentTeam?.id || '');
     
-    // Create match object
     const match: Omit<Match, 'id'> = {
       date: format(date, 'yyyy-MM-dd'),
       homeTeamId: actualHomeTeamId,
@@ -184,11 +175,8 @@ const MatchEntry = () => {
       return;
     }
     
-    // Validate we have a sensible score
-    const totalFlightsCount = 5; // Singles 1-3, Doubles 1-2
+    const totalFlightsCount = 5;
     const wonFlightsCount = Object.values(flightsWon).filter(Boolean).length;
-    
-    // Count our team's score (whether home or away)
     const ourTeamScore = isHomeTeam ? homeTeamScore : awayTeamScore;
     
     if (wonFlightsCount !== ourTeamScore) {
@@ -209,22 +197,19 @@ const MatchEntry = () => {
       return;
     }
     
-    // Create the match
     const newMatch = createMatchFromForm();
     
-    // Calculate FWS for the match
-    const fws = calculateFlightWeightedScore(newMatch);
+    const fws = calculateFlightWeightedScore(newMatch as Match);
     console.log('Match FWS:', fws);
     
-    // Add the match
-    addMatch(newMatch);
+    const createdMatch = addMatch(newMatch);
+    console.log('Created match with ID:', createdMatch.id);
     
     toast({
       title: "Match Added",
       description: "Match has been recorded successfully"
     });
     
-    // Reset form
     setHomeTeamScore(0);
     setAwayTeamScore(0);
     setFlightsWon({
