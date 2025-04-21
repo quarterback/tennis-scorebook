@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { calculateWs10, calculateOsi, calculateApr } from '@/utils/aprCalculations';
+import { useDistrictOperations } from '@/hooks/useDistrictOperations';
 
 interface TeamRankingData {
   teamId: string;
@@ -29,21 +29,21 @@ interface TeamRankingData {
 }
 
 const Rankings = () => {
-  const { schools, teams, matches, districts } = useData();
+  const { schools, teams, matches, districts: contextDistricts } = useData();
+  const { districts } = useDistrictOperations();
   
   const [selectedGender, setSelectedGender] = useState<Gender>('Boys');
   const [selectedClassification, setSelectedClassification] = useState<Classification>('6A');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
   const [rankingData, setRankingData] = useState<TeamRankingData[]>([]);
   const [sortField, setSortField] = useState<keyof TeamRankingData>('apr');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
-  // Calculate rankings whenever dependencies change
   useEffect(() => {
     calculateRankings();
   }, [teams, matches, selectedGender, selectedClassification]);
   
   const calculateRankings = () => {
-    // First pass: Calculate WS10 for all teams
     const teamWs10Map = new Map<string, { ws10: number, matchesPlayed: number }>();
     
     teams.forEach(team => {
@@ -59,17 +59,13 @@ const Rankings = () => {
       });
     });
     
-    // Second pass: Calculate OSI and APR for all teams
     const rankings: TeamRankingData[] = teams
       .filter(team => {
-        // Filter by gender
         if (team.gender !== selectedGender) return false;
         
-        // Get school to check classification
         const school = schools.find(s => s.id === team.schoolId);
         if (!school) return false;
         
-        // Filter by classification
         return school.classification === selectedClassification;
       })
       .map(team => {
@@ -86,7 +82,6 @@ const Rankings = () => {
           m.isComplete && (m.homeTeamId === team.id || m.awayTeamId === team.id)
         );
         
-        // Count wins, losses, ties
         const wins = teamMatches.filter(m => 
           (m.homeTeamId === team.id && m.homeTeamWon === true) || 
           (m.awayTeamId === team.id && m.homeTeamWon === false)
@@ -105,14 +100,11 @@ const Rankings = () => {
         const winPercentage = matchesPlayed > 0 ? 
           (wins + (ties * 0.5)) / matchesPlayed : 0;
         
-        // Get WS10
         const ws10Data = teamWs10Map.get(team.id) || { ws10: 0, matchesPlayed: 0 };
         const ws10 = ws10Data.ws10;
         
-        // Calculate OSI
         const osi = calculateOsi(matches, team.id, teamWs10Map);
         
-        // Calculate APR
         const apr = calculateApr(ws10, osi);
         
         return {
@@ -137,31 +129,25 @@ const Rankings = () => {
     setRankingData(rankings);
   };
   
-  // Handle sorting
   const handleSort = (field: keyof TeamRankingData) => {
     if (sortField === field) {
-      // Toggle direction if same field
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // New field, default to descending for most fields
       setSortField(field);
       setSortDirection(field === 'teamName' || field === 'schoolName' ? 'asc' : 'desc');
     }
   };
   
-  // Apply sorting
   const sortedRankings = [...rankingData].sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
     
-    // Handle string comparisons
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       return sortDirection === 'asc' 
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
     }
     
-    // Handle number comparisons
     if (typeof aValue === 'number' && typeof bValue === 'number') {
       return sortDirection === 'asc' 
         ? aValue - bValue
@@ -179,8 +165,21 @@ const Rankings = () => {
       : <SortDesc className="inline h-4 w-4 ml-1" />;
   };
   
-  // Scale APR values to 0-100 for display
   const maxApr = Math.max(...rankingData.map(r => r.apr), 1);
+  
+  const filteredDistricts = districts.filter(
+    (d) => d.classification === selectedClassification
+  );
+  
+  const filteredRankings = selectedDistrict === 'all'
+    ? sortedRankings
+    : sortedRankings.filter((team) => {
+        return (
+          team.districtName &&
+          team.districtName.toLowerCase() ===
+            filteredDistricts.find((d) => d.name === team.districtName)?.name?.toLowerCase()
+        );
+      });
   
   return (
     <div className="space-y-6">
@@ -205,7 +204,7 @@ const Rankings = () => {
             APR = WS10 × OSI — where WS10 is the team's weighted flight score and OSI is the opponent strength index.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <Select
                 value={selectedGender}
@@ -220,11 +219,13 @@ const Rankings = () => {
                 </SelectContent>
               </Select>
             </div>
-            
             <div>
               <Select
                 value={selectedClassification}
-                onValueChange={(value: Classification) => setSelectedClassification(value)}
+                onValueChange={(value: Classification) => {
+                  setSelectedClassification(value);
+                  setSelectedDistrict('all');
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Classification" />
@@ -233,6 +234,24 @@ const Rankings = () => {
                   <SelectItem value="6A">6A</SelectItem>
                   <SelectItem value="5A">5A</SelectItem>
                   <SelectItem value="4A/3A/2A/1A">4A/3A/2A/1A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Select
+                value={selectedDistrict}
+                onValueChange={(value: string) => setSelectedDistrict(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select District" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Districts</SelectItem>
+                  {filteredDistricts.map((district) => (
+                    <SelectItem key={district.id} value={district.name}>
+                      {district.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -270,8 +289,8 @@ const Rankings = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedRankings.length > 0 ? (
-                sortedRankings.map((team, index) => (
+              {filteredRankings.length > 0 ? (
+                filteredRankings.map((team, index) => (
                   <TableRow key={team.teamId}>
                     <TableCell className="font-medium">{index + 1}</TableCell>
                     <TableCell>{team.teamName}</TableCell>
