@@ -48,9 +48,10 @@ const Rankings = () => {
   const [sortField, setSortField] = useState<keyof TeamRankingData>('apr');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
+  // Recalculate rankings whenever matches, teams, or filters change
   useEffect(() => {
     calculateRankings();
-  }, [teams, matches, selectedGender, selectedClassification]);
+  }, [teams, matches, selectedGender, selectedClassification, selectedDistrict]);
   
   const calculateRankings = () => {
     // Step 1: Calculate WS10 for all teams
@@ -77,7 +78,16 @@ const Rankings = () => {
         const school = schools.find(s => s.id === team.schoolId);
         if (!school) return false;
         
-        return school.classification === selectedClassification;
+        // Filter by classification
+        if (school.classification !== selectedClassification) return false;
+        
+        // Filter by district if a specific district is selected
+        if (selectedDistrict !== 'all') {
+          const district = districts.find(d => d.id === school.districtId);
+          return district?.name === selectedDistrict;
+        }
+        
+        return true;
       })
       .map(team => {
         const school = schools.find(s => s.id === team.schoolId) || { 
@@ -178,19 +188,13 @@ const Rankings = () => {
   
   const maxApr = Math.max(...rankingData.map(r => r.apr), 1);
   
+  // Get districts for the selected classification
   const filteredDistricts = districts.filter(
     (d) => d.classification === selectedClassification
   );
   
-  const filteredRankings = selectedDistrict === 'all'
-    ? sortedRankings
-    : sortedRankings.filter((team) => {
-        return (
-          team.districtName &&
-          team.districtName.toLowerCase() ===
-            filteredDistricts.find((d) => d.name === team.districtName)?.name?.toLowerCase()
-        );
-      });
+  // This is now handled in the team filtering above
+  const filteredRankings = sortedRankings;
   
   return (
     <div className="space-y-6">
@@ -294,6 +298,9 @@ const Rankings = () => {
                 <TableHead onClick={() => handleSort('teamName')}>
                   Team <SortIcon field="teamName" />
                 </TableHead>
+                <TableHead onClick={() => handleSort('districtName')}>
+                  District <SortIcon field="districtName" />
+                </TableHead>
                 <TableHead onClick={() => handleSort('matchesPlayed')}>
                   MP <SortIcon field="matchesPlayed" />
                 </TableHead>
@@ -348,6 +355,7 @@ const Rankings = () => {
                   <TableRow key={team.teamId}>
                     <TableCell className="font-medium">{index + 1}</TableCell>
                     <TableCell>{team.teamName}</TableCell>
+                    <TableCell>{team.districtName}</TableCell>
                     <TableCell>{team.matchesPlayed}</TableCell>
                     <TableCell>{team.wins}-{team.losses}{team.ties > 0 ? `-${team.ties}` : ''}</TableCell>
                     <TableCell>{team.ws10.toFixed(2)}</TableCell>
@@ -365,7 +373,7 @@ const Rankings = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
                     No teams found or no match data available
                   </TableCell>
                 </TableRow>

@@ -99,10 +99,12 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
           else if (f.outcome === "away") winner = false;
           else winner = undefined;
 
-          // Optionally parse score here if you want to show it in system
+          // Ensure type is explicitly "singles" or "doubles" to satisfy TypeScript
+          const flightType: "singles" | "doubles" = type === "singles" ? "singles" : "doubles";
+
           return {
             id: crypto.randomUUID(),
-            type,
+            type: flightType,
             position,
             level: "varsity",
             homePlayers: [],
