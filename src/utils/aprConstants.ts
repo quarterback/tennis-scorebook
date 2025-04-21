@@ -27,5 +27,9 @@ export const APR_CONSTANTS = {
   OSI_TARGET_MEDIAN: 1.0,
   
   // Decimal places for display
-  DECIMAL_PLACES: 2
+  DECIMAL_PLACES: 2,
+  
+  // New properties needed by useAprCalculator
+  SCALE_TO_100: true,
+  MAX_COMPOSITE_SCORE: 30
 };
