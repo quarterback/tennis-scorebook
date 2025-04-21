@@ -1,12 +1,13 @@
 
 import React, { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useMatches } from "@/context/MatchesContext";
 import { useData } from "@/context/DataContext";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
 import { Match, Flight } from "@/types";
+import { findTeamIdByName, standardizePosition } from "./utils/matchImportUtils";
+import MatchFileInput from "./MatchFileInput";
 
 interface MatchImportDialogProps {
   open: boolean;
@@ -26,55 +27,11 @@ type ImportMatch = {
   flights: ImportFlight[];
 };
 
-function standardizePosition(pos: string): { type: "singles" | "doubles"; position: number } {
-  // Convert "1S" -> { type: "singles", position: 1 }, etc
-  if (!pos || pos.length < 2) return { type: "singles", position: 1 };
-  const [num, t] = [pos[0], pos[1]?.toUpperCase()];
-  return {
-    type: t === "S" ? "singles" : "doubles",
-    position: Number(num)
-  };
-}
-
 export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setOpen }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const { matches, setMatches } = useMatches();
   const { teams, schools } = useData();
-
-  // Helper function to find team ID from name
-  const findTeamIdByName = (teamName: string): string => {
-    // First, try to find by constructed team name (school name + gender)
-    const foundTeam = teams.find(t => {
-      const school = schools.find(s => s.id === t.schoolId);
-      if (!school) return false;
-      const fullTeamName = `${school.name} ${t.gender}`;
-      return fullTeamName === teamName;
-    });
-    
-    if (foundTeam) return foundTeam.id;
-    
-    // Try to match by partial name
-    const fuzzyMatch = teams.find(t => {
-      const school = schools.find(s => s.id === t.schoolId);
-      if (!school) return false;
-      const fullTeamName = `${school.name} ${t.gender}`;
-      return fullTeamName.toLowerCase().includes(teamName.toLowerCase()) || 
-             teamName.toLowerCase().includes(fullTeamName.toLowerCase()) ||
-             teamName.toLowerCase().includes(school.name.toLowerCase());
-    });
-    
-    if (fuzzyMatch) return fuzzyMatch.id;
-    
-    // Return the first team ID as fallback (or generate a warning)
-    toast({
-      title: "Team not found",
-      description: `Could not find team: "${teamName}". Please check team name.`,
-      variant: "destructive"
-    });
-    
-    return teams.length > 0 ? teams[0].id : "unknown";
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,9 +48,7 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
       } else if (ext === "csv") {
         const text = await file.text();
         const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-        // Transform each row into an ImportMatch shape
         importedMatches = parsed.data.map((row: any) => {
-          // Assume columns: date, home_team, away_team, 1S, 2S, 3S, 1D, 2D, 3D, 1S_score, etc.
           const flights: ImportFlight[] = [];
           ["1S","2S","3S","1D","2D","3D"].forEach((label) => {
             if (row[label]) {
@@ -124,20 +79,19 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
 
     let imported = 0;
     let skipped = 0;
-    // Map ImportMatch -> Match, then add to system
     const newMatches: Match[] = [];
-    
+
     importedMatches.forEach(importEntry => {
       try {
-        // Find team IDs from names
-        const homeTeamId = findTeamIdByName(importEntry.home_team);
-        const awayTeamId = findTeamIdByName(importEntry.away_team);
-        
+        // Find team IDs using the utility (does toast if not found)
+        const homeTeamId = findTeamIdByName(importEntry.home_team, teams, schools, toast);
+        const awayTeamId = findTeamIdByName(importEntry.away_team, teams, schools, toast);
+
         if (homeTeamId === "unknown" || awayTeamId === "unknown") {
           skipped++;
-          return; // Skip this match if teams not found
+          return;
         }
-        
+
         const flights: Flight[] = importEntry.flights.map(f => {
           const { type, position } = standardizePosition(f.position);
           let winner: boolean|undefined;
@@ -145,9 +99,7 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
           else if (f.outcome === "away") winner = false;
           else winner = undefined;
 
-          // Ensure type is explicitly "singles" or "doubles" to satisfy TypeScript
-          const flightType: "singles" | "doubles" = type === "singles" ? "singles" : "doubles";
-
+          const flightType: "singles" | "doubles" = type;
           return {
             id: crypto.randomUUID(),
             type: flightType,
@@ -169,24 +121,22 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
           isLeagueMatch: true,
           isComplete: true,
           hasJvMatches: false,
-          homeTeamWon: undefined, // Will be recalculated elsewhere
+          homeTeamWon: undefined,
           homeCoachApproved: false,
           awayCoachApproved: false,
           homeTeamScore: undefined,
           awayTeamScore: undefined,
           flights
         };
-        
+
         newMatches.push(newMatch);
         imported += 1;
       } catch (err) {
-        // Skip and show error
         skipped++;
         toast({ title: "Match import failed", description: String(err) });
       }
     });
-    
-    // Add all new matches to the existing matches
+
     setMatches(prevMatches => [...prevMatches, ...newMatches]);
 
     toast({
@@ -207,23 +157,11 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
             Each match must include: date, home_team, away_team, and flights (with outcomes for 1S, 2S, 3S, 1D, 2D, 3D).
           </DialogDescription>
         </DialogHeader>
-
-        <div className="my-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,.csv"
-            className="mb-2"
-            disabled={loading}
-            onChange={handleFileChange}
-          />
-        </div>
-        <Button onClick={() => fileInputRef.current?.click()} disabled={loading}>
-          Choose File
-        </Button>
-        <div className="text-xs mt-2 text-gray-500">
-          After importing, records and APR will be updated automatically.
-        </div>
+        <MatchFileInput
+          fileInputRef={fileInputRef}
+          loading={loading}
+          onFileChange={handleFileChange}
+        />
       </DialogContent>
     </Dialog>
   );
