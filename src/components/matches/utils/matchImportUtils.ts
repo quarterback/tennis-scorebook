@@ -1,8 +1,14 @@
 
 import { Team, School } from "@/types";
+import { toast as toastFunction } from "@/hooks/use-toast";
 
 // Helper function to find team ID from name, given teams and schools data
-export function findTeamIdByName(teamName: string, teams: Team[], schools: School[], toast: (opts: { title: string; description: string; variant?: string }) => void): string {
+export function findTeamIdByName(
+  teamName: string, 
+  teams: Team[], 
+  schools: School[], 
+  toast: typeof toastFunction
+): string {
   // Construct: `${school.name} ${team.gender}` for display
   const foundTeam = teams.find(t => {
     const school = schools.find(s => s.id === t.schoolId);
