@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useMatches } from "@/context/MatchesContext";
 import { useData } from "@/context/DataContext";
 import Papa from "papaparse";
@@ -8,6 +8,9 @@ import { toast } from "@/hooks/use-toast";
 import { Match, Flight } from "@/types";
 import { findTeamIdByName, standardizePosition } from "./utils/matchImportUtils";
 import MatchFileInput from "./MatchFileInput";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useItaRankingCalculator } from "@/hooks/rankings/useItaRankingCalculator";
 
 interface MatchImportDialogProps {
   open: boolean;
@@ -24,14 +27,18 @@ type ImportMatch = {
   date: string;
   home_team: string;
   away_team: string;
+  isLeagueMatch?: boolean;
   flights: ImportFlight[];
 };
 
 export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setOpen }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [importedData, setImportedData] = useState<ImportMatch[]>([]);
+  const [isReviewStep, setIsReviewStep] = useState(false);
   const { matches, setMatches } = useMatches();
   const { teams, schools } = useData();
+  const { calculateRankings } = useItaRankingCalculator();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -63,25 +70,39 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
             date: row.date,
             home_team: row.home_team,
             away_team: row.away_team,
+            isLeagueMatch: row.is_league_match === "true" || row.is_league_match === "1" || row.is_league_match === true,
             flights
           };
         });
       } else {
-        toast({ title: "Invalid file type", description: "Please upload a .csv or .json file" });
+        toast({ 
+          title: "Invalid file type", 
+          description: "Please upload a .csv or .json file",
+          variant: "destructive"
+        });
         setLoading(false);
         return;
       }
-    } catch (err) {
-      toast({ title: "Error parsing file", description: String(err) });
-      setLoading(false);
-      return;
-    }
 
+      setImportedData(importedMatches);
+      setIsReviewStep(true);
+      setLoading(false);
+    } catch (err) {
+      toast({ 
+        title: "Error parsing file", 
+        description: String(err),
+        variant: "destructive" 
+      });
+      setLoading(false);
+    }
+  };
+
+  const processImport = () => {
     let imported = 0;
     let skipped = 0;
     const newMatches: Match[] = [];
 
-    importedMatches.forEach(importEntry => {
+    importedData.forEach(importEntry => {
       try {
         // Find team IDs using the utility (does toast if not found)
         const homeTeamId = findTeamIdByName(importEntry.home_team, teams, schools, toast);
@@ -113,19 +134,23 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
           };
         });
 
+        // Count wins for each team
+        const homeWins = flights.filter(f => f.homePlayerWon === true).length;
+        const awayWins = flights.filter(f => f.homePlayerWon === false).length;
+
         const newMatch: Match = {
           id: crypto.randomUUID(),
           date: importEntry.date,
           homeTeamId: homeTeamId,
           awayTeamId: awayTeamId,
-          isLeagueMatch: true,
+          isLeagueMatch: importEntry.isLeagueMatch ?? true,
           isComplete: true,
           hasJvMatches: false,
-          homeTeamWon: undefined,
+          homeTeamWon: homeWins > awayWins,
           homeCoachApproved: false,
           awayCoachApproved: false,
-          homeTeamScore: undefined,
-          awayTeamScore: undefined,
+          homeTeamScore: homeWins,
+          awayTeamScore: awayWins,
           flights
         };
 
@@ -133,7 +158,11 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
         imported += 1;
       } catch (err) {
         skipped++;
-        toast({ title: "Match import failed", description: String(err) });
+        toast({ 
+          title: "Match import failed", 
+          description: String(err),
+          variant: "destructive"  
+        });
       }
     });
 
@@ -143,8 +172,31 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
       title: "Import Complete",
       description: `Imported ${imported} matches${skipped > 0 ? `, skipped ${skipped} invalid entries` : ''}.`
     });
-    setLoading(false);
+    
+    // Recalculate rankings after import
+    calculateRankings({
+      gender: 'Boys',
+      classification: '6A',
+      includeNonLeagueMatches: true
+    });
+    
+    calculateRankings({
+      gender: 'Girls',
+      classification: '6A',
+      includeNonLeagueMatches: true
+    });
+    
+    setImportedData([]);
+    setIsReviewStep(false);
     setOpen(false);
+  };
+
+  const resetImport = () => {
+    setImportedData([]);
+    setIsReviewStep(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -153,15 +205,57 @@ export const MatchImportDialog: React.FC<MatchImportDialogProps> = ({ open, setO
         <DialogHeader>
           <DialogTitle>Import Matches</DialogTitle>
           <DialogDescription>
-            Upload match data as a structured JSON or CSV file.<br />
-            Each match must include: date, home_team, away_team, and flights (with outcomes for 1S, 2S, 3S, 1D, 2D, 3D).
+            {!isReviewStep ? (
+              <>
+                Upload match data as a structured JSON or CSV file.<br />
+                Each match must include: date, home_team, away_team, and flights (with outcomes for 1S, 2S, 3S, 1D, 2D, 3D).
+              </>
+            ) : (
+              <>
+                Review your match data before completing the import.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
-        <MatchFileInput
-          fileInputRef={fileInputRef}
-          loading={loading}
-          onFileChange={handleFileChange}
-        />
+        
+        {!isReviewStep ? (
+          <MatchFileInput
+            fileInputRef={fileInputRef}
+            loading={loading}
+            onFileChange={handleFileChange}
+          />
+        ) : (
+          <div className="space-y-4">
+            <Alert>
+              <AlertTitle>Ready to import {importedData.length} matches</AlertTitle>
+              <AlertDescription>
+                This will update your rankings automatically. Please review the details to ensure accuracy.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+              {importedData.map((match, i) => (
+                <div key={i} className="border-b last:border-0 py-2">
+                  <div className="font-medium">{match.date}</div>
+                  <div className="text-sm">{match.home_team} vs {match.away_team}</div>
+                  <div className="text-xs text-gray-500">
+                    {match.isLeagueMatch ? "League match" : "Non-league match"} · 
+                    {match.flights.length} flights
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <DialogFooter className="flex flex-row gap-2 sm:justify-between">
+              <Button variant="outline" onClick={resetImport}>
+                Back
+              </Button>
+              <Button onClick={processImport}>
+                Complete Import
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

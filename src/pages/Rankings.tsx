@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +17,9 @@ import { APR_CONSTANTS } from '@/utils/aprConstants';
 import { useDistrictOperations } from '@/hooks/useDistrictOperations';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RankingSystemExplanation } from '@/components/rankings/RankingSystemExplanation';
+import { ItaRankingsTable } from '@/components/rankings/ItaRankingsTable';
+import { useItaRankingCalculator } from '@/hooks/rankings/useItaRankingCalculator';
+import { ImportSampleDataButton } from '@/components/rankings/ImportSampleDataButton';
 
 interface TeamRankingData {
   teamId: string;
@@ -47,12 +49,69 @@ const Rankings = () => {
   const [rankingData, setRankingData] = useState<TeamRankingData[]>([]);
   const [sortField, setSortField] = useState<keyof TeamRankingData>('apr');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  
-  // Recalculate rankings whenever matches, teams, or filters change
+
+  const [rankingSystem, setRankingSystem] = useState<'apr' | 'ita'>('ita');
+  const { rankings: itaRankings, calculateRankings: calculateItaRankings } = useItaRankingCalculator();
+
+  // Recalculate ITA rankings when filters change
   useEffect(() => {
-    calculateRankings();
-  }, [teams, matches, selectedGender, selectedClassification, selectedDistrict]);
+    if (rankingSystem === 'ita') {
+      calculateItaRankings({
+        gender: selectedGender,
+        classification: selectedClassification,
+        includeNonLeagueMatches: true,
+        cutoffDate: new Date()
+      });
+    }
+  }, [calculateItaRankings, selectedGender, selectedClassification, rankingSystem]);
   
+  const handleSort = (field: keyof TeamRankingData) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'teamName' || field === 'schoolName' ? 'asc' : 'desc');
+    }
+  };
+  
+  const sortedRankings = [...rankingData].sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' 
+        ? aValue - bValue
+        : bValue - aValue;
+    }
+    
+    return 0;
+  });
+  
+  const SortIcon = ({ field }: { field: keyof TeamRankingData }) => {
+    if (sortField !== field) return null;
+    
+    return sortDirection === 'asc' 
+      ? <SortAsc className="inline h-4 w-4 ml-1" />
+      : <SortDesc className="inline h-4 w-4 ml-1" />;
+  };
+  
+  const maxApr = Math.max(...rankingData.map(r => r.apr), 1);
+  
+  // Get districts for the selected classification
+  const filteredDistricts = districts.filter(
+    (d) => d.classification === selectedClassification
+  );
+  
+  // This is now handled in the team filtering above
+  const filteredRankings = sortedRankings;
+  
+  // This function is kept from original file
   const calculateRankings = () => {
     // Step 1: Calculate WS10 for all teams
     const teamWs10Map = new Map<string, { ws10: number, matchesPlayed: number }>();
@@ -149,58 +208,13 @@ const Rankings = () => {
     
     setRankingData(rankings);
   };
-  
-  const handleSort = (field: keyof TeamRankingData) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection(field === 'teamName' || field === 'schoolName' ? 'asc' : 'desc');
-    }
-  };
-  
-  const sortedRankings = [...rankingData].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-    
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortDirection === 'asc' 
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
-    }
-    
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortDirection === 'asc' 
-        ? aValue - bValue
-        : bValue - aValue;
-    }
-    
-    return 0;
-  });
-  
-  const SortIcon = ({ field }: { field: keyof TeamRankingData }) => {
-    if (sortField !== field) return null;
-    
-    return sortDirection === 'asc' 
-      ? <SortAsc className="inline h-4 w-4 ml-1" />
-      : <SortDesc className="inline h-4 w-4 ml-1" />;
-  };
-  
-  const maxApr = Math.max(...rankingData.map(r => r.apr), 1);
-  
-  // Get districts for the selected classification
-  const filteredDistricts = districts.filter(
-    (d) => d.classification === selectedClassification
-  );
-  
-  // This is now handled in the team filtering above
-  const filteredRankings = sortedRankings;
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">APR Rankings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Tennis Rankings</h1>
         <div className="flex items-center space-x-2">
+          <ImportSampleDataButton />
           <Button variant="outline" onClick={() => window.location.href = '/match-entry'}>
             Record Matches
           </Button>
@@ -209,14 +223,24 @@ const Rankings = () => {
       
       <Card className="bg-white mb-6">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <BarChart3 className="h-5 w-5 mr-2 text-tennis-blue" />
-            Athletic Power Rating (APR) Rankings
+          <CardTitle className="text-lg flex items-center justify-between">
+            <div className="flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2 text-tennis-blue" />
+              Oregon High School Tennis Rankings
+            </div>
+            <Tabs value={rankingSystem} onValueChange={(val) => setRankingSystem(val as 'apr' | 'ita')}>
+              <TabsList>
+                <TabsTrigger value="apr">APR System</TabsTrigger>
+                <TabsTrigger value="ita">ITA System</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-500 mb-4">
-            APR = WS10 × OSI — where WS10 is the sum of your 10 best match scores and OSI is the opponent strength index.
+            {rankingSystem === 'apr' 
+              ? "APR = WS10 × OSI — where WS10 is the sum of your 10 best match scores and OSI is the opponent strength index."
+              : "ITA Points are calculated based on opponent ranking, with league matches at 100% value and non-league at 50%. Away wins receive a 10% bonus."}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -274,114 +298,157 @@ const Rankings = () => {
         </CardContent>
       </Card>
       
-      <RankingSystemExplanation defaultConfig={{
-        weights: {
-          singles1: FLIGHT_WEIGHTS.singles1,
-          singles2: FLIGHT_WEIGHTS.singles2,
-          singles3: FLIGHT_WEIGHTS.singles3,
-          doubles1: FLIGHT_WEIGHTS.doubles1,
-          doubles2: FLIGHT_WEIGHTS.doubles2,
-          doubles3: FLIGHT_WEIGHTS.doubles3
-        },
-        minimumMatches: APR_CONSTANTS.MIN_MATCHES,
-        cutoffDate: new Date().toISOString()
-      }} />
-      
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12" onClick={() => handleSort('apr')}>
-                  Rank <SortIcon field="apr" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('teamName')}>
-                  Team <SortIcon field="teamName" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('districtName')}>
-                  District <SortIcon field="districtName" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('matchesPlayed')}>
-                  MP <SortIcon field="matchesPlayed" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('winPercentage')}>
-                  Record <SortIcon field="winPercentage" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('ws10')}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="flex items-center">
-                        WS10 <Info className="h-3 w-3 ml-1" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">Win Score 10: Sum of your 10 best match scores using weighted flight values</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <SortIcon field="ws10" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('osi')}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="flex items-center">
-                        OSI <Info className="h-3 w-3 ml-1" /> 
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">Opponent Strength Index: Average of opponents' WS10 scores</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <SortIcon field="osi" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('apr')}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="flex items-center">
-                        APR <Info className="h-3 w-3 ml-1" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">Athletic Power Rating: WS10 × OSI</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <SortIcon field="apr" />
-                </TableHead>
-                <TableHead className="text-right">APR Score</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRankings.length > 0 ? (
-                filteredRankings.map((team, index) => (
-                  <TableRow key={team.teamId}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>{team.teamName}</TableCell>
-                    <TableCell>{team.districtName}</TableCell>
-                    <TableCell>{team.matchesPlayed}</TableCell>
-                    <TableCell>{team.wins}-{team.losses}{team.ties > 0 ? `-${team.ties}` : ''}</TableCell>
-                    <TableCell>{team.ws10.toFixed(2)}</TableCell>
-                    <TableCell>{team.osi.toFixed(2)}</TableCell>
-                    <TableCell>{team.apr.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div 
-                          className="bg-blue-600 h-2.5 rounded-full" 
-                          style={{ width: `${Math.min(100, (team.apr / maxApr) * 100)}%` }}
-                        ></div>
-                      </div>
-                    </TableCell>
+      {rankingSystem === 'apr' && (
+        <>
+          <RankingSystemExplanation defaultConfig={{
+            weights: {
+              singles1: FLIGHT_WEIGHTS.singles1,
+              singles2: FLIGHT_WEIGHTS.singles2,
+              singles3: FLIGHT_WEIGHTS.singles3,
+              doubles1: FLIGHT_WEIGHTS.doubles1,
+              doubles2: FLIGHT_WEIGHTS.doubles2,
+              doubles3: FLIGHT_WEIGHTS.doubles3
+            },
+            minimumMatches: APR_CONSTANTS.MIN_MATCHES,
+            cutoffDate: new Date().toISOString()
+          }} />
+          
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12" onClick={() => handleSort('apr')}>
+                      Rank <SortIcon field="apr" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('teamName')}>
+                      Team <SortIcon field="teamName" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('districtName')}>
+                      District <SortIcon field="districtName" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('matchesPlayed')}>
+                      MP <SortIcon field="matchesPlayed" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('winPercentage')}>
+                      Record <SortIcon field="winPercentage" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('ws10')}>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="flex items-center">
+                            WS10 <Info className="h-3 w-3 ml-1" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Win Score 10: Sum of your 10 best match scores using weighted flight values</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <SortIcon field="ws10" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('osi')}>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="flex items-center">
+                            OSI <Info className="h-3 w-3 ml-1" /> 
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Opponent Strength Index: Average of opponents' WS10 scores</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <SortIcon field="osi" />
+                    </TableHead>
+                    <TableHead onClick={() => handleSort('apr')}>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="flex items-center">
+                            APR <Info className="h-3 w-3 ml-1" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Athletic Power Rating: WS10 × OSI</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <SortIcon field="apr" />
+                    </TableHead>
+                    <TableHead className="text-right">APR Score</TableHead>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
-                    No teams found or no match data available
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {filteredRankings.length > 0 ? (
+                    filteredRankings.map((team, index) => (
+                      <TableRow key={team.teamId}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{team.teamName}</TableCell>
+                        <TableCell>{team.districtName}</TableCell>
+                        <TableCell>{team.matchesPlayed}</TableCell>
+                        <TableCell>{team.wins}-{team.losses}{team.ties > 0 ? `-${team.ties}` : ''}</TableCell>
+                        <TableCell>{team.ws10.toFixed(2)}</TableCell>
+                        <TableCell>{team.osi.toFixed(2)}</TableCell>
+                        <TableCell>{team.apr.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className="bg-blue-600 h-2.5 rounded-full" 
+                              style={{ width: `${Math.min(100, (team.apr / maxApr) * 100)}%` }}
+                            ></div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                        No teams found or no match data available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
+      
+      {rankingSystem === 'ita' && (
+        <>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">ITA Ranking System Explanation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                The ITA ranking system assigns points based on opponent ranking:
+              </p>
+              <ul className="list-disc pl-6 mt-2 text-sm">
+                <li>Top 10 opponent: 10 points</li>
+                <li>Ranked 11-25: 7 points</li>
+                <li>Ranked 26-50: 5 points</li>
+                <li>All others: 3 points</li>
+              </ul>
+              <p className="text-sm mt-2">
+                League matches count at 100% value, non-league at 50%. Away wins receive a 10% bonus.
+                Only the best wins are counted - 4 wins early season (weeks 1-3), 6 wins mid-season (weeks 4-6), 
+                and 8 wins late season (week 7+).
+              </p>
+            </CardContent>
+          </Card>
+          
+          <ItaRankingsTable 
+            rankings={itaRankings.filter(r => {
+              if (selectedDistrict !== 'all') {
+                return r.districtName === selectedDistrict;
+              }
+              return true;
+            })} 
+            displayLimit={
+              selectedClassification === '6A' ? 25 : 
+              selectedClassification === '5A' ? 15 : 15
+            } 
+          />
+        </>
+      )}
     </div>
   );
 };

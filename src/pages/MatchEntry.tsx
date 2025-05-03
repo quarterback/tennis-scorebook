@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Match, Flight, Team, School } from '@/types';
 import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
@@ -14,11 +14,18 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { calculateFlightWeightedScore } from '@/utils/aprCalculations';
+import { useItaRankingCalculator } from '@/hooks/rankings/useItaRankingCalculator';
+import { MatchPointsCalculator } from '@/components/matches/MatchPointsCalculator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const MatchEntry = () => {
   const { teams, schools, addMatch } = useData();
   const { toast } = useToast();
   const today = new Date();
+  
+  const { rankings: itaRankings, calculateRankings: calculateItaRankings } = useItaRankingCalculator();
+  const [opponent, setOpponent] = useState<Team | null>(null);
+  const [opponentRank, setOpponentRank] = useState<number>(99);
   
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [date, setDate] = useState<Date>(today);
@@ -58,6 +65,31 @@ const MatchEntry = () => {
       doubles2: false,
     });
   }, [selectedTeamId]);
+  
+  useEffect(() => {
+    if (!opponent || !selectedTeam) return;
+    
+    // Get rankings for the appropriate gender and classification
+    calculateItaRankings({
+      gender: selectedTeam.gender,
+      classification: teamSchool?.classification || '6A',
+      includeNonLeagueMatches: true
+    });
+    
+    // Set opponent for display purposes
+    const opponentTeams = teams.filter(t => 
+      t.schoolId === opponentSchoolId && 
+      t.gender === selectedTeam?.gender
+    );
+    
+    if (opponentTeams.length > 0) {
+      setOpponent(opponentTeams[0]);
+      
+      // Find opponent's rank in ITA rankings
+      const opponentRanking = itaRankings.find(r => r.teamId === opponentTeams[0].id);
+      setOpponentRank(opponentRanking?.classificationRank || 99);
+    }
+  }, [opponentSchoolId, selectedTeam, calculateItaRankings, itaRankings]);
   
   const handleFlightToggle = (flight: keyof typeof flightsWon) => {
     setFlightsWon(prev => ({
@@ -232,6 +264,7 @@ const MatchEntry = () => {
         </div>
       </div>
       
+      {/* Match Entry Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Record New Match</CardTitle>
@@ -239,6 +272,7 @@ const MatchEntry = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left column - main match details */}
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="selectedTeam">Your Team</Label>
@@ -344,8 +378,36 @@ const MatchEntry = () => {
                     />
                   </div>
                 </div>
+                
+                {/* Point calculator */}
+                {selectedTeamId && opponentSchoolId && (
+                  <MatchPointsCalculator
+                    opponentRank={opponentRank}
+                    isLeagueMatch={isLeagueMatch}
+                    isHomeTeam={isHomeTeam}
+                  />
+                )}
+                
+                {!isLeagueMatch && (
+                  <Alert>
+                    <AlertTitle>Non-league match</AlertTitle>
+                    <AlertDescription>
+                      Non-league matches count at 50% value for rankings.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {!isHomeTeam && (
+                  <Alert className="bg-green-50 text-green-800 border-green-200">
+                    <AlertTitle>Away match bonus</AlertTitle>
+                    <AlertDescription>
+                      Away wins receive a 10% bonus in the ITA ranking system.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
               
+              {/* Right column - flights */}
               <div className="space-y-4">
                 <div>
                   <Label className="block mb-2">Flights Won by {teamSchool?.name}</Label>
